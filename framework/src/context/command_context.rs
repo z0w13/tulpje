@@ -19,7 +19,7 @@ use crate::Error;
 pub struct CommandContext<T: Clone + Send + Sync> {
     pub meta: DiscordEventMeta,
     pub application_id: Id<ApplicationMarker>,
-    pub services: T,
+    pub services: Arc<T>,
     pub client: Arc<Client>,
 
     pub event: InteractionCreate,

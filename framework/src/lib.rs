@@ -5,10 +5,12 @@ use twilight_gateway::Event;
 use twilight_model::gateway::payload::incoming::InteractionCreate;
 
 pub use context::{Context, EventContext, InteractionContext};
+pub use framework::Framework;
 pub use module::{builder::ModuleBuilder, registry::Registry, Module};
 pub use scheduler::Scheduler;
 
 pub mod context;
+pub mod framework;
 pub mod handler;
 pub mod interaction;
 pub mod macros;
@@ -86,7 +88,7 @@ pub async fn handle<T: Clone + Send + Sync + 'static>(
                 meta: meta.clone(),
                 application_id: ctx.application_id,
                 client: Arc::clone(&ctx.client),
-                services: ctx.services.clone(),
+                services: Arc::clone(&ctx.services),
 
                 event: event.clone(),
             };

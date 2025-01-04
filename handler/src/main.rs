@@ -15,7 +15,7 @@ use sqlx::{
 };
 use tracing::log::LevelFilter;
 
-use tulpje_framework::{Error, Registry, Scheduler};
+use tulpje_framework::{Error, Framework, Registry};
 use tulpje_shared::{DiscordEvent, DiscordEventMeta};
 
 use config::Config;
@@ -51,10 +51,15 @@ async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt::init();
 
     // needed for fetching recommended shard count
-    let client = twilight_http::Client::builder()
-        .proxy(config.discord_proxy, true)
-        .ratelimiter(None)
-        .build();
+    let client = Arc::new(
+        twilight_http::Client::builder()
+            .proxy(config.discord_proxy, true)
+            .ratelimiter(None)
+            .build(),
+    );
+
+    // Get and store application id
+    let app_id = client.current_user_application().await?.model().await?.id;
 
     // create the redis connection
     let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
@@ -89,9 +94,6 @@ async fn main() -> Result<(), Error> {
         .await
         .expect("error running migrations");
 
-    // Client interaction client
-    let app = client.current_user_application().await?.model().await?;
-
     // register interaction handlers
     tracing::info!("registering handlers");
     let mut registry = Registry::<Services>::new();
@@ -107,44 +109,52 @@ async fn main() -> Result<(), Error> {
     // we don't need to mutate registry anymore after this
     let registry = Arc::new(registry);
 
-    // create context
-    let context = context::Context {
-        application_id: app.id,
-        services: context::Services {
-            handler_id: config.handler_id,
+    let services = Arc::new(context::Services {
+        handler_id: config.handler_id,
 
-            redis,
-            db,
-            registry: Arc::clone(&registry),
-        },
-        client: Arc::new(client),
-    };
+        redis,
+        db,
+        registry: Arc::clone(&registry),
+    });
+    let (mut framework, sender) = Framework::new(
+        registry,
+        client,
+        app_id,
+        services,
+        Some(|ctx| {
+            Box::pin(async move {
+                tracing::info!("registering global commands");
+                ctx.interaction()
+                    .set_global_commands(&ctx.services.registry.global_commands())
+                    .await?;
 
-    // start the task scheduler
-    let mut scheduler = Scheduler::new();
-    let sched_handle = scheduler
-        .run(context.clone(), registry.tasks.values().collect())
-        .await;
+                // register guild commands
+                let guild_modules = modules::core::db_all_guild_modules(&ctx.services.db)
+                    .await
+                    .expect("error fetching guild modules");
+                for (guild_id, modules) in guild_modules {
+                    if let Err(err) = modules::core::set_guild_commands_for_guild(
+                        &modules,
+                        guild_id,
+                        ctx.interaction(),
+                        &ctx.services.registry,
+                    )
+                    .await
+                    {
+                        tracing::error!(
+                            "error registering commands for guild {}: {}",
+                            guild_id,
+                            err
+                        );
+                    }
+                }
 
-    tracing::info!("registering global commands");
-    context
-        .interaction()
-        .set_global_commands(&registry.global_commands())
-        .await?;
+                Ok(())
+            })
+        }),
+    );
 
-    // register guild commands
-    let guild_modules = modules::core::db_all_guild_modules(&context.services.db)
-        .await
-        .expect("error fetching guild modules");
-    for (guild_id, modules) in guild_modules {
-        modules::core::set_guild_commands_for_guild(
-            &modules,
-            guild_id,
-            context.interaction(),
-            &context.services.registry,
-        )
-        .await?;
-    }
+    framework.start().await?;
 
     let main_handle = tokio::spawn(async move {
         loop {
@@ -167,11 +177,14 @@ async fn main() -> Result<(), Error> {
                 "event received",
             );
 
-            tulpje_framework::handle(meta, context.clone(), &registry, event.clone()).await;
+            if let Err(err) = sender.send((meta, event)) {
+                tracing::error!("error queueing event: {}", err);
+            };
         }
     });
 
-    futures_util::future::join_all([main_handle, sched_handle]).await;
+    framework.join().await?;
+    main_handle.await?;
 
     Ok(())
 }

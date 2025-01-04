@@ -17,7 +17,6 @@ pub struct Services {
     pub registry: Arc<Registry<Services>>,
 }
 
-pub type Context = context::Context<Services>;
 pub type ComponentInteractionContext = context::ComponentInteractionContext<Services>;
 pub type CommandContext = context::CommandContext<Services>;
 pub type EventContext = context::EventContext<Services>;

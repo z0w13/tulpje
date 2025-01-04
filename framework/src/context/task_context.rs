@@ -7,7 +7,7 @@ use super::Context;
 #[derive(Debug)]
 pub struct TaskContext<T: Clone + Send + Sync> {
     pub application_id: Id<ApplicationMarker>,
-    pub services: T,
+    pub services: Arc<T>,
     pub client: Arc<Client>,
 }
 
