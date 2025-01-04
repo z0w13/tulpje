@@ -16,5 +16,15 @@ tokio = "1.42.0"
 uuid = { version = "1.11.0", features = ["v7"] }
 tokio-util = { version = "0.7.13", features = ["rt"] }
 
+[dev-dependencies]
+criterion = { version = "0.5.1", features = ["async_tokio"] }
+
+[lib]
+bench = false
+
+[[bench]]
+name = "framework"
+harness = false
+
 [lints]
 workspace = true
