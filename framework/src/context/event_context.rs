@@ -9,7 +9,7 @@ use twilight_model::id::{marker::ApplicationMarker, Id};
 pub struct EventContext<T: Clone + Send + Sync> {
     pub meta: DiscordEventMeta,
     pub application_id: Id<ApplicationMarker>,
-    pub services: T,
+    pub services: Arc<T>,
     pub client: Arc<Client>,
 
     pub event: Event,

@@ -4003,6 +4003,8 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-sink",
+ "futures-util",
+ "hashbrown 0.14.5",
  "pin-project-lite",
  "tokio",
 ]
@@ -4113,6 +4115,7 @@ dependencies = [
  "async-cron-scheduler",
  "chrono",
  "tokio",
+ "tokio-util",
  "tracing",
  "tulpje-shared",
  "twilight-gateway",

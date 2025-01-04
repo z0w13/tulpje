@@ -20,27 +20,16 @@ pub fn parse<T: Clone + Send + Sync>(
         }
         Some(InteractionData::MessageComponent(interaction)) => {
             Ok(context::InteractionContext::<T>::ComponentInteraction(
-                context::ComponentInteractionContext {
+                context::ComponentInteractionContext::from_context(
+                    ctx,
                     meta,
-                    application_id: ctx.application_id,
-                    client: ctx.client,
-                    services: ctx.services,
-
-                    interaction: *interaction.clone(),
-                    event: event.clone(),
-                },
+                    event.clone(),
+                    *interaction.clone(),
+                ),
             ))
         }
         Some(InteractionData::ModalSubmit(data)) => Ok(context::InteractionContext::<T>::Modal(
-            context::ModalContext {
-                meta,
-                application_id: ctx.application_id,
-                client: ctx.client,
-                services: ctx.services,
-
-                data: data.clone(),
-                event: event.clone(),
-            },
+            context::ModalContext::from_context(ctx, meta, event.clone(), data.clone()),
         )),
         Some(_) => Err(format!("unknown interaction type: {:?}", event.kind).into()),
         None => Err("no interaction data".into()),

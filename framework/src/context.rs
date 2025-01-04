@@ -19,7 +19,7 @@ pub use task_context::TaskContext;
 #[derive(Debug)]
 pub struct Context<T: Clone + Send + Sync> {
     pub application_id: Id<ApplicationMarker>,
-    pub services: T,
+    pub services: Arc<T>,
     pub client: Arc<Client>,
 }
 
@@ -33,7 +33,7 @@ impl<T: Clone + Send + Sync> Clone for Context<T> {
     fn clone(&self) -> Self {
         Self {
             application_id: self.application_id,
-            services: self.services.clone(),
+            services: Arc::clone(&self.services),
             client: Arc::clone(&self.client),
         }
     }
