@@ -75,53 +75,40 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Error> {
 
     let shard_stats = get_all_shard_stats(ctx.services.redis.clone()).await?;
     let total_shards = shard_stats.len();
+    let Some(current_shard_state) = shard_stats.get(&ctx.meta.shard) else {
+        return Err(format!("couldn't get current shard state {}", ctx.meta.shard).into());
+    };
     // TODO: Handle dead shards somehow, they don't get cleaned up automatically
     let shards_up = shard_stats.iter().filter(|(_, s)| s.is_up()).count();
     let guild_count: u64 = shard_stats.values().map(|s| s.guild_count).sum();
 
-    let handler_cpu_usage = get_process_stats(
+    let handler_stats = get_process_stats(
         &ctx.services.redis,
         &format!("handler-{}", ctx.services.handler_id),
     )
-    .await?
-    .map(|m| m.cpu_usage);
-    let gateway_cpu_usage =
-        get_process_stats(&ctx.services.redis, &format!("gateway-{}", ctx.meta.shard))
-            .await?
-            .map(|m| m.cpu_usage);
+    .await?;
+    let gateway_stats =
+        get_process_stats(&ctx.services.redis, &format!("gateway-{}", ctx.meta.shard)).await?;
 
-    let cpu_usage_str = if let (Some(handler_cpu_usage), Some(gateway_cpu_usage)) =
-        (handler_cpu_usage, gateway_cpu_usage)
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "`Metrics::memory_usage` overflows at 9PiB, we should never hit that"
+    )]
+    let (cpu_usage_str, mem_usage_str) = if let (Some(handler_stats), Some(gateway_stats)) =
+        (handler_stats, gateway_stats)
     {
-        &format!(
-            "{:.2} %",
-            (handler_cpu_usage + gateway_cpu_usage) / 1024. / 1024.
+        (
+            format!(
+                "{:.2} %",
+                (handler_stats.cpu_usage + gateway_stats.cpu_usage)
+            ),
+            format!(
+                "{:.2} MiB",
+                (handler_stats.memory_usage + gateway_stats.memory_usage) as f64 / 1024. / 1024.
+            ),
         )
     } else {
-        "N/A"
-    };
-
-    let handler_mem_usage = get_process_stats(
-        &ctx.services.redis,
-        &format!("handler-{}", ctx.services.handler_id),
-    )
-    .await?
-    .map(|m| m.memory_usage);
-    let gateway_mem_usage =
-        get_process_stats(&ctx.services.redis, &format!("gateway-{}", ctx.meta.shard))
-            .await?
-            .map(|m| m.memory_usage);
-
-    let Some(current_shard_state) = shard_stats.get(&ctx.meta.shard) else {
-        return Err(format!("couldn't get current shard state {}", ctx.meta.shard).into());
-    };
-
-    let mem_usage_str = if let (Some(handler_mem_usage), Some(gateway_mem_usage)) =
-        (handler_mem_usage, gateway_mem_usage)
-    {
-        &format!("{:.2} MiB", handler_mem_usage + gateway_mem_usage)
-    } else {
-        "N/A"
+        (String::from("N/A"), String::from("N/A"))
     };
 
     let embed = EmbedBuilder::new()
