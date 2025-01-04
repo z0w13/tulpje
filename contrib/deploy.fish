@@ -10,7 +10,15 @@ else
   set -x SHARD_COUNT (cargo run -p tulpje-manager)
 end
 
+# Set shard count from command line argument or ask discord
+if test (count $argv) -gt 1
+  set -x HANDLER_COUNT $argv[2]
+else
+  set -x HANDLER_COUNT 1
+end
+
 echo "* shard count: $SHARD_COUNT"
+echo "* handler count: $HANDLER_COUNT"
 echo "* writing secrets from .env to file..."
 
 for L in (cat .env | grep -vE '^(#|$)');
