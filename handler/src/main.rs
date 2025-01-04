@@ -59,7 +59,14 @@ async fn main() -> Result<(), Error> {
     );
 
     // Get and store application id
-    let app_id = client.current_user_application().await?.model().await?.id;
+    let app_id = client
+        .current_user_application()
+        .await
+        .expect("error fetching application")
+        .model()
+        .await
+        .expect("eror decoding application")
+        .id;
 
     // create the redis connection
     let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
