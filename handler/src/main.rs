@@ -27,7 +27,7 @@ async fn main() -> Result<(), Error> {
         Err(err) if err.not_found() => {
             tracing::warn!("no .env file found");
         }
-        result => result?,
+        result => result.expect("error loading .env file"),
     };
 
     // parse TASK_SLOT env var if it exists and use it for the handler id
@@ -45,7 +45,7 @@ async fn main() -> Result<(), Error> {
     }
 
     // create config from environment vars
-    let config = Config::from_env()?;
+    let config = Config::from_env().expect("error loading config from env");
 
     // set-up logging
     tracing_subscriber::fmt::init();
@@ -161,7 +161,7 @@ async fn main() -> Result<(), Error> {
         }),
     );
 
-    framework.start().await?;
+    framework.start().await.expect("error starting framework");
 
     let sender = framework.sender();
     let main_handle = tokio::spawn(async move {
@@ -191,8 +191,8 @@ async fn main() -> Result<(), Error> {
         }
     });
 
-    framework.join().await?;
-    main_handle.await?;
+    framework.join().await.expect("error joining framework");
+    main_handle.await.expect("error joining main_handle");
 
     Ok(())
 }
