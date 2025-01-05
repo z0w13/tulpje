@@ -1,4 +1,7 @@
-use std::{error::Error, time::Duration};
+use std::{
+    error::Error,
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
 
 use bb8_redis::{
     redis::{self, AsyncCommands as _, FromRedisValue, ToRedisArgs},
@@ -12,6 +15,7 @@ pub fn install(
     builder: PrometheusBuilder,
     redis: bb8::Pool<RedisConnectionManager>,
     process_name: String,
+    version: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // install recorder and exporter
     builder
@@ -24,7 +28,7 @@ pub fn install(
 
     // create and run metrics manager
     tokio::spawn(async {
-        MetricsManager::new(process_name, redis, proc_collector)
+        MetricsManager::new(process_name, version, redis, proc_collector)
             .run()
             .await;
     });
@@ -35,18 +39,26 @@ pub fn install(
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Metrics {
     pub name: String,
+    pub version: String,
 
     pub cpu_usage: f32,
     pub memory_usage: u64,
+
+    pub last_started: u64,
+    pub last_updated: u64,
 }
 
 impl Metrics {
-    fn new(name: String) -> Self {
+    fn new(name: String, version: String) -> Self {
         Self {
             name,
+            version,
+            last_started: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time went backwards")
+                .as_secs(),
 
-            cpu_usage: 0.,
-            memory_usage: 0,
+            ..Default::default()
         }
     }
 }
@@ -93,11 +105,12 @@ struct MetricsManager {
 impl MetricsManager {
     fn new(
         name: String,
+        version: String,
         redis: bb8::Pool<RedisConnectionManager>,
         collector: ProcessCollector,
     ) -> Self {
         Self {
-            metrics: Metrics::new(name),
+            metrics: Metrics::new(name, version),
 
             interval_ms: 10_000,
             prev_cpu_ms: 0,
@@ -136,6 +149,10 @@ impl MetricsManager {
         // Update metrics
         self.metrics.cpu_usage = (curr_cpu_ms - self.prev_cpu_ms) as f32 / interval_ms_float;
         self.metrics.memory_usage = metrics.resident_memory_bytes.unwrap_or(0);
+        self.metrics.last_updated = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("time went backwards")
+            .as_secs();
 
         // TODO: Implement IDs for the instances
         self.redis

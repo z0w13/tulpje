@@ -285,9 +285,17 @@ pub async fn cmd_processes(ctx: CommandContext) -> Result<(), Error> {
                 EmbedFieldBuilder::new(
                     process.name,
                     format!(
-                        "CPU: {:.2}% / Mem: {:.2}MiB",
+                        "CPU: {:.2}% / Mem: {:.2}MiB / Uptime: {} / Version: {}",
                         process.cpu_usage,
-                        process.memory_usage as f64 / 1024. / 1024.
+                        process.memory_usage as f64 / 1024. / 1024.,
+                        tulpje_shared::format_significant_duration(
+                            chrono::DateTime::from_timestamp(process.last_started.try_into()?, 0)
+                                .ok_or("couldn't create timestamp")?
+                                .signed_duration_since(Utc::now())
+                                .num_seconds()
+                                .unsigned_abs()
+                        ),
+                        process.version,
                     ),
                 )
                 .into(),

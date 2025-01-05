@@ -3,6 +3,7 @@ use std::error::Error;
 use bb8_redis::RedisConnectionManager;
 use metrics::{counter, describe_counter};
 use metrics_exporter_prometheus::PrometheusBuilder;
+use tulpje_shared::version;
 use twilight_gateway::{Event, EventType};
 
 pub(crate) fn install(
@@ -14,6 +15,7 @@ pub(crate) fn install(
         PrometheusBuilder::new(),
         redis,
         format!("gateway-{}", shard_id),
+        version!(),
     )?;
 
     // define metrics
