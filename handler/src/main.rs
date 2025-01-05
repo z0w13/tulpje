@@ -113,6 +113,11 @@ async fn main() -> Result<(), Error> {
     // previous modules to set up
     registry.register(modules::core::build(&registry));
 
+    // only run scheduled tasks on the "primary" handler
+    if config.handler_id != 0 {
+        registry.tasks.clear();
+    }
+
     // we don't need to mutate registry anymore after this
     let registry = Arc::new(registry);
 
