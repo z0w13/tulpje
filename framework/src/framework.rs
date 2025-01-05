@@ -1,9 +1,6 @@
-use std::{borrow::BorrowMut as _, future::Future, pin::Pin, sync::Arc};
+use std::{future::Future, pin::Pin, sync::Arc};
 
-use tokio::{
-    sync::mpsc::{self, UnboundedReceiver, UnboundedSender},
-    task::JoinHandle,
-};
+use tokio::{sync::mpsc, task::JoinHandle};
 
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use tulpje_shared::DiscordEventMeta;
@@ -11,7 +8,9 @@ use twilight_gateway::Event;
 use twilight_http::Client;
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
-use crate::{Context, Error, Registry, Scheduler};
+use crate::handler::task_handler::TaskHandler;
+use crate::scheduler::{SchedulerHandle, SchedulerTaskMessage};
+use crate::{Context, Error, Registry};
 
 type SetupFunc<T> = fn(ctx: Context<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
@@ -46,7 +45,7 @@ impl<T: Clone + Send + Sync + 'static> FrameworkBuilder<T> {
         self
     }
 
-    pub fn build(&self) -> (Framework<T>, UnboundedSender<(DiscordEventMeta, Event)>) {
+    pub fn build(&self) -> Framework<T> {
         Framework::new(
             Arc::clone(&self.registry),
             Arc::clone(&self.client),
@@ -58,159 +57,199 @@ impl<T: Clone + Send + Sync + 'static> FrameworkBuilder<T> {
 }
 
 pub struct Framework<T: Clone + Send + Sync> {
-    registry: Arc<Registry<T>>,
-    client: Arc<Client>,
-    scheduler: Scheduler,
-
-    app_id: Id<ApplicationMarker>,
-    user_data: Arc<T>,
-
+    ctx: Context<T>,
     setup_fn: Option<SetupFunc<T>>,
-    sched_handle: Option<JoinHandle<()>>,
 
-    shutdown_token: CancellationToken,
-    dispatcher_handle: JoinHandle<()>,
+    scheduler: SchedulerHandle<T>,
+    dispatcher: DispatchHandle,
 }
 
 impl<T: Clone + Send + Sync + 'static> Framework<T> {
     pub fn new(
         registry: Arc<Registry<T>>,
         client: Arc<Client>,
-        app_id: Id<ApplicationMarker>,
-        user_data: Arc<T>,
+        application_id: Id<ApplicationMarker>,
+        services: Arc<T>,
         setup_fn: Option<SetupFunc<T>>,
-    ) -> (Self, UnboundedSender<(DiscordEventMeta, Event)>) {
-        let (sender, receiver) = mpsc::unbounded_channel();
-        let shutdown_token = CancellationToken::new();
+    ) -> Self {
+        let ctx = Context {
+            application_id,
+            services,
+            client,
+        };
+        let scheduler =
+            SchedulerHandle::new(registry.tasks.values().cloned().collect(), ctx.clone());
+        let dispatcher = DispatchHandle::new(registry, ctx.clone());
 
-        let mut dispatcher = Dispatcher::new(
-            Arc::clone(&registry),
-            Arc::clone(&client),
-            app_id,
-            Arc::clone(&user_data),
-            receiver,
-            shutdown_token.clone(),
-        );
-        let dispatcher_handle = tokio::spawn(async move {
-            dispatcher.run().await;
-        });
+        Self {
+            ctx,
+            setup_fn,
 
-        (
-            Self {
-                registry,
-                client,
-                scheduler: Scheduler::new(),
-
-                app_id,
-                user_data,
-
-                setup_fn,
-                sched_handle: None,
-
-                shutdown_token,
-                dispatcher_handle,
-            },
-            sender,
-        )
+            scheduler,
+            dispatcher,
+        }
     }
 
     pub async fn start(&mut self) -> Result<(), Error> {
-        let ctx = Context {
-            application_id: self.app_id,
-            services: Arc::clone(&self.user_data),
-            client: Arc::clone(&self.client),
-        };
-
-        self.sched_handle = Some(
-            self.scheduler
-                .run(ctx.clone(), self.registry.tasks.values().collect())
-                .await,
-        );
-
         if let Some(setup_fn) = self.setup_fn.take() {
-            (setup_fn)(ctx.clone())
+            (setup_fn)(self.ctx.clone())
                 .await
                 .map_err(|err| format!("error running setup function: {}", err))?;
         }
 
+        self.scheduler
+            .start()
+            .map_err(|err| format!("error starting scheduled tasks: {}", err))?;
+
         Ok(())
     }
 
-    pub async fn join(&mut self) -> Result<(), Error> {
-        self.dispatcher_handle.borrow_mut().await?;
-        if let Some(sched_handle) = self.sched_handle.take() {
-            sched_handle.await?;
-        }
+    pub fn enable_task(
+        &mut self,
+        handler: TaskHandler<T>,
+    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+        self.scheduler.enable_task(handler)
+    }
 
-        Ok(())
+    pub fn disable_task(
+        &mut self,
+        name: String,
+    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+        self.scheduler.disable_task(name)
+    }
+
+    pub fn sender(&self) -> Sender {
+        Sender {
+            sender: self.dispatcher.sender.clone(),
+        }
+    }
+
+    pub fn send(
+        &mut self,
+        meta: DiscordEventMeta,
+        event: Event,
+    ) -> Result<(), mpsc::error::SendError<(DiscordEventMeta, Event)>> {
+        self.dispatcher.send(meta, event)
     }
 
     pub async fn shutdown(&mut self) {
-        self.shutdown_token.cancel();
-        self.scheduler.shutdown().await;
+        self.scheduler.shutdown();
+        self.dispatcher.shutdown();
+    }
+
+    pub async fn join(&mut self) -> Result<(), Error> {
+        self.scheduler.join().await?;
+        self.dispatcher.join().await?;
+
+        Ok(())
     }
 }
 
-struct Dispatcher<T: Clone + Send + Sync> {
-    registry: Arc<Registry<T>>,
-    client: Arc<Client>,
-    app_id: Id<ApplicationMarker>,
-    user_data: Arc<T>,
+struct DispatchHandle {
+    sender: mpsc::UnboundedSender<(DiscordEventMeta, Event)>,
+    shutdown: CancellationToken,
+    handle: Option<JoinHandle<()>>,
+}
+impl DispatchHandle {
+    fn new<T: Clone + Send + Sync + 'static>(registry: Arc<Registry<T>>, ctx: Context<T>) -> Self {
+        let (sender, receiver) = mpsc::unbounded_channel();
+        let shutdown = CancellationToken::new();
 
-    receiver: UnboundedReceiver<(DiscordEventMeta, Event)>,
-    shutdown_token: CancellationToken,
+        let mut dispatch = Dispatch::new(ctx, registry, receiver, shutdown.child_token());
+        let handle = Some(tokio::spawn(async move { dispatch.run().await }));
+
+        Self {
+            sender,
+            shutdown,
+            handle,
+        }
+    }
+
+    fn send(
+        &mut self,
+        meta: DiscordEventMeta,
+        event: Event,
+    ) -> Result<(), mpsc::error::SendError<(DiscordEventMeta, Event)>> {
+        self.sender.send((meta, event))
+    }
+
+    fn shutdown(&mut self) {
+        self.shutdown.cancel();
+    }
+
+    async fn join(&mut self) -> Result<(), Error> {
+        Ok(self
+            .handle
+            .take()
+            .ok_or("Dispatch already shutdown")?
+            .await?)
+    }
 }
 
-impl<T: Clone + Send + Sync + 'static> Dispatcher<T> {
-    pub fn new(
-        registry: Arc<Registry<T>>,
-        client: Arc<Client>,
-        app_id: Id<ApplicationMarker>,
-        user_data: Arc<T>,
+struct Dispatch<T: Clone + Send + Sync> {
+    registry: Arc<Registry<T>>,
+    ctx: Context<T>,
 
-        receiver: UnboundedReceiver<(DiscordEventMeta, Event)>,
-        shutdown_token: CancellationToken,
+    receiver: mpsc::UnboundedReceiver<(DiscordEventMeta, Event)>,
+    shutdown: CancellationToken,
+
+    tracker: TaskTracker,
+}
+impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
+    fn new(
+        ctx: Context<T>,
+        registry: Arc<Registry<T>>,
+
+        receiver: mpsc::UnboundedReceiver<(DiscordEventMeta, Event)>,
+        shutdown: CancellationToken,
     ) -> Self {
         Self {
             registry,
-            client,
-            app_id,
-            user_data,
+            ctx,
 
             receiver,
-            shutdown_token,
+            shutdown,
+
+            tracker: TaskTracker::new(),
         }
     }
 
-    pub async fn run(&mut self) {
-        let ctx = Context {
-            application_id: self.app_id,
-            services: Arc::clone(&self.user_data),
-            client: Arc::clone(&self.client),
-        };
-
-        let tracker = TaskTracker::new();
-
+    async fn run(&mut self) {
         loop {
             tokio::select! {
-                data = self.receiver.recv() => {
-                    let Some((meta, event)) = data else {
-                        tracing::info!("received empty event, exiting...");
-                        break;
-                    };
-
+                Some((meta, event)) = self.receiver.recv() => {
                     let registry = Arc::clone(&self.registry);
-                    let ctx = ctx.clone();
+                    let ctx = self.ctx.clone();
 
-                    tracker.spawn(async move {
+                    self.tracker.spawn(async move {
                         crate::handle(meta, ctx, &registry, event).await;
                     });
                 },
-                () = self.shutdown_token.cancelled() => self.receiver.close(),
-            };
+                () = self.shutdown.cancelled() => break,
+            }
         }
 
-        tracker.close();
-        tracker.wait().await;
+        self.receiver.close();
+        self.tracker.close();
+
+        self.tracker.wait().await;
+    }
+}
+
+pub struct Sender {
+    sender: mpsc::UnboundedSender<(DiscordEventMeta, Event)>,
+}
+
+impl Sender {
+    pub fn send(
+        &self,
+        meta: DiscordEventMeta,
+        event: Event,
+    ) -> Result<(), mpsc::error::SendError<(DiscordEventMeta, Event)>> {
+        self.sender.send((meta, event))
+    }
+
+    pub fn closed(&self) -> bool {
+        self.sender.is_closed()
     }
 }
