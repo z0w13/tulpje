@@ -97,7 +97,7 @@ async fn main() {
     let mut amqp = amqp::create(&config.rabbitmq_address).await;
 
     tracing::info!("running migrations...");
-    sqlx::migrate!("../migrations")
+    sqlx::migrate!("./migrations")
         .run(&db)
         .await
         .expect("error running migrations");
