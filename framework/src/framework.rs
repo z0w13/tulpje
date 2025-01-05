@@ -3,7 +3,7 @@ use std::{future::Future, pin::Pin, sync::Arc};
 use tokio::{sync::mpsc, task::JoinHandle};
 
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
-use tulpje_shared::DiscordEventMeta;
+use crate::Metadata;
 use twilight_gateway::Event;
 use twilight_http::Client;
 use twilight_model::id::{marker::ApplicationMarker, Id};
@@ -126,9 +126,9 @@ impl<T: Clone + Send + Sync + 'static> Framework<T> {
 
     pub fn send(
         &mut self,
-        meta: DiscordEventMeta,
+        meta: Metadata,
         event: Event,
-    ) -> Result<(), mpsc::error::SendError<(DiscordEventMeta, Event)>> {
+    ) -> Result<(), mpsc::error::SendError<(Metadata, Event)>> {
         self.dispatcher.send(meta, event)
     }
 
@@ -146,7 +146,7 @@ impl<T: Clone + Send + Sync + 'static> Framework<T> {
 }
 
 struct DispatchHandle {
-    sender: mpsc::UnboundedSender<(DiscordEventMeta, Event)>,
+    sender: mpsc::UnboundedSender<(Metadata, Event)>,
     shutdown: CancellationToken,
     handle: Option<JoinHandle<()>>,
 }
@@ -167,9 +167,9 @@ impl DispatchHandle {
 
     fn send(
         &mut self,
-        meta: DiscordEventMeta,
+        meta: Metadata,
         event: Event,
-    ) -> Result<(), mpsc::error::SendError<(DiscordEventMeta, Event)>> {
+    ) -> Result<(), mpsc::error::SendError<(Metadata, Event)>> {
         self.sender.send((meta, event))
     }
 
@@ -190,7 +190,7 @@ struct Dispatch<T: Clone + Send + Sync> {
     registry: Arc<Registry<T>>,
     ctx: Context<T>,
 
-    receiver: mpsc::UnboundedReceiver<(DiscordEventMeta, Event)>,
+    receiver: mpsc::UnboundedReceiver<(Metadata, Event)>,
     shutdown: CancellationToken,
 
     tracker: TaskTracker,
@@ -200,7 +200,7 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
         ctx: Context<T>,
         registry: Arc<Registry<T>>,
 
-        receiver: mpsc::UnboundedReceiver<(DiscordEventMeta, Event)>,
+        receiver: mpsc::UnboundedReceiver<(Metadata, Event)>,
         shutdown: CancellationToken,
     ) -> Self {
         Self {
@@ -237,15 +237,15 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
 }
 
 pub struct Sender {
-    sender: mpsc::UnboundedSender<(DiscordEventMeta, Event)>,
+    sender: mpsc::UnboundedSender<(Metadata, Event)>,
 }
 
 impl Sender {
     pub fn send(
         &self,
-        meta: DiscordEventMeta,
+        meta: Metadata,
         event: Event,
-    ) -> Result<(), mpsc::error::SendError<(DiscordEventMeta, Event)>> {
+    ) -> Result<(), mpsc::error::SendError<(Metadata, Event)>> {
         self.sender.send((meta, event))
     }
 

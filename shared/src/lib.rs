@@ -1,29 +1,22 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::id::{marker::ApplicationMarker, Id};
 
+use tulpje_framework::Metadata;
+
 pub mod color;
 pub mod metrics;
 pub mod shard_state;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DiscordEvent {
-    pub meta: DiscordEventMeta,
+    pub meta: Metadata,
     pub payload: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DiscordEventMeta {
-    pub uuid: uuid::Uuid, // used for tracing
-    pub shard: u32,
 }
 
 impl DiscordEvent {
     pub fn new(shard: u32, payload: String) -> Self {
         Self {
-            meta: DiscordEventMeta {
-                uuid: uuid::Uuid::now_v7(),
-                shard,
-            },
+            meta: Metadata::new(shard),
             payload,
         }
     }

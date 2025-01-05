@@ -14,9 +14,10 @@ use sqlx::{
     ConnectOptions as _,
 };
 use tracing::log::LevelFilter;
+use twilight_gateway::Event;
 
-use tulpje_framework::{Error, Framework, Registry};
-use tulpje_shared::{DiscordEvent, DiscordEventMeta};
+use tulpje_framework::{Error, Framework, Metadata, Registry};
+use tulpje_shared::DiscordEvent;
 
 use config::Config;
 
@@ -210,9 +211,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn parse_delivery(
-    message: Vec<u8>,
-) -> Result<(DiscordEventMeta, twilight_model::gateway::event::Event), Box<dyn std::error::Error>> {
+fn parse_delivery(message: Vec<u8>) -> Result<(Metadata, Event), Box<dyn std::error::Error>> {
     let discord_event = serde_json::from_str::<DiscordEvent>(&String::from_utf8(message)?)?;
 
     Ok((

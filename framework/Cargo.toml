@@ -10,7 +10,6 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-shared = { path = "../shared" }
 twilight-http = { version = "0.16.0-rc.1", features = ["decompression", "rustls-webpki-roots"], default-features = false }
 twilight-model = "0.16.0-rc.1"
 twilight-gateway = "0.16.0-rc.1"
@@ -19,8 +18,9 @@ tracing = "0.1.41"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = "0.4.39"
 tokio = "1.42.0"
-uuid = { version = "1.11.0", features = ["v7"] }
+uuid = { version = "1.11.0", features = ["v7", "serde"] }
 tokio-util = { version = "0.7.13", features = ["rt"] }
+serde = { version = "1.0.216", features = ["derive"] }
 
 [lints]
 workspace = true

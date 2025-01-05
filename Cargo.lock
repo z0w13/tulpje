@@ -3200,10 +3200,10 @@ version = "0.10.0"
 dependencies = [
  "async-cron-scheduler",
  "chrono",
+ "serde",
  "tokio",
  "tokio-util",
  "tracing",
- "tulpje-shared",
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
@@ -3298,6 +3298,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+ "tulpje-framework",
  "twilight-model",
  "uuid",
 ]

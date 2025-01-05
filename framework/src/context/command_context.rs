@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use tulpje_shared::DiscordEventMeta;
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
 use twilight_model::{
     application::interaction::application_command::{CommandData, CommandOptionValue},
@@ -13,11 +12,11 @@ use twilight_model::{
 use twilight_util::builder::InteractionResponseDataBuilder;
 
 use super::Context;
-use crate::Error;
+use crate::{Error, Metadata};
 
 #[derive(Clone, Debug)]
 pub struct CommandContext<T: Clone + Send + Sync> {
-    pub meta: DiscordEventMeta,
+    pub meta: Metadata,
     pub application_id: Id<ApplicationMarker>,
     pub services: Arc<T>,
     pub client: Arc<Client>,
@@ -28,7 +27,7 @@ pub struct CommandContext<T: Clone + Send + Sync> {
 
 impl<T: Clone + Send + Sync> CommandContext<T> {
     pub fn from_context(
-        meta: DiscordEventMeta,
+        meta: Metadata,
         ctx: Context<T>,
         event: InteractionCreate,
         command: CommandData,

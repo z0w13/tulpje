@@ -1,16 +1,13 @@
-use tulpje_shared::DiscordEventMeta;
 use twilight_model::{
     application::interaction::InteractionData, gateway::payload::incoming::InteractionCreate,
 };
 
-use super::context;
-use crate::context::Context;
-use crate::Error;
+use crate::{context, Error, Metadata};
 
 pub fn parse<T: Clone + Send + Sync>(
     event: &InteractionCreate,
-    meta: DiscordEventMeta,
-    ctx: Context<T>,
+    meta: Metadata,
+    ctx: context::Context<T>,
 ) -> Result<context::InteractionContext<T>, Error> {
     match &event.data {
         Some(InteractionData::ApplicationCommand(command)) => {

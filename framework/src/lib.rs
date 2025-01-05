@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use tulpje_shared::DiscordEventMeta;
 use twilight_gateway::Event;
 use twilight_model::gateway::payload::incoming::InteractionCreate;
 
 pub use context::{Context, EventContext, InteractionContext};
 pub use framework::Framework;
+pub use metadata::Metadata;
 pub use module::{builder::ModuleBuilder, registry::Registry, Module};
 
 pub mod context;
@@ -13,6 +13,7 @@ pub mod framework;
 pub mod handler;
 pub mod interaction;
 pub mod macros;
+pub mod metadata;
 pub mod module;
 pub mod scheduler;
 
@@ -21,7 +22,7 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
     event: InteractionCreate,
     context: Context<T>,
-    meta: &DiscordEventMeta,
+    meta: &Metadata,
     registry: &Registry<T>,
 ) -> Result<(), Error> {
     tracing::info!("interaction");
@@ -64,7 +65,7 @@ pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
 }
 
 pub async fn handle<T: Clone + Send + Sync + 'static>(
-    meta: DiscordEventMeta,
+    meta: Metadata,
     ctx: Context<T>,
     registry: &Registry<T>,
     event: Event,

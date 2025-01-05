@@ -8,11 +8,11 @@ use twilight_model::{
 };
 
 use super::Context;
-use tulpje_shared::DiscordEventMeta;
+use crate::Metadata;
 
 #[derive(Clone, Debug)]
 pub struct ModalContext<T: Clone + Send + Sync> {
-    pub meta: DiscordEventMeta,
+    pub meta: Metadata,
     pub application_id: Id<ApplicationMarker>,
     pub services: Arc<T>,
     pub client: Arc<Client>,
@@ -24,7 +24,7 @@ pub struct ModalContext<T: Clone + Send + Sync> {
 impl<T: Clone + Send + Sync> ModalContext<T> {
     pub fn from_context(
         ctx: Context<T>,
-        meta: DiscordEventMeta,
+        meta: Metadata,
         event: InteractionCreate,
         data: ModalInteractionData,
     ) -> Self {
