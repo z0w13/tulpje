@@ -20,9 +20,14 @@ if ! hash cross 2>/dev/null; then
   exit 1
 fi
 
-GIT_TAG="$(git describe --abbrev=0)"
-TULPJE_VERSION="${GIT_TAG#v}"
-export IMAGE_SUFFIX=":${TULPJE_VERSION}"
+if [[ -z "${IMAGE_TAG:-}" ]]; then
+  GIT_TAG="$(git describe --abbrev=0)"
+  TULPJE_VERSION="${GIT_TAG#v}"
+  export IMAGE_SUFFIX=":${TULPJE_VERSION}"
+else
+  export IMAGE_SUFFIX=":${IMAGE_TAG}"
+fi
+
 echo " [*] image tag:" "${TULPJE_VERSION}"
 
 # Build binaries
