@@ -1,97 +1,117 @@
-use std::{collections::HashMap, future::Future, pin::Pin};
+use std::collections::HashMap;
 
 use async_cron_scheduler::{Job, JobId, Scheduler as CronScheduler};
 use chrono::Utc;
+use tokio::{sync::mpsc, task::JoinHandle};
+use tokio_util::sync::CancellationToken;
 
 use crate::{
     context::{Context, TaskContext},
     handler::task_handler::TaskHandler,
+    Error,
 };
 
-struct Runner {
-    scheduler: Option<CronScheduler<Utc>>,
-    service: Option<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
+pub enum SchedulerTaskMessage<T: Clone + Send + Sync> {
+    Start(Vec<TaskHandler<T>>),
+    Enable(TaskHandler<T>),
+    Disable(String),
 }
 
-impl Runner {
-    fn init(&mut self) {
-        assert!(
-            self.scheduler.is_none(),
-            "don't call init twice unless we've stopped previously"
-        );
+pub struct SchedulerHandle<T: Clone + Send + Sync> {
+    tasks: Vec<TaskHandler<T>>,
+    sender: mpsc::UnboundedSender<SchedulerTaskMessage<T>>,
+    shutdown: CancellationToken,
+    handle: Option<JoinHandle<()>>,
+}
+impl<T: Clone + Send + Sync + 'static> SchedulerHandle<T> {
+    pub(crate) fn new(tasks: Vec<TaskHandler<T>>, ctx: Context<T>) -> Self {
+        let (sender, receiver) = mpsc::unbounded_channel();
+        let shutdown = CancellationToken::new();
 
+        let mut scheduler = Scheduler::new(ctx, receiver, shutdown.clone());
+        let handle = Some(tokio::spawn(async move { scheduler.run().await }));
+
+        Self {
+            tasks,
+            sender,
+            shutdown,
+            handle,
+        }
+    }
+
+    pub(crate) fn shutdown(&mut self) {
+        self.shutdown.cancel();
+    }
+
+    pub(crate) fn start(&mut self) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+        self.sender
+            .send(SchedulerTaskMessage::Start(self.tasks.clone()))
+    }
+
+    pub fn enable_task(
+        &mut self,
+        handler: TaskHandler<T>,
+    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+        self.sender.send(SchedulerTaskMessage::Enable(handler))
+    }
+
+    pub fn disable_task(
+        &mut self,
+        name: String,
+    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+        self.sender.send(SchedulerTaskMessage::Disable(name))
+    }
+
+    pub(crate) async fn join(&mut self) -> Result<(), Error> {
+        Ok(self
+            .handle
+            .take()
+            .ok_or("Scheduler already shutdown")?
+            .await?)
+    }
+}
+
+struct Scheduler<T: Clone + Send + Sync> {
+    job_map: HashMap<String, JobId>,
+    scheduler: Option<CronScheduler<Utc>>,
+    handle: Option<JoinHandle<()>>,
+
+    ctx: Context<T>,
+    receiver: mpsc::UnboundedReceiver<SchedulerTaskMessage<T>>,
+    shutdown: CancellationToken,
+}
+
+impl<T: Clone + Send + Sync + 'static> Scheduler<T> {
+    fn new(
+        ctx: Context<T>,
+        receiver: mpsc::UnboundedReceiver<SchedulerTaskMessage<T>>,
+        shutdown: CancellationToken,
+    ) -> Self {
         let (scheduler, service) = CronScheduler::<Utc>::launch(tokio::time::sleep);
 
-        self.scheduler = Some(scheduler);
-        self.service = Some(Box::pin(service));
-    }
-    // create the scheduler and service if it doesn't exist yet and then return it
-    fn get_scheduler(&mut self) -> &mut CronScheduler<Utc> {
-        if self.scheduler.is_none() {
-            self.init();
-        }
-
-        self.scheduler.as_mut().expect("we just assigned it")
-    }
-
-    fn start(&mut self) -> tokio::task::JoinHandle<()> {
-        if self.scheduler.is_none() {
-            self.init();
-        }
-
-        tokio::spawn(self.service.take().unwrap())
-    }
-
-    fn started(&self) -> bool {
-        self.scheduler.is_some() && self.service.is_none()
-    }
-
-    async fn stop(&mut self, jobs: Vec<JobId>) {
-        self.service.take();
-
-        let Some(mut scheduler) = self.scheduler.take() else {
-            return;
-        };
-
-        for job in jobs {
-            scheduler.remove(job).await;
-        }
-    }
-}
-
-pub struct Scheduler {
-    job_map: HashMap<String, JobId>,
-    runner: Runner,
-}
-
-impl Scheduler {
-    #[expect(
-        clippy::new_without_default,
-        reason = "we might have constructor arguments in the future, having a Default implementation feels incorrect"
-    )]
-    pub fn new() -> Self {
         Self {
+            ctx,
+            receiver,
+            shutdown,
+
             job_map: HashMap::new(),
-            runner: Runner {
-                scheduler: None,
-                service: None,
-            },
+            scheduler: Some(scheduler),
+            handle: Some(tokio::spawn(service)),
         }
     }
 
-    pub async fn enable_task<T: Clone + Send + Sync + 'static>(
-        &mut self,
-        ctx: Context<T>,
-        task: TaskHandler<T>,
-    ) {
-        let job = Job::<Utc>::cron_schedule(task.cron.clone());
-        let job_name = task.name.clone();
+    pub async fn enable_task(&mut self, handler: TaskHandler<T>) {
+        let local_ctx = self.ctx.clone();
+
+        let job = Job::<Utc>::cron_schedule(handler.cron.clone());
+        let job_name = handler.name.clone();
         let job_id = self
-            .runner
-            .get_scheduler()
+            .scheduler
+            .as_mut()
+            .unwrap()
             .insert(job, move |_id| {
-                let job_ctx = ctx.clone();
-                let job_handler = task.clone();
+                let job_ctx = local_ctx.clone();
+                let job_handler = handler.clone();
 
                 tokio::spawn(async move {
                     if let Err(err) = job_handler.run(TaskContext::from_context(job_ctx)).await {
@@ -109,31 +129,50 @@ impl Scheduler {
             return;
         };
 
-        self.runner.get_scheduler().remove(job_id).await;
+        self.scheduler.as_mut().unwrap().remove(job_id).await;
     }
 
-    pub async fn run<T: Clone + Send + Sync + 'static>(
-        &mut self,
-        ctx: Context<T>,
-        tasks: Vec<&TaskHandler<T>>,
-    ) -> tokio::task::JoinHandle<()> {
-        assert!(
-            !self.runner.started(),
-            "Scheduler::run called twice, scheduler is already running"
-        );
-
-        for task in tasks {
-            self.enable_task(ctx.clone(), task.clone()).await;
+    async fn run(&mut self) {
+        loop {
+            tokio::select! {
+                Some(msg) = self.receiver.recv() => {
+                    match msg {
+                        SchedulerTaskMessage::Start(tasks) => {
+                            for task in tasks {
+                                self.enable_task(task.clone()).await;
+                            }
+                        },
+                        SchedulerTaskMessage::Enable(task) => self.enable_task(task).await,
+                        SchedulerTaskMessage::Disable(name) => self.disable_task(&name).await,
+                    }
+                },
+                () = self.shutdown.cancelled() => break,
+            }
         }
 
-        self.runner.start()
-    }
+        // drain the jobs from the job map and also take the scheduler
+        // removing the jobs, and taking the scheduler from the runner should
+        // cause the scheduler to be dropped and thus stop
+        //
+        // NOTE: Separate scope so we drop correctly after removing jobs
+        {
+            let Some(mut scheduler) = self.scheduler.take() else {
+                tracing::warn!("Scheduler already removed");
+                return;
+            };
 
-    // drain the jobs from the job map and also take the scheduler
-    // removing the jobs, and taking the scheduler from the runner should
-    // cause the scheduler to be dropped and thus stop
-    pub async fn shutdown(&mut self) {
-        let jobs: Vec<JobId> = self.job_map.drain().map(|(_k, v)| v).collect();
-        self.runner.stop(jobs).await;
+            for (_, job) in self.job_map.drain() {
+                scheduler.remove(job).await;
+            }
+        }
+
+        let Some(handle) = self.handle.take() else {
+            tracing::warn!("CronScheduler already shutdown");
+            return;
+        };
+
+        if let Err(err) = handle.await {
+            tracing::warn!("Error joining CronScheduler: {}", err);
+        }
     }
 }

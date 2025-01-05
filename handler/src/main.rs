@@ -123,7 +123,7 @@ async fn main() -> Result<(), Error> {
         db,
         registry: Arc::clone(&registry),
     });
-    let (mut framework, sender) = Framework::new(
+    let mut framework = Framework::new(
         registry,
         client,
         app_id,
@@ -163,6 +163,7 @@ async fn main() -> Result<(), Error> {
 
     framework.start().await?;
 
+    let sender = framework.sender();
     let main_handle = tokio::spawn(async move {
         loop {
             let Some(message) = amqp.recv().await else {
@@ -184,7 +185,7 @@ async fn main() -> Result<(), Error> {
                 "event received",
             );
 
-            if let Err(err) = sender.send((meta, event)) {
+            if let Err(err) = sender.send(meta, event) {
                 tracing::error!("error queueing event: {}", err);
             };
         }

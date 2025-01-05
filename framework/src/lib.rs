@@ -7,7 +7,6 @@ use twilight_model::gateway::payload::incoming::InteractionCreate;
 pub use context::{Context, EventContext, InteractionContext};
 pub use framework::Framework;
 pub use module::{builder::ModuleBuilder, registry::Registry, Module};
-pub use scheduler::Scheduler;
 
 pub mod context;
 pub mod framework;
