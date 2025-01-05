@@ -14,7 +14,7 @@ export DISCORD_GATEWAY_QUEUE=http://$(get_container_ip "tulpje-gateway_queue-1")
 export REDIS_URL=redis://$(get_container_ip "tulpje-valkey-1"):6379
 export DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@$(get_container_ip "tulpje-postgres-1")/${POSTGRES_DB}"
 
-export SHARD_ID=1
-export HANDLER_ID=1
+export SHARD_ID=0
+export HANDLER_ID=0
 
 exec "$@"
