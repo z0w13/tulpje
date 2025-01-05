@@ -4,7 +4,6 @@ use twilight_model::application::command::Command;
 
 use super::super::context::CommandContext;
 
-use super::InteractionHandler;
 use crate::Error;
 
 pub(crate) type CommandFunc<T> =
@@ -15,12 +14,6 @@ pub struct CommandHandler<T: Clone + Send + Sync> {
     pub module: String,
     pub definition: Command,
     pub func: CommandFunc<T>,
-}
-
-impl<T: Clone + Send + Sync> InteractionHandler<String> for CommandHandler<T> {
-    fn key(&self) -> String {
-        self.definition.name.clone()
-    }
 }
 
 impl<T: Clone + Send + Sync> CommandHandler<T> {
