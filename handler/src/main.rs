@@ -16,13 +16,13 @@ use sqlx::{
 use tracing::log::LevelFilter;
 use twilight_gateway::Event;
 
-use tulpje_framework::{Error, Framework, Metadata, Registry};
+use tulpje_framework::{Framework, Metadata, Registry};
 use tulpje_shared::DiscordEvent;
 
 use config::Config;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() {
     // load .env into environment vars, ignore if not found
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => {
@@ -207,8 +207,6 @@ async fn main() -> Result<(), Error> {
 
     framework.join().await.expect("error joining framework");
     main_handle.await.expect("error joining main_handle");
-
-    Ok(())
 }
 
 fn parse_delivery(message: Vec<u8>) -> Result<(Metadata, Event), Box<dyn std::error::Error>> {

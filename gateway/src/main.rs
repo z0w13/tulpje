@@ -20,13 +20,13 @@ mod shard_state;
 use config::Config;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     // load .env into environment vars, ignore if not found
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => {
             tracing::warn!("no .env file found");
         }
-        result => result?,
+        result => result.expect("error loading .env file"),
     };
 
     // parse TASK_SLOT env var if it exists and use it for the shard id
@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // create config from environment vars
-    let config = Config::from_env()?;
+    let config = Config::from_env().expect("error loading config from env");
 
     // set-up logging
     tracing_subscriber::fmt::init();
@@ -84,7 +84,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
-    reqwest::get(config.discord_gateway_queue).await?;
+    reqwest::get(config.discord_gateway_queue)
+        .await
+        .expect("error waiting for gateway queue");
 
     // start main loop
     tracing::info!("starting main loop...");

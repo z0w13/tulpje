@@ -1,5 +1,5 @@
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     // load .env into environment vars, ignore if not found
     match dotenvy::dotenv().map(|_| ()) {
         Err(err) if err.not_found() => eprintln!("warn: no .env file found"),
@@ -20,9 +20,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let client = twilight_http::Client::builder().token(token).build();
-    let connection_info = client.gateway().authed().await?.model().await?;
+    let connection_info = client
+        .gateway()
+        .authed()
+        .await
+        .expect("error fetching bot connection info")
+        .model()
+        .await
+        .expect("error decoding bot connection info");
 
     println!("{}", connection_info.shards);
-
-    Ok(())
 }
