@@ -1,8 +1,3 @@
-#[cfg(all(feature = "amqp-amqprs", feature = "amqp-lapin"))]
-compile_error!(
-    "can only pick one amqp implementation, `amqp-amqprs` and `amqp-lapin` are mutually exclusive"
-);
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // vergen
     vergen_gitcl::Emitter::default()

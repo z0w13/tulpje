@@ -11,20 +11,13 @@ export RUSTFLAGS="-Dwarnings"
 
 HOST_TARGET="$(rustc --version --verbose | pcregrep -o1 'host: (.*)')"
 
-FEAT_PERMUTATIONS=(
-  "amqp-amqprs"
-  "amqp-lapin"
-)
-
 TARGETS=("x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl")
 
 echo "* auditing dependencies..."
 cargo audit
 
-for permutation in ${FEAT_PERMUTATIONS[@]}; do
-  echo "* running clippy ($permutation)..."
-  cargo clippy --no-default-features -F "$permutation" --quiet
-done
+echo "* running clippy..."
+cargo clippy --quiet
 
 for target in ${TARGETS[@]}; do
   # clean up the target/release folder otherwise some weird issues happen with GLIBC and serde
@@ -36,13 +29,11 @@ for target in ${TARGETS[@]}; do
     rustBin=cross
   fi
 
-  for permutation in ${FEAT_PERMUTATIONS[@]}; do
-    echo "* building binaries ($target, $permutation)..."
-    $rustBin build --target=$target --no-default-features -F "$permutation" --release --quiet
+  echo "* building binaries ($target)..."
+  $rustBin build --target=$target --release --quiet
 
-    echo "* running tests ($target, $permutation)..."
-    $rustBin test --target=$target --no-default-features -F "$permutation" --release --quiet
-  done
+  echo "* running tests ($target)..."
+  $rustBin test --target=$target --release --quiet
 done
 
 echo "* building containers..."
