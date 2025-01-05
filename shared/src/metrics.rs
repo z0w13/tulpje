@@ -23,7 +23,11 @@ pub fn install(
     proc_collector.describe();
 
     // create and run metrics manager
-    MetricsManager::new(process_name, redis, proc_collector).run();
+    tokio::spawn(async {
+        MetricsManager::new(process_name, redis, proc_collector)
+            .run()
+            .await;
+    });
 
     Ok(())
 }
@@ -34,6 +38,17 @@ pub struct Metrics {
 
     pub cpu_usage: f32,
     pub memory_usage: u64,
+}
+
+impl Metrics {
+    fn new(name: String) -> Self {
+        Self {
+            name,
+
+            cpu_usage: 0.,
+            memory_usage: 0,
+        }
+    }
 }
 
 impl ToRedisArgs for Metrics {
@@ -65,9 +80,8 @@ impl FromRedisValue for Metrics {
     }
 }
 
-#[derive(Clone)]
 struct MetricsManager {
-    name: String,
+    metrics: Metrics,
 
     interval_ms: u64,
     prev_cpu_ms: u64,
@@ -83,7 +97,7 @@ impl MetricsManager {
         collector: ProcessCollector,
     ) -> Self {
         Self {
-            name,
+            metrics: Metrics::new(name),
 
             interval_ms: 10_000,
             prev_cpu_ms: 0,
@@ -93,17 +107,13 @@ impl MetricsManager {
         }
     }
 
-    fn run(&self) {
-        let mut manager = self.clone();
-
-        tokio::spawn(async move {
-            loop {
-                if let Err(err) = manager.update().await {
-                    tracing::error!("error updating shard metrics: {}", err);
-                }
-                tokio::time::sleep(Duration::from_millis(manager.interval_ms)).await;
+    async fn run(&mut self) {
+        loop {
+            if let Err(err) = self.update().await {
+                tracing::error!("error updating shard metrics: {}", err);
             }
-        });
+            tokio::time::sleep(Duration::from_millis(self.interval_ms)).await;
+        }
     }
 
     #[expect(
@@ -113,31 +123,25 @@ impl MetricsManager {
     async fn update(&mut self) -> Result<(), Box<dyn Error>> {
         self.collector.collect();
 
+        // collect data from metrics_process collector for local use
+        // ugly double work, but it works
         let metrics = metrics_process::collector::collect();
 
-        let memory_usage = metrics.resident_memory_bytes.unwrap_or(0);
         let curr_cpu_ms = (metrics.cpu_seconds_total.unwrap_or(0.) * 1000.) as u64;
-
         // NOTE: these would only overflow if either has a number over 285_000 years
         //       and if we're running or waiting for that long, there's other concerns
         let interval_ms_float = self.interval_ms as f32;
-        let cpu_usage = (curr_cpu_ms - self.prev_cpu_ms) as f32 / interval_ms_float;
         self.prev_cpu_ms = curr_cpu_ms;
+
+        // Update metrics
+        self.metrics.cpu_usage = (curr_cpu_ms - self.prev_cpu_ms) as f32 / interval_ms_float;
+        self.metrics.memory_usage = metrics.resident_memory_bytes.unwrap_or(0);
 
         // TODO: Implement IDs for the instances
         self.redis
             .get()
             .await?
-            .hset::<&str, &str, Metrics, ()>(
-                "tulpje:metrics",
-                &self.name,
-                Metrics {
-                    name: self.name.clone(),
-
-                    cpu_usage,
-                    memory_usage,
-                },
-            )
+            .hset::<&str, &str, &Metrics, ()>("tulpje:metrics", &self.metrics.name, &self.metrics)
             .await?;
 
         Ok(())
