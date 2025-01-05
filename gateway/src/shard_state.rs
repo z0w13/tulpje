@@ -42,15 +42,13 @@ impl ShardManager {
     }
 
     async fn save_shard(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let json_shard = serde_json::to_string(&self.shard)?;
-
         self.redis
             .get()
             .await?
-            .hset::<&str, String, String, ()>(
+            .hset::<&str, String, &ShardState, ()>(
                 "tulpje:shard_status",
                 self.shard.shard_id.to_string(),
-                json_shard,
+                &self.shard,
             )
             .await
             .map_err(|err| err.into())

@@ -52,18 +52,10 @@ pub async fn get_all_shard_stats(
     Ok(redis
         .get()
         .await?
-        .hgetall::<&str, HashMap<String, String>>("tulpje:shard_status")
+        .hgetall::<&str, HashMap<String, ShardState>>("tulpje:shard_status")
         .await?
-        .into_iter()
-        .filter_map(
-            |(id, json)| match serde_json::from_str::<ShardState>(&json) {
-                Err(err) => {
-                    tracing::warn!("error decoding shard state {}: {}", id, err);
-                    None
-                }
-                Ok(state) => Some((state.shard_id, state)),
-            },
-        )
+        .into_values()
+        .map(|state| (state.shard_id, state))
         .collect())
 }
 
@@ -268,16 +260,11 @@ pub async fn get_process_stats(
     redis: &bb8::Pool<RedisConnectionManager>,
     name: &str,
 ) -> Result<Option<Metrics>, Error> {
-    let json = redis
+    Ok(redis
         .get()
         .await?
-        .hget::<&str, &str, Option<String>>("tulpje:metrics", name)
-        .await?;
-
-    Ok(match json {
-        Some(json) => Some(serde_json::from_str::<Metrics>(&json)?),
-        None => None,
-    })
+        .hget::<&str, &str, Option<Metrics>>("tulpje:metrics", name)
+        .await?)
 }
 
 pub async fn get_all_process_stats(
@@ -286,18 +273,10 @@ pub async fn get_all_process_stats(
     Ok(redis
         .get()
         .await?
-        .hgetall::<&str, HashMap<String, String>>("tulpje:metrics")
+        .hgetall::<&str, HashMap<String, Metrics>>("tulpje:metrics")
         .await?
-        .into_iter()
-        .filter_map(
-            |(name, json)| match serde_json::from_str::<Metrics>(&json) {
-                Err(err) => {
-                    tracing::warn!("error decoding metrics {}: {}", name, err);
-                    None
-                }
-                Ok(state) => Some((state.name.clone(), state)),
-            },
-        )
+        .into_values()
+        .map(|metrics| (metrics.name.clone(), metrics))
         .collect())
 }
 

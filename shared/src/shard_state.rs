@@ -1,5 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use bb8_redis::redis::{self, FromRedisValue, ToRedisArgs};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -43,6 +44,35 @@ impl ShardState {
         let heartbeat_interval_with_wiggle_room =
             ((f64::from(self.heartbeat_interval) / 1000.) * 1.2) as u64;
         self.up && now - self.last_heartbeat < heartbeat_interval_with_wiggle_room
+    }
+}
+
+impl ToRedisArgs for ShardState {
+    fn write_redis_args<W>(&self, out: &mut W)
+    where
+        W: ?Sized + redis::RedisWrite,
+    {
+        out.write_arg(&serde_json::to_vec(self).expect("error serialising json"));
+    }
+}
+
+impl FromRedisValue for ShardState {
+    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
+        match *v {
+            redis::Value::BulkString(ref bytes) => match serde_json::from_slice(bytes) {
+                Ok(rv) => Ok(rv),
+                Err(err) => Err(redis::RedisError::from((
+                    redis::ErrorKind::TypeError,
+                    "error deserializing json",
+                    format!("{err}"),
+                ))),
+            },
+            _ => Err(redis::RedisError::from((
+                redis::ErrorKind::TypeError,
+                "invalid response type for json",
+                format!("{:?}", v),
+            ))),
+        }
     }
 }
 

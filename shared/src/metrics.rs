@@ -1,6 +1,9 @@
 use std::{error::Error, time::Duration};
 
-use bb8_redis::{redis::AsyncCommands as _, RedisConnectionManager};
+use bb8_redis::{
+    redis::{self, AsyncCommands as _, FromRedisValue, ToRedisArgs},
+    RedisConnectionManager,
+};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_process::Collector as ProcessCollector;
 use serde::{Deserialize, Serialize};
@@ -31,6 +34,35 @@ pub struct Metrics {
 
     pub cpu_usage: f32,
     pub memory_usage: u64,
+}
+
+impl ToRedisArgs for Metrics {
+    fn write_redis_args<W>(&self, out: &mut W)
+    where
+        W: ?Sized + redis::RedisWrite,
+    {
+        out.write_arg(&serde_json::to_vec(self).expect("error serialising json"));
+    }
+}
+
+impl FromRedisValue for Metrics {
+    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
+        match *v {
+            redis::Value::BulkString(ref bytes) => match serde_json::from_slice(bytes) {
+                Ok(rv) => Ok(rv),
+                Err(err) => Err(redis::RedisError::from((
+                    redis::ErrorKind::TypeError,
+                    "error deserializing json",
+                    format!("{err}"),
+                ))),
+            },
+            _ => Err(redis::RedisError::from((
+                redis::ErrorKind::TypeError,
+                "invalid response type for json",
+                format!("{:?}", v),
+            ))),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -92,18 +124,20 @@ impl MetricsManager {
         let cpu_usage = (curr_cpu_ms - self.prev_cpu_ms) as f32 / interval_ms_float;
         self.prev_cpu_ms = curr_cpu_ms;
 
-        let json_metrics = serde_json::to_string(&Metrics {
-            name: self.name.clone(),
-
-            cpu_usage,
-            memory_usage,
-        })?;
-
         // TODO: Implement IDs for the instances
         self.redis
             .get()
             .await?
-            .hset::<&str, &str, String, ()>("tulpje:metrics", &self.name, json_metrics)
+            .hset::<&str, &str, Metrics, ()>(
+                "tulpje:metrics",
+                &self.name,
+                Metrics {
+                    name: self.name.clone(),
+
+                    cpu_usage,
+                    memory_usage,
+                },
+            )
             .await?;
 
         Ok(())
