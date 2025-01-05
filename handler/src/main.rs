@@ -133,12 +133,14 @@ async fn main() -> Result<(), Error> {
                 tracing::info!("registering global commands");
                 ctx.interaction()
                     .set_global_commands(&ctx.services.registry.global_commands())
-                    .await?;
+                    .await
+                    .map_err(|err| format!(".set_global_commands() error: {}", err))?;
 
                 // register guild commands
                 let guild_modules = modules::core::db_all_guild_modules(&ctx.services.db)
                     .await
-                    .expect("error fetching guild modules");
+                    .map_err(|err| format!("error fetching guild modules: {}", err))?;
+
                 for (guild_id, modules) in guild_modules {
                     if let Err(err) = modules::core::set_guild_commands_for_guild(
                         &modules,
