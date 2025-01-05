@@ -1,7 +1,13 @@
 [package]
 name = "tulpje-framework"
 edition = "2021"
+publish = false # for now
+
 version.workspace = true
+description.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 tulpje-shared = { path = "../shared" }

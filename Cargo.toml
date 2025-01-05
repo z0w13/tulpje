@@ -7,6 +7,10 @@ resolver = "2"
 
 [workspace.package]
 version = "0.10.0"
+description = "Multi-purpose discord bot & framework"
+homepage = "https://github.com/z0w13/tulpje"
+repository = "https://github.com/z0w13/tulpje"
+license = "CC-BY-NC-SA-4.0"
 
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks
