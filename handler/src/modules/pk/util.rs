@@ -1,6 +1,6 @@
 use std::str::FromStr as _;
 
-use pkrs::model::Member;
+use pkrs_fork::model::Member;
 use tulpje_shared::color;
 
 pub(crate) fn get_member_name(member: &Member) -> String {

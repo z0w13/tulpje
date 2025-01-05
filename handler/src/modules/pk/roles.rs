@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use pkrs::model::PkId;
+use pkrs_fork::{client::PkClient, model::PkId};
 use tracing::debug;
 use twilight_model::guild::Guild;
 use twilight_model::id::marker::RoleMarker;
@@ -39,7 +39,7 @@ async fn get_desired_roles(
     system: &PkId,
     token: String,
 ) -> Result<HashMap<String, MemberRole>, Error> {
-    let pk = pkrs::client::PkClient {
+    let pk = PkClient {
         token,
         ..Default::default()
     };

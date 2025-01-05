@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use pkrs::model::PkId;
+use pkrs_fork::{client::PkClient, model::PkId};
 use serde_either::StringOrStruct;
 use tracing::error;
 use twilight_http::Client;
@@ -18,7 +18,7 @@ use crate::context::CommandContext;
 use crate::modules::pk::db::{get_guild_settings_for_id, ModPkGuildRow};
 
 async fn get_desired_fronters(system: &PkId, token: String) -> Result<HashSet<String>, Error> {
-    let pk = pkrs::client::PkClient {
+    let pk = PkClient {
         token,
         ..Default::default()
     };

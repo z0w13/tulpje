@@ -1,4 +1,4 @@
-use pkrs::model::PkId;
+use pkrs_fork::{client::PkClient, model::PkId};
 use tracing::debug;
 
 use tulpje_framework::Error;
@@ -43,7 +43,7 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     )
     .await?;
 
-    let pk = pkrs::client::PkClient {
+    let pk = PkClient {
         token: token.unwrap_or_default(),
         ..Default::default()
     };

@@ -1853,9 +1853,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
-name = "pkrs"
+name = "pkrs-fork"
 version = "0.4.0"
-source = "git+https://github.com/z0w13/pkrs.git#c440be807ca3645bf303b43d0e79d2d82987eebc"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11ce377455a3a243c58fa3aa432b549c1be155d949859a8a6ced6342001cdfeb"
 dependencies = [
  "reqwest",
  "serde",
@@ -3255,7 +3256,7 @@ dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
  "num-format",
- "pkrs",
+ "pkrs-fork",
  "regex",
  "reqwest",
  "serde",
