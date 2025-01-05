@@ -21,7 +21,7 @@ echo "* shard count: $SHARD_COUNT"
 echo "* handler count: $HANDLER_COUNT"
 echo "* writing secrets from .env to file..."
 
-for L in (cat .env | grep -vE '^(#|$)');
+for L in (cat .env | grep -vE '^(#|SHARD_COUNT|HANDLER_COUNT|$)');
   set -l varName (string split -f1 "=" "$L")
   # substitute bash style expansion with fish style
   set -l varVal (string split -f2 -m1 "=" "$L" | sed 's/${/{$/g')
