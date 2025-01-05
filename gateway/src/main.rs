@@ -10,7 +10,7 @@ use twilight_model::gateway::{
     OpCode,
 };
 
-use tulpje_shared::DiscordEvent;
+use tulpje_shared::{version, DiscordEvent};
 
 mod amqp;
 mod config;
@@ -167,15 +167,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_presence() -> UpdatePresencePayload {
-    let state = format!(
-        " Version: {} ({}{})",
-        env!("CARGO_PKG_VERSION"),
-        env!("VERGEN_GIT_SHA"),
-        match env!("VERGEN_GIT_DIRTY") {
-            "true" => "-dirty",
-            _ => "",
-        }
-    );
+    let state = format!(" Version: {}", version!());
 
     let mut activity: Activity = MinimalActivity {
         kind: twilight_model::gateway::presence::ActivityType::Custom,

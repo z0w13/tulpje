@@ -58,6 +58,21 @@ pub fn is_pk_proxy(application_id: &Option<Id<ApplicationMarker>>) -> bool {
     application_id.is_some_and(|id| id.get() == 466378653216014359) // PluralKit Application ID
 }
 
+#[macro_export]
+macro_rules! version {
+    () => {
+        format!(
+            "{} ({}{})",
+            env!("CARGO_PKG_VERSION"),
+            env!("VERGEN_GIT_SHA"),
+            match env!("VERGEN_GIT_DIRTY") {
+                "true" => "-dirty",
+                _ => "",
+            }
+        )
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

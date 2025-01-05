@@ -15,7 +15,7 @@ use twilight_util::builder::{
 };
 
 use tulpje_framework::{handler_func, Error, Module, ModuleBuilder};
-use tulpje_shared::{metrics::Metrics, shard_state::ShardState};
+use tulpje_shared::{metrics::Metrics, shard_state::ShardState, version};
 
 use crate::context::{CommandContext, Services};
 
@@ -106,21 +106,7 @@ pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Error> {
     let embed = EmbedBuilder::new()
         .title("Tulpje Discord Bot")
         .url("https://github.com/z0w13/tulpje")
-        .field(
-            EmbedFieldBuilder::new(
-                "Version",
-                format!(
-                    "{} ({}{})",
-                    env!("CARGO_PKG_VERSION"),
-                    env!("VERGEN_GIT_SHA"),
-                    match env!("VERGEN_GIT_DIRTY") {
-                        "true" => "-dirty",
-                        _ => "",
-                    },
-                ),
-            )
-            .inline(),
-        )
+        .field(EmbedFieldBuilder::new("Version", version!()).inline())
         .field(
             EmbedFieldBuilder::new("Servers", guild_count.to_formatted_string(&Locale::en))
                 .inline(),
