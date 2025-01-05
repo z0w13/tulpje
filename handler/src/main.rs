@@ -130,6 +130,12 @@ async fn main() -> Result<(), Error> {
         services,
         Some(|ctx| {
             Box::pin(async move {
+                // only register commands on the "primary" handler to avoid
+                // sending too many requests to discord
+                if ctx.services.handler_id != 0 {
+                    return Ok(());
+                }
+
                 tracing::info!("registering global commands");
                 ctx.interaction()
                     .set_global_commands(&ctx.services.registry.global_commands())
