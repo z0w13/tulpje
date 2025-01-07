@@ -20,6 +20,9 @@ echo "* running clippy..."
 cargo clippy --quiet
 
 for target in ${TARGETS[@]}; do
+  # clean up the target/release folder otherwise some weird issues happen with GLIBC and serde
+  rm -rf target/release
+
   if [[ "$target" = "$HOST_TARGET" ]]; then
     rustBin=cargo
   else
