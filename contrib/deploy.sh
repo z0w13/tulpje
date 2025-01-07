@@ -19,14 +19,6 @@ fi
 IMAGE_SUFFIX=":$(date +%s)"
 export IMAGE_SUFFIX
 
-# Request shard count from discord if we haven't specified it in env
-if [[ -z "${SHARD_COUNT:-}" ]]; then
-  echo " [-] Shard count not found in environment, fetching from Discord..."
-
-  SHARD_COUNT="$(cargo run -p tulpje-manager)"
-  export SHARD_COUNT
-fi
-
 echo " [-] Writing secrets from .env to file..."
 rm -f _secrets/*
 grep -vE '^(#|$)' .env | while IFS= read -r L; do
@@ -43,6 +35,17 @@ grep -vE '^(#|$)' .env | while IFS= read -r L; do
   echo "     - ${varName}"
   echo "${!varName}" > "_secrets/$(echo "$varName" | tr '[:upper:]' '[:lower:]')"
 done
+
+# Request shard count from discord if we haven't specified it in env
+if [[ -z "${SHARD_COUNT:-}" ]]; then
+  echo " [-] Shard count not found in environment, fetching from Discord..."
+
+  SHARD_COUNT="$(cargo run -p tulpje-manager)"
+  export SHARD_COUNT
+fi
+
+# Default value for handler count
+export HANDLER_COUNT="${HANDLER_COUNT:-1}"
 
 echo " [*] Shard count: $SHARD_COUNT"
 echo " [*] Handler count: $HANDLER_COUNT"
