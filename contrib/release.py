@@ -258,12 +258,30 @@ RELEASE_FILENAME_MATCHLIST_WORKSPACE = {
 
 @dataclass
 class ReleaseInfo:
-    crates: list[CrateInfo]
+    crates: tuple[CrateInfo, ...]
 
     prev_version: Version
     curr_version: Version
 
+    commits: tuple[CommitInfo, ...]
     changelog: str
+    should_release: bool
+
+    has_feature_commit: bool
+    has_breaking_commit: bool
+    is_breaking_semver_checks: bool
+
+    def breaking_with_reason(self) -> str:
+        if not self.is_breaking:
+            return "False"
+        elif self.has_breaking_commit:
+            return "True (Breaking Commit)"
+        elif self.is_breaking_semver_checks:
+            return "True (`cargo semver-checks` failed)"
+
+        raise Exception(
+            "did we add a new conditional for breaking changes, shouldn't reach this"
+        )
 
     @property
     def changed(self) -> bool:
@@ -281,6 +299,10 @@ class ReleaseInfo:
             return ""
 
     @property
+    def is_breaking(self) -> bool:
+        return self.has_breaking_commit or self.is_breaking_semver_checks
+
+    @property
     def dir(self) -> str:
         return f"{self.crates[0].path}" if self.single_crate else ""
 
@@ -291,6 +313,10 @@ class ReleaseInfo:
     @property
     def curr_tag(self) -> str:
         return f"{self.prefix}v{self.curr_version}"
+
+    @property
+    def commit_count(self) -> int:
+        return len(self.commits)
 
     @property
     def changelog_path(self) -> str:
@@ -368,39 +394,27 @@ def gather_release(
     has_breaking_change_semver_checks, _ = cargo_semver_checks(
         latest_tag, crates[0].name if independent_crate else None
     )
-    create_release = should_create_release(commits, file_whitelist, prefix)
+    should_release = should_create_release(commits, file_whitelist, prefix)
     old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
     new_version = old_version.bumped(
         has_feature_commit,
         has_breaking_change_commit or has_breaking_change_semver_checks,
     )
-    new_tag = f"{prefix}-v{new_version}" if independent_crate else f"v{new_version}"
 
-    print(f"Crate: {crates[0].name if independent_crate else "root"}")
-    print(f" [*] Latest tag: {latest_tag}")
-    print(f" [*] Commits since: {len(commits)}")
-    print(f" [*] Feature: {has_feature_commit}")
-    print(f" [*] Breaking change (commit): {has_breaking_change_commit}")
-    print(f" [*] Breaking change (semver-checks): {has_breaking_change_semver_checks}")
-    print(f" [*] Create release: {create_release}")
-    print(f" [*] Version: {old_version} -> {new_version}")
-    print(f" [*] Tag: {latest_tag} -> {new_tag}")
-    print(f" [*] Commits ({len(commits)}):")
-    for commit in commits:
-        print(f"    - {commit.raw_subject} ({commit.sha[:8]})")
-
-    print(" [-] Generating changelog...")
     new_changelog = create_changelog_update(
         prefix, new_version, independent_crate, independent_crates
     )
-    print(" [*] Changelog Additions: ")
-    print(new_changelog)
 
     return ReleaseInfo(
-        crates=crates,
+        crates=tuple(crates),
+        commits=tuple(commits),
         prev_version=old_version,
         curr_version=new_version,
         changelog=new_changelog,
+        should_release=should_release,
+        has_feature_commit=has_feature_commit,
+        has_breaking_commit=has_breaking_change_commit,
+        is_breaking_semver_checks=has_breaking_change_semver_checks,
     )
 
 
@@ -433,7 +447,7 @@ def lock_bump_version(crate: CrateInfo, new_version: Version):
 
 
 def workspace_bump_version(
-    manifest_path: str, crates: list[CrateInfo], version: Version
+    manifest_path: str, crates: Iterable[CrateInfo], version: Version
 ):
     with open(manifest_path) as manifest_file:
         manifest = tomlkit.load(manifest_file)
@@ -481,47 +495,97 @@ def workspace_update_dependency(
         tomlkit.dump(manifest, manifest_file)
 
 
-# TODO: Enforce independent crates not depending on workspace crates
-def do_releases(releases: list[ReleaseInfo], crates: list[CrateInfo], execute=False):
-    graph = TopologicalSorter(
-        {crate.name: crate.workspace_dependencies for crate in crates}
-    )
-    dependency_order = [*graph.static_order()]
-
+def sort_releases_by_deps(releases: list[ReleaseInfo]) -> list[ReleaseInfo]:
+    # crate.name -> ReleaseInfo
     releases_by_crate: dict[str, ReleaseInfo] = {}
     for release in releases:
         for crate in release.crates:
             releases_by_crate[crate.name] = release
 
-    releases_sorted_by_deps = []
+    # create an order of which dependencies to evaluate first
+    dependency_order = [
+        *TopologicalSorter(
+            {
+                crate.name: crate.workspace_dependencies
+                for release in releases
+                for crate in release.crates
+            }
+        ).static_order()
+    ]
+    releases_by_deps: list[ReleaseInfo] = []
     for crate in dependency_order:
         release = releases_by_crate[crate]
-        if not release in releases_sorted_by_deps:
-            releases_sorted_by_deps.append(releases_by_crate[crate])
+        if not release in releases_by_deps:
+            releases_by_deps.append(releases_by_crate[crate])
 
+    return releases_by_deps
+
+
+def process_dependencies(releases_by_deps: list[ReleaseInfo]) -> list[ReleaseInfo]:
+    releases_copy = [ReleaseInfo(**release.__dict__) for release in releases_by_deps]
+
+    # crate.name -> ReleaseInfo
+    releases_by_crate: dict[str, ReleaseInfo] = {}
+    for release in releases_copy:
+        for crate in release.crates:
+            releases_by_crate[crate.name] = release
+
+    # reverse dependency lookup
     depended_on_by: dict[str, set[CrateInfo]] = defaultdict(set)
-    for crate in crates:
-        for dependency in crate.workspace_dependencies:
-            depended_on_by[dependency].add(crate)
+    for release in releases_by_deps:
+        for crate in release.crates:
+            for dependency in crate.workspace_dependencies:
+                depended_on_by[dependency].add(crate)
 
-    print(" [-] Bumping versions..." + ("" if execute else " (dry-run)"))
-    for release in releases_sorted_by_deps:
-        if release.changed:
-            name = release.crates[0].name if release.single_crate else "tulpje"
-
-            if release.single_crate:
-                for crate in depended_on_by[release.crates[0].name]:
-                    crate_release = releases_by_crate[crate.name]
+    # iterate through dependencies and update versions where required
+    for release in releases_copy:
+        if release.should_release:
+            for crate in release.crates:
+                for depended_crate in depended_on_by[crate.name]:
+                    crate_release = releases_by_crate[depended_crate.name]
+                    crate_release.should_release = True
                     if not crate_release.changed:
                         crate_release.curr_version = crate_release.curr_version.bumped(
                             False, False
                         )
+    return [release for release in releases_copy if release.should_release]
 
-    if execute:
-        for release in releases_sorted_by_deps:
-            name = release.crates[0].name if release.single_crate else "tulpje"
-            print(f"     - {name}: {release.prev_version} -> {release.curr_version}")
 
+# TODO: Enforce independent crates not depending on workspace crates
+def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
+    if len(releases_by_deps) == 0:
+        print(" [*] Nothing to release")
+        return
+
+    for release in releases_by_deps:
+        print(f"Crate: {release.crates[0].name if release.single_crate else "root"}")
+        print(f" [*] Should release: {release.should_release}")
+        print(f" [*] Version: {release.prev_version} -> {release.curr_version}")
+        print(f" [*] Tag: {release.prev_tag} -> {release.curr_tag}")
+        print(f" [*] Commits since: {release.commit_count}")
+        print(f" [*] Feature: {release.has_feature_commit}")
+        print(f" [*] Breaking: {release.breaking_with_reason()}")
+        print(f" [*] Commits ({release.commit_count}):")
+        for commit in release.commits:
+            print(f"    - {commit.raw_subject} ({commit.sha[:8]})")
+
+    # reverse dependency lookup
+    depended_on_by: dict[str, set[CrateInfo]] = defaultdict(set)
+    for release in releases_by_deps:
+        for crate in release.crates:
+            for dependency in crate.workspace_dependencies:
+                depended_on_by[dependency].add(crate)
+
+    filtered_releases = [
+        release for release in releases_by_deps if release.should_release
+    ]
+
+    print(" [-] Bumping versions..." + ("" if execute else " (dry-run)"))
+    for release in filtered_releases:
+        name = release.crates[0].name if release.single_crate else "tulpje"
+        print(f"     - {name}: {release.prev_version} -> {release.curr_version}")
+
+        if execute:
             if release.single_crate:
                 manifest_bump_version(release.crates[0], release.curr_version)
             else:
@@ -535,7 +599,7 @@ def do_releases(releases: list[ReleaseInfo], crates: list[CrateInfo], execute=Fa
 
     print(" [-] Writing changelogs..." + ("" if execute else " (dry-run)"))
     if execute:
-        for release in releases:
+        for release in filtered_releases:
             with open(release.changelog_path) as changelog_file:
                 new_changelog = changelog_file.read().replace(
                     "##", f"{release.changelog}\n\n##", 1
@@ -561,7 +625,7 @@ def do_releases(releases: list[ReleaseInfo], crates: list[CrateInfo], execute=Fa
     commit_message = "release: " + (
         ", ".join(
             f"{release.crates[0].name if release.single_crate else "tulpje"} v{release.curr_version}"
-            for release in reversed(releases)
+            for release in reversed(filtered_releases)
         )
     )
     check_output_dry(
@@ -571,7 +635,7 @@ def do_releases(releases: list[ReleaseInfo], crates: list[CrateInfo], execute=Fa
     )
 
     print(" [-] Tagging release...")
-    for release in releases:
+    for release in filtered_releases:
         check_output_dry(
             None,
             execute,
@@ -582,11 +646,12 @@ def do_releases(releases: list[ReleaseInfo], crates: list[CrateInfo], execute=Fa
     check_output_dry(
         " [-] Pushing release...",
         execute,
-        ["git", "push", "origin", "main"] + [release.curr_tag for release in releases],
+        ["git", "push", "origin", "main"]
+        + [release.curr_tag for release in filtered_releases],
     )
 
     print(" [-] Creating GitHub releases...")
-    for release in releases:
+    for release in filtered_releases:
         check_output_dry(
             f"    - {release.crates[0].name if release.single_crate else "tulpje"}",
             execute,
@@ -599,7 +664,7 @@ def check_output_dry(title: Optional[str], execute: bool, *args, **kwargs):
     if title is not None:
         print(title)
 
-    print(("" if execute else "(dry-run) ") + "> " + " ".join(args[0]))
+    print("     " + ("" if execute else "(dry-run) ") + "> " + " ".join(args[0]))
 
     if execute:
         return process_run(*args, **kwargs)
@@ -624,7 +689,9 @@ def main(args: argparse.Namespace) -> int:
     releases = [
         gather_release([crate], independent_crates) for crate in independent_crates
     ] + [gather_release(grouped_crates, independent_crates)]
-    do_releases(releases, crates, args.execute)
+    releases_by_deps = sort_releases_by_deps(releases)
+    releasable = process_dependencies(releases_by_deps)
+    do_releases(releasable, args.execute)
 
     return 0
 
