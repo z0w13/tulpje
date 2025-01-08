@@ -372,7 +372,7 @@ def gather_release(
     old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
     new_version = old_version.bumped(
         has_feature_commit,
-        has_breaking_change_commit,
+        has_breaking_change_commit or has_breaking_change_semver_checks,
     )
     new_tag = f"{prefix}-v{new_version}" if independent_crate else f"v{new_version}"
 
