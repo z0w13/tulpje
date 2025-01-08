@@ -315,7 +315,7 @@ def create_changelog_update(
     prefix: str,
     new_version: Version,
     independent_crate: bool,
-    independent_crates: set[CrateInfo],
+    independent_crates: Iterable[CrateInfo],
 ) -> str:
     if independent_crate:
         extra_args = ["--include-path", f"{prefix}/**/*"]
