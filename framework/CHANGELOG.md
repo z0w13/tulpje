@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.1] - 2025-01-08
+
+### Added
+
+ - Add CHANGELOG.md
+
+### Changed
+
+ - Version tulpje-framework separately from the bot
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * docs: add CHANGELOG.md ([`0d202e7`](https://github.com/z0w13/tulpje/commit/0d202e7782b924955891541eb824b1026104be14))
+ * chore: version tulpje-framework separately from the bot ([`916f1ff`](https://github.com/z0w13/tulpje/commit/916f1ff26bfd4687953f5435c61005f3cc5b444e))
+</details>
+
 ## [0.11.0] - 2025-01-05
 
 ### Breaking Changes

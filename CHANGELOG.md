@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2025-01-08
+
+### Breaking Changes
+
+ - Move sqlx data to the tulpje-handler crate as they're part of that anyway
+
+### Added
+
+ - Add release tooling
+ - Add CHANGELOG.md
+
+### Fixed
+
+ - Set a default for HANDLER_COUNT and don't override SHARD_COUNT from .env
+ - Revert "don't clear target/release, unneeded after removal of amqp feature"
+ - Fix crash when unable to parse gateway payload, log error instead
+ - Use fork of pkrs that's actually published to crates.io
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * build: add release tooling ([`417cbcf`](https://github.com/z0w13/tulpje/commit/417cbcf0fbd08b3c05a4014ca7e883b9dce7cf54))
+ * docs: add CHANGELOG.md ([`0d202e7`](https://github.com/z0w13/tulpje/commit/0d202e7782b924955891541eb824b1026104be14))
+ * fix(build): set a default for HANDLER_COUNT and don't override SHARD_COUNT from .env ([`67612cc`](https://github.com/z0w13/tulpje/commit/67612cc65241772bcdd745b1797d1ca3b4b409fa))
+ * fix: revert "don't clear target/release, unneeded after removal of amqp feature" ([`1043929`](https://github.com/z0w13/tulpje/commit/1043929ac418d522212a067397a33317cee7ae5b))
+ * fix(handler): fix crash when unable to parse gateway payload, log error instead ([`ca5d4ff`](https://github.com/z0w13/tulpje/commit/ca5d4ffe5e28f555db02f3328856ff1acd2f3db6))
+ * chore!: move sqlx data to the tulpje-handler crate as they're part of that anyway ([`bf3bdb5`](https://github.com/z0w13/tulpje/commit/bf3bdb57c3d2b7361a64bd7a1a2a2c617016d9c0))
+ * fix(handler): use fork of pkrs that's actually published to crates.io ([`b94cac6`](https://github.com/z0w13/tulpje/commit/b94cac6280e85f3c8fa10ee28fa3a79d6c1cc6aa))
+</details>
+
 ## [0.11.0] - 2025-01-05
 
 ### Breaking Changes
