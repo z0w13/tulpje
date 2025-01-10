@@ -14,12 +14,6 @@ if test -z "${DOCKER_REPO:-}"; then
     exit 1
 fi
 
-# Check that cross is installed for cross-compiling with musl
-if ! hash cross 2>/dev/null; then
-  echo " [!] \`cross\` binary for cross-compilation not found, please run \`cargo install cross\`"
-  exit 1
-fi
-
 if [[ -z "${IMAGE_TAG:-}" ]]; then
   GIT_TAG="$(git describe --abbrev=0)"
   TULPJE_VERSION="${GIT_TAG#v}"
@@ -32,7 +26,7 @@ echo " [*] image tag:" "${TULPJE_VERSION}"
 
 # Build binaries
 echo " [-] building binaries..."
-cross build --target=x86_64-unknown-linux-musl --release
+cargo build --target=x86_64-unknown-linux-musl --release
 
 # Build images
 echo " [-] building images..."

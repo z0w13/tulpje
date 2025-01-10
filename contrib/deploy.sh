@@ -9,12 +9,6 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # Make sure we're in the project directory
 cd "$PROJECT_DIR"
 
-# Check that cross is installed for cross-compiling with musl
-if ! hash cross 2>/dev/null; then
-  echo " [!] \`cross\` binary for cross-compilation not found, please run \`cargo install cross\`"
-  exit 1
-fi
-
 # Set unique image suffix (current UNIX timestamp)
 IMAGE_SUFFIX=":$(date +%s)"
 export IMAGE_SUFFIX
@@ -52,7 +46,7 @@ echo " [*] Handler count: $HANDLER_COUNT"
 
 # Build binaries
 echo " [-] Building binaries..."
-cross build --target=x86_64-unknown-linux-musl --release
+cargo build --target=x86_64-unknown-linux-musl --release
 
 # Build images
 echo " [-] Building images..."
