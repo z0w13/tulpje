@@ -14,7 +14,9 @@ use twilight_util::builder::{
 };
 
 use tulpje_framework::{
-    handler_func, module::command_builder::CommandBuilder, Error, Module, ModuleBuilder,
+    handler_func,
+    module::command_builder::{CommandBuilder, SubCommandBuilder},
+    Error, Module, ModuleBuilder,
 };
 use tulpje_shared::{metrics::Metrics, shard_state::ShardState, version};
 
@@ -28,18 +30,17 @@ pub(crate) fn build() -> Module<Services> {
                 .handler(handler_func!(cmd_stats)),
         )
         .command(
-            CommandBuilder::new("shards", "Stats for bot shards", CommandType::ChatInput)
+            // TODO: Lock this to a specific guild or list of guilds
+            CommandBuilder::new("info", "various bot statistics", CommandType::ChatInput)
                 .dm_permission(false)
-                .handler(handler_func!(cmd_shards)),
-        )
-        .command(
-            CommandBuilder::new(
-                "processes",
-                "Stats for bot processes",
-                CommandType::ChatInput,
-            )
-            .dm_permission(false)
-            .handler(handler_func!(cmd_processes)),
+                .subcommand(
+                    SubCommandBuilder::new("shards", "bot shard stats")
+                        .handler(handler_func!(cmd_shards)),
+                )
+                .subcommand(
+                    SubCommandBuilder::new("processes", "bot process stats")
+                        .handler(handler_func!(cmd_processes)),
+                ),
         )
         .build()
 }

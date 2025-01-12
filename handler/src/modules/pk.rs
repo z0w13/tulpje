@@ -2,7 +2,9 @@ use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
-    handler_func, module::command_builder::CommandBuilder, Module, ModuleBuilder,
+    handler_func,
+    module::command_builder::{CommandBuilder, SubCommandBuilder, SubCommandGroupBuilder},
+    Module, ModuleBuilder,
 };
 
 use crate::context::Services;
@@ -18,47 +20,36 @@ pub fn build() -> Module<Services> {
         .guild()
         // commands
         .command(
-            CommandBuilder::new(
-                "setup-pk",
-                "set-up the PluralKit module",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .option(StringBuilder::new("system_id", "PluralKit system ID").required(true))
-            .option(StringBuilder::new("token", "(optional) PluralKit token"))
-            .handler(handler_func!(commands::setup_pk)),
-        )
-        .command(
-            CommandBuilder::new(
-                "setup-fronters",
-                "set-up fronter channels",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .option(StringBuilder::new("name", "Name of the fronters category"))
-            .handler(handler_func!(fronters::commands::setup_fronters)),
-        )
-        .command(
-            CommandBuilder::new(
-                "update-fronters",
-                "manually update fronter channels",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .handler(handler_func!(fronters::commands::update_fronters)),
-        )
-        .command(
-            CommandBuilder::new(
-                "update-member-roles",
-                "update the member roles",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .handler(handler_func!(roles::update_member_roles)),
+            CommandBuilder::new("pk", "PluralKit related commands", CommandType::ChatInput)
+                .default_member_permissions(Permissions::MANAGE_GUILD)
+                .dm_permission(false)
+                .subcommand(
+                    SubCommandBuilder::new("setup", "set-up the PluralKit module")
+                        .option(
+                            StringBuilder::new("system_id", "PluralKit system ID").required(true),
+                        )
+                        .option(StringBuilder::new("token", "(optional) PluralKit token"))
+                        .handler(handler_func!(commands::setup_pk)),
+                )
+                .subcommand(
+                    SubCommandBuilder::new("update-member-roles", "update the member roles")
+                        .handler(handler_func!(roles::update_member_roles)),
+                )
+                .group(
+                    SubCommandGroupBuilder::new("fronters", "fronter related commands")
+                        .subcommand(
+                            SubCommandBuilder::new("setup", "set-up fronter channels")
+                                .option(
+                                    StringBuilder::new("name", "Name of the fronters category")
+                                        .required(true),
+                                )
+                                .handler(handler_func!(fronters::commands::setup_fronters)),
+                        )
+                        .subcommand(
+                            SubCommandBuilder::new("update", "manually update fronter channels")
+                                .handler(handler_func!(fronters::commands::update_fronters)),
+                        ),
+                ),
         )
         // tasks
         .task(

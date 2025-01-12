@@ -9,7 +9,9 @@ use twilight_model::{application::command::CommandType, guild::Permissions};
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
-    handler_func, module::command_builder::CommandBuilder, Module, ModuleBuilder,
+    handler_func,
+    module::command_builder::{CommandBuilder, SubCommandBuilder},
+    Module, ModuleBuilder,
 };
 
 use crate::context::Services;
@@ -18,38 +20,31 @@ pub(crate) fn build() -> Module<Services> {
     ModuleBuilder::<Services>::new("emoji")
         // commands
         .command(
-            CommandBuilder::new(
-                "emoji-stats",
-                "Stats for emojis in this server",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
-            .dm_permission(false)
-            .option(
-                StringBuilder::new("sort", "How to sort the emojis").choices([
-                    ("Most Used", "count_desc"),
-                    ("Least Used", "count_asc"),
-                    ("Most Recent", "date_desc"),
-                    ("Least Recent", "date_asc"),
-                ]),
-            )
-            .handler(handler_func!(commands::cmd_emoji_stats)),
-        )
-        .command(
-            CommandBuilder::new(
-                "emoji-clone",
-                "clone an emoji to this server",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
-            .dm_permission(false)
-            .option(StringBuilder::new("emoji", "emojis to clone").required(true))
-            .option(StringBuilder::new(
-                "new_name",
-                "new name (only if cloning a single emoji)",
-            ))
-            .option(StringBuilder::new("prefix", "prefix for new emoji(s)"))
-            .handler(handler_func!(clone::command)),
+            CommandBuilder::new("emoji", "emoji related commands", CommandType::ChatInput)
+                .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
+                .dm_permission(false)
+                .subcommand(
+                    SubCommandBuilder::new("stats", "stats for emojis in this server")
+                        .option(
+                            StringBuilder::new("sort", "How to sort the emojis").choices([
+                                ("Most Used", "count_desc"),
+                                ("Least Used", "count_asc"),
+                                ("Most Recent", "date_desc"),
+                                ("Least Recent", "date_asc"),
+                            ]),
+                        )
+                        .handler(handler_func!(commands::cmd_emoji_stats)),
+                )
+                .subcommand(
+                    SubCommandBuilder::new("clone", "clone an emoji to this server")
+                        .option(StringBuilder::new("emoji", "emojis to clone").required(true))
+                        .option(StringBuilder::new(
+                            "new_name",
+                            "new name (only if cloning a single emoji)",
+                        ))
+                        .option(StringBuilder::new("prefix", "prefix for new emoji(s)"))
+                        .handler(handler_func!(clone::command)),
+                ),
         )
         .command(
             CommandBuilder::new("Clone Emojis", "", CommandType::Message)

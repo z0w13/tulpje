@@ -9,7 +9,9 @@ use twilight_model::{
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
-    handler_func, module::command_builder::CommandBuilder, Error, Module, ModuleBuilder, Registry,
+    handler_func,
+    module::command_builder::{CommandBuilder, SubCommandBuilder},
+    Error, Module, ModuleBuilder, Registry,
 };
 
 use crate::{
@@ -26,44 +28,31 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
 
     ModuleBuilder::<Services>::new("core")
         .command(
-            CommandBuilder::new(
-                "enable",
-                "enable a module for this server",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .option(
-                StringBuilder::new("module", "The module to enable")
-                    .choices(guild_module_choices.clone())
-                    .required(true),
-            )
-            .handler(handler_func!(enable)),
-        )
-        .command(
-            CommandBuilder::new(
-                "disable",
-                "disable a module for this server",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .option(
-                StringBuilder::new("module", "The module to disable")
-                    .choices(guild_module_choices)
-                    .required(true),
-            )
-            .handler(handler_func!(disable)),
-        )
-        .command(
-            CommandBuilder::new(
-                "modules",
-                "list enabled and available server modules",
-                CommandType::ChatInput,
-            )
-            .default_member_permissions(Permissions::MANAGE_GUILD)
-            .dm_permission(false)
-            .handler(handler_func!(modules)),
+            CommandBuilder::new("mod", "module management", CommandType::ChatInput)
+                .default_member_permissions(Permissions::MANAGE_GUILD)
+                .dm_permission(false)
+                .subcommand(
+                    SubCommandBuilder::new("enable", "enable a module for this server")
+                        .option(
+                            StringBuilder::new("module", "The module to enable")
+                                .choices(guild_module_choices.clone())
+                                .required(true),
+                        )
+                        .handler(handler_func!(enable)),
+                )
+                .subcommand(
+                    SubCommandBuilder::new("disable", "disable a module for this server")
+                        .option(
+                            StringBuilder::new("module", "The module to disable")
+                                .choices(guild_module_choices)
+                                .required(true),
+                        )
+                        .handler(handler_func!(disable)),
+                )
+                .subcommand(
+                    SubCommandBuilder::new("list", "list enabled and available server modules")
+                        .handler(handler_func!(modules)),
+                ),
         )
         .build()
 }
