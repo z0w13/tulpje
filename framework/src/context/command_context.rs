@@ -2,7 +2,9 @@ use std::sync::Arc;
 
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
 use twilight_model::{
-    application::interaction::application_command::{CommandData, CommandOptionValue},
+    application::interaction::application_command::{
+        CommandData, CommandDataOption, CommandOptionValue,
+    },
     channel::{message::MessageFlags, Message},
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
@@ -23,6 +25,7 @@ pub struct CommandContext<T: Clone + Send + Sync> {
 
     pub event: InteractionCreate,
     pub command: CommandData,
+    pub options: Vec<CommandDataOption>,
 }
 
 impl<T: Clone + Send + Sync> CommandContext<T> {
@@ -40,6 +43,7 @@ impl<T: Clone + Send + Sync> CommandContext<T> {
 
             command,
             event,
+            options: Vec::new(),
         }
     }
 
@@ -115,7 +119,7 @@ impl<T: Clone + Send + Sync> CommandContext<T> {
     }
 
     pub fn get_arg_string_optional(&self, name: &str) -> Result<Option<String>, Error> {
-        let Some(opt) = self.command.options.iter().find(|opt| opt.name == name) else {
+        let Some(opt) = self.options.iter().find(|opt| opt.name == name) else {
             return Ok(None);
         };
 

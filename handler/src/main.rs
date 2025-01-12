@@ -109,6 +109,7 @@ async fn main() {
     registry.register(modules::emoji::build());
     registry.register(modules::pk::build());
     registry.register(modules::stats::build());
+    registry.register(modules::test::build());
 
     // core should always be registered last because it needs the data from
     // previous modules to set up

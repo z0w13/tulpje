@@ -1,7 +1,10 @@
 use std::collections::{HashMap, HashSet};
 
 use twilight_gateway::EventType;
-use twilight_model::application::command::Command;
+use twilight_model::application::{
+    command::Command,
+    interaction::application_command::{CommandData, CommandDataOption, CommandOptionValue},
+};
 
 use super::Module;
 use crate::handler::{
@@ -17,7 +20,7 @@ use crate::handler::{
 pub struct Registry<T: Clone + Send + Sync> {
     modules: HashMap<String, Module<T>>,
 
-    pub(crate) commands: HashMap<String, CommandHandler<T>>,
+    pub(crate) command_handlers: HashMap<String, CommandHandler<T>>,
     pub(crate) components: HashMap<String, ComponentInteractionHandler<T>>,
     pub(crate) events: HashMap<EventType, HashSet<EventHandler<T>>>,
     pub tasks: HashMap<String, TaskHandler<T>>,
@@ -27,7 +30,7 @@ impl<T: Clone + Send + Sync> Registry<T> {
     pub fn new() -> Self {
         Self {
             modules: HashMap::new(),
-            commands: HashMap::new(),
+            command_handlers: HashMap::new(),
             components: HashMap::new(),
             events: HashMap::new(),
             tasks: HashMap::new(),
@@ -35,7 +38,8 @@ impl<T: Clone + Send + Sync> Registry<T> {
     }
 
     pub fn register(&mut self, module: Module<T>) {
-        self.commands.extend(module.commands.clone());
+        self.command_handlers
+            .extend(module.command_handlers.clone());
         self.components.extend(module.components.clone());
         self.events.extend(module.events.clone());
         self.tasks.extend(module.tasks.clone());
@@ -47,7 +51,7 @@ impl<T: Clone + Send + Sync> Registry<T> {
         self.modules
             .values()
             .filter(|m| !m.guild_scoped) // filter out guild scoped modules
-            .flat_map(|m| m.commands.values().map(|ch| ch.definition.clone()))
+            .flat_map(|m| m.command_definitions.values().cloned())
             .collect()
     }
 
@@ -55,15 +59,21 @@ impl<T: Clone + Send + Sync> Registry<T> {
         Some(
             self.modules
                 .get(module)?
-                .commands
+                .command_definitions
                 .values()
-                .map(|ch| ch.definition.clone())
+                .cloned()
                 .collect(),
         )
     }
 
-    pub fn find_command(&self, name: &str) -> Option<&CommandHandler<T>> {
-        self.commands.get(name)
+    pub fn find_command<'a>(
+        &self,
+        data: &'a CommandData,
+    ) -> Option<(&CommandHandler<T>, &'a [CommandDataOption])> {
+        let (name, options) = extract_command(&data.name, &data.options, &mut Vec::new());
+        self.command_handlers
+            .get(&name)
+            .map(|command| (command, options))
     }
 
     pub fn guild_module_names(&self) -> Vec<String> {
@@ -78,5 +88,23 @@ impl<T: Clone + Send + Sync> Registry<T> {
 impl<T: Clone + Send + Sync> Default for Registry<T> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+fn extract_command<'a>(
+    name: &'a str,
+    options: &'a [CommandDataOption],
+    parents: &mut Vec<&'a str>,
+) -> (String, &'a [CommandDataOption]) {
+    parents.push(name);
+
+    if let Some((name, options)) = options.iter().find_map(|opt| match opt.value {
+        CommandOptionValue::SubCommand(ref subopts)
+        | CommandOptionValue::SubCommandGroup(ref subopts) => Some((&opt.name, subopts)),
+        _ => None,
+    }) {
+        extract_command(name, options, parents)
+    } else {
+        (parents.join(" "), options)
     }
 }

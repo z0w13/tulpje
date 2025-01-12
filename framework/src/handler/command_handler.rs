@@ -1,7 +1,5 @@
 use std::{future::Future, pin::Pin};
 
-use twilight_model::application::command::Command;
-
 use super::super::context::CommandContext;
 
 use crate::Error;
@@ -12,7 +10,7 @@ pub(crate) type CommandFunc<T> =
 #[derive(Clone)]
 pub struct CommandHandler<T: Clone + Send + Sync> {
     pub module: String,
-    pub definition: Command,
+    pub name: String,
     pub func: CommandFunc<T>,
 }
 

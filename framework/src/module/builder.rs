@@ -16,7 +16,9 @@ pub struct ModuleBuilder<T: Clone + Send + Sync> {
     name: String,
     guild_scoped: bool,
 
-    commands: HashMap<String, CommandHandler<T>>,
+    command_definitions: HashMap<String, Command>,
+    command_handlers: HashMap<String, CommandHandler<T>>,
+
     components: HashMap<String, ComponentInteractionHandler<T>>,
     events: HashMap<EventType, HashSet<EventHandler<T>>>,
     tasks: HashMap<String, TaskHandler<T>>,
@@ -28,7 +30,9 @@ impl<T: Clone + Send + Sync> ModuleBuilder<T> {
             name: name.into(),
             guild_scoped: false,
 
-            commands: HashMap::new(),
+            command_definitions: HashMap::new(),
+            command_handlers: HashMap::new(),
+
             components: HashMap::new(),
             events: HashMap::new(),
             tasks: HashMap::new(),
@@ -41,7 +45,9 @@ impl<T: Clone + Send + Sync> ModuleBuilder<T> {
             name: self.name,
             guild_scoped: self.guild_scoped,
 
-            commands: self.commands,
+            command_definitions: self.command_definitions,
+            command_handlers: self.command_handlers,
+
             components: self.components,
             events: self.events,
             tasks: self.tasks,
@@ -55,15 +61,21 @@ impl<T: Clone + Send + Sync> ModuleBuilder<T> {
     }
 
     #[must_use]
-    pub fn command(mut self, definition: Command, func: CommandFunc<T>) -> Self {
-        self.commands.insert(
-            definition.name.clone(),
-            CommandHandler {
-                module: self.name.clone(),
-                definition,
-                func,
-            },
-        );
+    pub fn command(mut self, definition: Command, handlers: Vec<(&str, CommandFunc<T>)>) -> Self {
+        self.command_definitions
+            .insert(definition.name.clone(), definition);
+
+        for (name, func) in handlers {
+            self.command_handlers.insert(
+                String::from(name),
+                CommandHandler {
+                    module: self.name.clone(),
+                    name: String::from(name),
+                    func,
+                },
+            );
+        }
+
         self
     }
 

@@ -28,11 +28,12 @@ pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
     tracing::info!("interaction");
 
     match interaction::parse(&event, meta.clone(), context) {
-        Ok(InteractionContext::Command(ctx)) => {
-            let Some(command) = registry.find_command(&ctx.command.name) else {
+        Ok(InteractionContext::Command(mut ctx)) => {
+            let Some((command, options)) = registry.find_command(&ctx.command) else {
                 return Err(format!("unknown command /{}", ctx.command.name).into());
             };
 
+            ctx.options.extend_from_slice(options);
             if let Err(err) = command.run(ctx.clone()).await {
                 return Err(format!("error running command /{}: {}", ctx.command.name, err).into());
             }
