@@ -655,7 +655,15 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
         check_output_dry(
             f"    - {release.crates[0].name if release.single_crate else "tulpje"}",
             execute,
-            ["gh", "release", "create", release.curr_tag, "--notes-file=-"],
+            [
+                "gh",
+                "release",
+                "create",
+                release.curr_tag,
+                "--notes-file=-",
+                "--title",
+                release.curr_tag,
+            ],
             input=release.changelog.encode("utf-8"),
         )
 
