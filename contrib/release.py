@@ -95,14 +95,14 @@ class Version(NamedTuple):
     def bumped(self, feature: bool, breaking: bool) -> "Version":
         if self.dot_zero():
             if breaking:
-                return Version(self.major, self.minor + 1, self.patch)
+                return Version(self.major, self.minor + 1, 0)
             else:
                 return Version(self.major, self.minor, self.patch + 1)
         else:
             if breaking:
-                return Version(self.major + 1, self.minor, self.patch)
+                return Version(self.major + 1, 0, 0)
             elif feature:
-                return Version(self.major, self.minor + 1, self.patch)
+                return Version(self.major, self.minor + 1, 0)
             else:
                 return Version(self.major, self.minor, self.patch + 1)
 
