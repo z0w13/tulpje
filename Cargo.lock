@@ -3214,7 +3214,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "amqprs",
  "bb8",
@@ -3242,7 +3242,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "amqprs",
  "async-cron-scheduler",
@@ -3278,7 +3278,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "dotenvy",
  "tokio",
@@ -3287,7 +3287,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "bb8",
  "bb8-redis",
@@ -3306,7 +3306,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "reqwest",
 ]
