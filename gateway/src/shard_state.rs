@@ -102,7 +102,7 @@ impl ShardManager {
         &mut self,
         created: GuildCreate,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if !self.guild_ids.insert(created.id.get()) {
+        if !self.guild_ids.insert(created.id().get()) {
             // guild was already in set, do nothing
             return Ok(());
         }

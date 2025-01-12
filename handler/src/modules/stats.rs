@@ -1,4 +1,4 @@
-use twilight_model::application::command::CommandType;
+use twilight_model::application::{command::CommandType, interaction::InteractionContextType};
 
 use tulpje_framework::{
     handler_func,
@@ -15,13 +15,13 @@ pub(crate) fn build() -> Module<Services> {
     ModuleBuilder::<Services>::new("stats")
         .command(
             CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
-                .dm_permission(false)
+                .contexts([InteractionContextType::Guild])
                 .handler(handler_func!(commands::stats)),
         )
         .command(
             // TODO: Lock this to a specific guild or list of guilds
             CommandBuilder::new("info", "various bot statistics", CommandType::ChatInput)
-                .dm_permission(false)
+                .contexts([InteractionContextType::Guild])
                 .subcommand(
                     SubCommandBuilder::new("shards", "bot shard stats")
                         .handler(handler_func!(commands::shards)),

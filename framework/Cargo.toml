@@ -9,10 +9,12 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-twilight-http = { version = "0.16.0-rc.1", features = ["decompression", "rustls-webpki-roots"], default-features = false }
-twilight-model = "0.16.0-rc.1"
-twilight-gateway = "0.16.0-rc.1"
-twilight-util = { version = "0.16.0-rc.1", features = ["builder"] }
+# TODO: Add support for picking TLS implementation and PKI source
+#       is that even needed here if we pass the http client in from other crates?
+twilight-http = { version = "0.16.0", features = ["decompression", "rustls-ring", "rustls-webpki-roots"], default-features = false }
+twilight-model = "0.16.0"
+twilight-gateway = { version = "0.16.0", default-features = false }
+twilight-util = { version = "0.16.0", features = ["builder"] }
 tracing = "0.1.41"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = "0.4.39"

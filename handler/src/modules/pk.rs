@@ -1,4 +1,7 @@
-use twilight_model::{application::command::CommandType, guild::Permissions};
+use twilight_model::{
+    application::{command::CommandType, interaction::InteractionContextType},
+    guild::Permissions,
+};
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
@@ -22,7 +25,7 @@ pub fn build() -> Module<Services> {
         .command(
             CommandBuilder::new("pk", "PluralKit related commands", CommandType::ChatInput)
                 .default_member_permissions(Permissions::MANAGE_GUILD)
-                .dm_permission(false)
+                .contexts([InteractionContextType::Guild])
                 .subcommand(
                     SubCommandBuilder::new("setup", "set-up the PluralKit module")
                         .option(

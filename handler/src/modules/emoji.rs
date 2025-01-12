@@ -5,7 +5,10 @@ pub mod event_handlers;
 pub mod shared;
 
 use twilight_gateway::EventType;
-use twilight_model::{application::command::CommandType, guild::Permissions};
+use twilight_model::{
+    application::{command::CommandType, interaction::InteractionContextType},
+    guild::Permissions,
+};
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
@@ -22,7 +25,7 @@ pub(crate) fn build() -> Module<Services> {
         .command(
             CommandBuilder::new("emoji", "emoji related commands", CommandType::ChatInput)
                 .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
-                .dm_permission(false)
+                .contexts([InteractionContextType::Guild])
                 .subcommand(
                     SubCommandBuilder::new("stats", "stats for emojis in this server")
                         .option(
@@ -53,7 +56,7 @@ pub(crate) fn build() -> Module<Services> {
         .command(
             CommandBuilder::new("Clone Emojis", "", CommandType::Message)
                 .default_member_permissions(Permissions::MANAGE_GUILD_EXPRESSIONS)
-                .dm_permission(false)
+                .contexts([InteractionContextType::Guild])
                 .handler(handler_func!(clone::context_command)),
         )
         // component interactions

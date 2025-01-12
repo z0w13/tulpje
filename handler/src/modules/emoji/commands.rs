@@ -4,7 +4,7 @@ use twilight_model::{
     application::interaction::application_command::CommandOptionValue,
     channel::message::{
         component::{ActionRow, Button, ButtonStyle, SelectMenu, SelectMenuType},
-        Component, Embed, ReactionType,
+        Component, Embed, EmojiReactionType,
     },
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
@@ -56,45 +56,49 @@ fn create_emoji_stats_pagination_buttons(current_page: u16, total_pages: u16) ->
             custom_id: Some(String::from("emoji_stats_first_page")),
             disabled: current_page == 1,
             style: ButtonStyle::Primary,
-            emoji: Some(ReactionType::Unicode {
+            emoji: Some(EmojiReactionType::Unicode {
                 name: String::from("⏮️"),
             }),
 
             label: None,
             url: None,
+            sku_id: None,
         }),
         Component::Button(Button {
             custom_id: Some(String::from("emoji_stats_prev_page")),
             disabled: current_page == 1,
             style: ButtonStyle::Primary,
-            emoji: Some(ReactionType::Unicode {
+            emoji: Some(EmojiReactionType::Unicode {
                 name: String::from("◀️"),
             }),
 
             label: None,
             url: None,
+            sku_id: None,
         }),
         Component::Button(Button {
             custom_id: Some(String::from("emoji_stats_next_page")),
             disabled: current_page == total_pages,
             style: ButtonStyle::Primary,
-            emoji: Some(ReactionType::Unicode {
+            emoji: Some(EmojiReactionType::Unicode {
                 name: String::from("▶️"),
             }),
 
             label: None,
             url: None,
+            sku_id: None,
         }),
         Component::Button(Button {
             custom_id: Some(String::from("emoji_stats_last_page")),
             disabled: current_page == total_pages,
             style: ButtonStyle::Primary,
-            emoji: Some(ReactionType::Unicode {
+            emoji: Some(EmojiReactionType::Unicode {
                 name: String::from("⏭️"),
             }),
 
             label: None,
             url: None,
+            sku_id: None,
         }),
     ]
 }

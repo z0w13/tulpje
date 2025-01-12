@@ -4,9 +4,13 @@
 use std::collections::HashMap;
 
 use twilight_model::{
-    application::command::{Command, CommandOption, CommandOptionType, CommandType},
+    application::{
+        command::{Command, CommandOption, CommandOptionType, CommandType},
+        interaction::InteractionContextType,
+    },
     guild::Permissions,
     id::{marker::GuildMarker, Id},
+    oauth::ApplicationIntegrationType,
 };
 
 use crate::handler::command_handler::CommandFunc;
@@ -22,7 +26,8 @@ pub struct CommandBuilder<T: Clone + Send + Sync> {
     pub kind: CommandType,
     pub guild_id: Option<Id<GuildMarker>>,
     pub default_member_permissions: Option<Permissions>,
-    pub dm_permission: Option<bool>,
+    pub contexts: Option<Vec<InteractionContextType>>,
+    pub integration_types: Option<Vec<ApplicationIntegrationType>>,
     pub nsfw: Option<bool>,
 
     pub func: Option<CommandFunc<T>>,
@@ -43,7 +48,8 @@ impl<T: Clone + Send + Sync> CommandBuilder<T> {
             kind,
             guild_id: None,
             default_member_permissions: None,
-            dm_permission: None,
+            contexts: None,
+            integration_types: None,
             nsfw: None,
 
             func: None,
@@ -84,8 +90,8 @@ impl<T: Clone + Send + Sync> CommandBuilder<T> {
     }
 
     #[must_use]
-    pub fn dm_permission(mut self, dm_permission: bool) -> Self {
-        self.dm_permission = Some(dm_permission);
+    pub fn contexts(mut self, contexts: impl IntoIterator<Item = InteractionContextType>) -> Self {
+        self.contexts = Some(contexts.into_iter().collect());
         self
     }
 
@@ -124,6 +130,15 @@ impl<T: Clone + Send + Sync> CommandBuilder<T> {
     }
 
     #[must_use]
+    pub fn integration_types(
+        mut self,
+        integration_types: impl IntoIterator<Item = ApplicationIntegrationType>,
+    ) -> Self {
+        self.integration_types = Some(integration_types.into_iter().collect());
+        self
+    }
+
+    #[must_use]
     pub fn option(mut self, option: impl Into<CommandOption>) -> Self {
         self.options.push(option.into());
         self
@@ -134,6 +149,10 @@ impl<T: Clone + Send + Sync> CommandBuilder<T> {
         let subcommand_options: Vec<CommandOption> =
             self.subcommands.into_iter().map(Into::into).collect();
 
+        #[expect(
+            deprecated,
+            reason = "dm_permission is deprecated but need to specify all fields"
+        )]
         Command {
             name: self.name,
             name_localizations: self.name_localizations,
@@ -143,7 +162,8 @@ impl<T: Clone + Send + Sync> CommandBuilder<T> {
 
             guild_id: self.guild_id,
             default_member_permissions: self.default_member_permissions,
-            dm_permission: self.dm_permission,
+            contexts: self.contexts,
+            integration_types: self.integration_types,
             nsfw: self.nsfw,
 
             options: [self.options, group_options, subcommand_options].concat(),
@@ -152,6 +172,8 @@ impl<T: Clone + Send + Sync> CommandBuilder<T> {
             application_id: None,
             id: None,
             version: Id::new(1),
+
+            dm_permission: None,
         }
     }
 }

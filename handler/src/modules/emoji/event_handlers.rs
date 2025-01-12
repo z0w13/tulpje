@@ -5,7 +5,8 @@ use sqlx::types::chrono;
 use tracing::{debug, error, trace};
 use twilight_gateway::Event;
 use twilight_model::{
-    channel::message::ReactionType,
+    channel::message::EmojiReactionType,
+    gateway::payload::incoming::GuildCreate,
     id::{marker::EmojiMarker, Id},
 };
 
@@ -74,14 +75,6 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
         return Ok(());
     };
 
-    let Some(new_content) = &evt.content else {
-        tracing::warn!(
-            "no content in message {}, do we have MESSAGE_CONTENT intent?",
-            evt.id
-        );
-        return Ok(());
-    };
-
     let guild_emojis: HashSet<Id<EmojiMarker>> = ctx
         .client
         .emojis(guild_id)
@@ -92,10 +85,8 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
         .map(|e| e.id)
         .collect();
 
-    let timestamp = evt
-        .timestamp
-        .and_then(|ts| DateTime::<Utc>::from_timestamp_micros(ts.as_micros()))
-        .unwrap_or_else(Utc::now);
+    let timestamp =
+        DateTime::<Utc>::from_timestamp_micros(evt.timestamp.as_micros()).unwrap_or_else(Utc::now);
 
     // TODO: Once we implement cache compare the messages
     //       currently every edit considers every emoji a new one
@@ -107,7 +98,7 @@ pub async fn message_update(ctx: EventContext) -> Result<(), Error> {
     );
 
     let new_emote_count = shared::count_emojis(
-        shared::parse_emojis_from_string(guild_id, new_content)
+        shared::parse_emojis_from_string(guild_id, &evt.content)
             .into_iter()
             .filter(|e| guild_emojis.contains(&e.id))
             .collect::<Vec<db::Emoji>>(),
@@ -148,7 +139,7 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
 
     debug!(reaction = ?reaction.emoji, "reaction_add");
     match &reaction.emoji {
-        ReactionType::Custom { animated, id, name } => {
+        EmojiReactionType::Custom { animated, id, name } => {
             let now = chrono::Utc::now();
             let (Some(guild_id), Some(name)) = (reaction.guild_id, name) else {
                 return Ok(());
@@ -164,7 +155,7 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
                 error!(err, "db::save_emoji_use");
             };
         }
-        ReactionType::Unicode { .. } => {
+        EmojiReactionType::Unicode { .. } => {
             // NOTE: We ignore unicode emojis, we're tracking emoji use to see which
             //       are underused, unicode emojis are global anyway
         }
@@ -174,8 +165,16 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
 }
 
 pub(crate) async fn guild_create(ctx: EventContext) -> Result<(), Error> {
-    let Event::GuildCreate(guild) = &ctx.event else {
+    let Event::GuildCreate(guild) = ctx.event else {
         unreachable!()
+    };
+
+    let GuildCreate::Available(ref guild) = *guild else {
+        tracing::debug!(
+            "skipping GuildCreate event for unavailable guild {}",
+            guild.id()
+        );
+        return Ok(());
     };
 
     let count = delete_emojis_not_in_list_for_guild(

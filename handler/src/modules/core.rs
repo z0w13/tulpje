@@ -1,6 +1,9 @@
 use twilight_http::client::InteractionClient;
 use twilight_model::{
-    application::command::{Command, CommandType},
+    application::{
+        command::{Command, CommandType},
+        interaction::InteractionContextType,
+    },
     guild::Permissions,
     id::{marker::GuildMarker, Id},
 };
@@ -28,7 +31,7 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
         .command(
             CommandBuilder::new("mod", "module management", CommandType::ChatInput)
                 .default_member_permissions(Permissions::MANAGE_GUILD)
-                .dm_permission(false)
+                .contexts([InteractionContextType::Guild])
                 .subcommand(
                     SubCommandBuilder::new("enable", "enable a module for this server")
                         .option(
