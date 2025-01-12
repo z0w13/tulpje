@@ -162,7 +162,8 @@ async fn main() {
                 tracing::error!(?err, "error receiving discord message");
             }
             None => {
-                tracing::error!("received empty message");
+                tracing::error!("empty message, connection irrecoverably closed, exiting...");
+                break;
             }
         };
     }
