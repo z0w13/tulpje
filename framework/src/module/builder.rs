@@ -4,9 +4,9 @@ use async_cron_scheduler::cron::Schedule;
 use twilight_gateway::EventType;
 use twilight_model::application::command::Command;
 
-use super::Module;
+use super::{command_builder::CommandBuilder, Module};
 use crate::handler::{
-    command_handler::{CommandFunc, CommandHandler},
+    command_handler::CommandHandler,
     component_interaction_handler::{ComponentInteractionFunc, ComponentInteractionHandler},
     event_handler::{EventFunc, EventHandler},
     task_handler::{TaskFunc, TaskHandler},
@@ -17,6 +17,8 @@ pub struct ModuleBuilder<T: Clone + Send + Sync> {
     guild_scoped: bool,
 
     commands: HashMap<String, CommandHandler<T>>,
+    command_definitions: Vec<Command>,
+
     components: HashMap<String, ComponentInteractionHandler<T>>,
     events: HashMap<EventType, HashSet<EventHandler<T>>>,
     tasks: HashMap<String, TaskHandler<T>>,
@@ -29,6 +31,8 @@ impl<T: Clone + Send + Sync> ModuleBuilder<T> {
             guild_scoped: false,
 
             commands: HashMap::new(),
+            command_definitions: Vec::new(),
+
             components: HashMap::new(),
             events: HashMap::new(),
             tasks: HashMap::new(),
@@ -42,6 +46,8 @@ impl<T: Clone + Send + Sync> ModuleBuilder<T> {
             guild_scoped: self.guild_scoped,
 
             commands: self.commands,
+            command_definitions: self.command_definitions,
+
             components: self.components,
             events: self.events,
             tasks: self.tasks,
@@ -55,15 +61,57 @@ impl<T: Clone + Send + Sync> ModuleBuilder<T> {
     }
 
     #[must_use]
-    pub fn command(mut self, definition: Command, func: CommandFunc<T>) -> Self {
-        self.commands.insert(
-            definition.name.clone(),
-            CommandHandler {
-                module: self.name.clone(),
-                definition,
-                func,
-            },
-        );
+    pub fn command(mut self, command: CommandBuilder<T>) -> Self {
+        self.command_definitions.push(command.clone().into());
+
+        for group in &command.groups {
+            for subcommand in &group.commands {
+                let command_name = format!("{} {} {}", command.name, group.name, subcommand.name);
+                let func = subcommand
+                    .func
+                    .unwrap_or_else(|| panic!("command '/{}' has no handler", command_name));
+
+                self.commands.insert(
+                    command_name.clone(),
+                    CommandHandler {
+                        module: self.name.clone(),
+                        name: command_name,
+                        func,
+                    },
+                );
+            }
+        }
+        for subcommand in &command.subcommands {
+            let command_name = format!("{} {}", command.name, subcommand.name);
+            let func = subcommand
+                .func
+                .unwrap_or_else(|| panic!("command /{} has no handler", command_name));
+
+            self.commands.insert(
+                command_name.clone(),
+                CommandHandler {
+                    module: self.name.clone(),
+                    name: command_name,
+                    func,
+                },
+            );
+        }
+
+        if command.subcommands.is_empty() && command.groups.is_empty() {
+            let func = command
+                .func
+                .unwrap_or_else(|| panic!("command /{} has no handler", command.name));
+
+            self.commands.insert(
+                command.name.clone(),
+                CommandHandler {
+                    module: self.name.clone(),
+                    name: command.name,
+                    func,
+                },
+            );
+        }
+
         self
     }
 

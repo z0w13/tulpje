@@ -47,19 +47,12 @@ impl<T: Clone + Send + Sync> Registry<T> {
         self.modules
             .values()
             .filter(|m| !m.guild_scoped) // filter out guild scoped modules
-            .flat_map(|m| m.commands.values().map(|ch| ch.definition.clone()))
+            .flat_map(|m| m.command_definitions.clone())
             .collect()
     }
 
     pub fn module_commands(&self, module: &str) -> Option<Vec<Command>> {
-        Some(
-            self.modules
-                .get(module)?
-                .commands
-                .values()
-                .map(|ch| ch.definition.clone())
-                .collect(),
-        )
+        Some(self.modules.get(module)?.command_definitions.clone())
     }
 
     pub fn find_command(&self, name: &str) -> Option<&CommandHandler<T>> {

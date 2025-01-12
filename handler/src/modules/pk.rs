@@ -1,7 +1,9 @@
 use twilight_model::{application::command::CommandType, guild::Permissions};
-use twilight_util::builder::command::{CommandBuilder, StringBuilder};
+use twilight_util::builder::command::StringBuilder;
 
-use tulpje_framework::{handler_func, Module, ModuleBuilder};
+use tulpje_framework::{
+    handler_func, module::command_builder::CommandBuilder, Module, ModuleBuilder,
+};
 
 use crate::context::Services;
 
@@ -23,14 +25,9 @@ pub fn build() -> Module<Services> {
             )
             .default_member_permissions(Permissions::MANAGE_GUILD)
             .dm_permission(false)
-            .option(
-                StringBuilder::new("system_id", "PluralKit system ID")
-                    .required(true)
-                    .build(),
-            )
-            .option(StringBuilder::new("token", "(optional) PluralKit token").build())
-            .build(),
-            handler_func!(commands::setup_pk),
+            .option(StringBuilder::new("system_id", "PluralKit system ID").required(true))
+            .option(StringBuilder::new("token", "(optional) PluralKit token"))
+            .handler(handler_func!(commands::setup_pk)),
         )
         .command(
             CommandBuilder::new(
@@ -40,9 +37,8 @@ pub fn build() -> Module<Services> {
             )
             .default_member_permissions(Permissions::MANAGE_GUILD)
             .dm_permission(false)
-            .option(StringBuilder::new("name", "Name of the fronters category").build())
-            .build(),
-            handler_func!(fronters::commands::setup_fronters),
+            .option(StringBuilder::new("name", "Name of the fronters category"))
+            .handler(handler_func!(fronters::commands::setup_fronters)),
         )
         .command(
             CommandBuilder::new(
@@ -52,8 +48,7 @@ pub fn build() -> Module<Services> {
             )
             .default_member_permissions(Permissions::MANAGE_GUILD)
             .dm_permission(false)
-            .build(),
-            handler_func!(fronters::commands::update_fronters),
+            .handler(handler_func!(fronters::commands::update_fronters)),
         )
         .command(
             CommandBuilder::new(
@@ -63,8 +58,7 @@ pub fn build() -> Module<Services> {
             )
             .default_member_permissions(Permissions::MANAGE_GUILD)
             .dm_permission(false)
-            .build(),
-            handler_func!(roles::update_member_roles),
+            .handler(handler_func!(roles::update_member_roles)),
         )
         // tasks
         .task(

@@ -9,12 +9,13 @@ use twilight_model::{
     util::Timestamp,
 };
 use twilight_util::builder::{
-    command::CommandBuilder,
     embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
 };
 
-use tulpje_framework::{handler_func, Error, Module, ModuleBuilder};
+use tulpje_framework::{
+    handler_func, module::command_builder::CommandBuilder, Error, Module, ModuleBuilder,
+};
 use tulpje_shared::{metrics::Metrics, shard_state::ShardState, version};
 
 use crate::context::{CommandContext, Services};
@@ -24,14 +25,12 @@ pub(crate) fn build() -> Module<Services> {
         .command(
             CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)
                 .dm_permission(false)
-                .build(),
-            handler_func!(cmd_stats),
+                .handler(handler_func!(cmd_stats)),
         )
         .command(
             CommandBuilder::new("shards", "Stats for bot shards", CommandType::ChatInput)
                 .dm_permission(false)
-                .build(),
-            handler_func!(cmd_shards),
+                .handler(handler_func!(cmd_shards)),
         )
         .command(
             CommandBuilder::new(
@@ -40,8 +39,7 @@ pub(crate) fn build() -> Module<Services> {
                 CommandType::ChatInput,
             )
             .dm_permission(false)
-            .build(),
-            handler_func!(cmd_processes),
+            .handler(handler_func!(cmd_processes)),
         )
         .build()
 }

@@ -1,8 +1,10 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
 use twilight_model::{
-    application::interaction::application_command::{CommandData, CommandOptionValue},
+    application::interaction::application_command::{
+        CommandData, CommandDataOption, CommandOptionValue,
+    },
     channel::{message::MessageFlags, Message},
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
@@ -23,14 +25,21 @@ pub struct CommandContext<T: Clone + Send + Sync> {
 
     pub event: InteractionCreate,
     pub command: CommandData,
+
+    pub name: String,
+    pub options: HashMap<String, CommandOptionValue>,
 }
 
 impl<T: Clone + Send + Sync> CommandContext<T> {
     pub fn from_context(
         meta: Metadata,
         ctx: Context<T>,
+
         event: InteractionCreate,
         command: CommandData,
+
+        name: String,
+        options: &[CommandDataOption],
     ) -> Self {
         Self {
             meta,
@@ -40,6 +49,13 @@ impl<T: Clone + Send + Sync> CommandContext<T> {
 
             command,
             event,
+
+            name,
+            options: options
+                .iter()
+                .cloned()
+                .map(|opt| (opt.name, opt.value))
+                .collect(),
         }
     }
 
@@ -115,11 +131,11 @@ impl<T: Clone + Send + Sync> CommandContext<T> {
     }
 
     pub fn get_arg_string_optional(&self, name: &str) -> Result<Option<String>, Error> {
-        let Some(opt) = self.command.options.iter().find(|opt| opt.name == name) else {
+        let Some(value) = self.options.get(name) else {
             return Ok(None);
         };
 
-        let CommandOptionValue::String(value) = &opt.value else {
+        let CommandOptionValue::String(value) = value else {
             return Err(format!("option '{}' not a string option", name).into());
         };
 

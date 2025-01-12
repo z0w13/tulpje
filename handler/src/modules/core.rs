@@ -6,9 +6,11 @@ use twilight_model::{
     guild::Permissions,
     id::{marker::GuildMarker, Id},
 };
-use twilight_util::builder::command::{CommandBuilder, StringBuilder};
+use twilight_util::builder::command::StringBuilder;
 
-use tulpje_framework::{handler_func, Error, Module, ModuleBuilder, Registry};
+use tulpje_framework::{
+    handler_func, module::command_builder::CommandBuilder, Error, Module, ModuleBuilder, Registry,
+};
 
 use crate::{
     context::{CommandContext, Services},
@@ -34,11 +36,9 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
             .option(
                 StringBuilder::new("module", "The module to enable")
                     .choices(guild_module_choices.clone())
-                    .required(true)
-                    .build(),
+                    .required(true),
             )
-            .build(),
-            handler_func!(enable),
+            .handler(handler_func!(enable)),
         )
         .command(
             CommandBuilder::new(
@@ -51,11 +51,9 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
             .option(
                 StringBuilder::new("module", "The module to disable")
                     .choices(guild_module_choices)
-                    .required(true)
-                    .build(),
+                    .required(true),
             )
-            .build(),
-            handler_func!(disable),
+            .handler(handler_func!(disable)),
         )
         .command(
             CommandBuilder::new(
@@ -65,8 +63,7 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
             )
             .default_member_permissions(Permissions::MANAGE_GUILD)
             .dm_permission(false)
-            .build(),
-            handler_func!(modules),
+            .handler(handler_func!(modules)),
         )
         .build()
 }
