@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2025-01-12
+
+### Breaking Changes
+
+ - Use subcommands and subcommand groups
+ - Added support for subcommands and subcommand groups
+
+### Changed
+
+ - Specify GitHub release title
+
+### Fixed
+
+ - Reset minor/patch levels when bumping versions
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(build): reset minor/patch levels when bumping versions ([`cc7bc4d`](https://github.com/z0w13/tulpje/commit/cc7bc4d9c884ec3ab3aee937d33e09dc5290f244))
+ * feat(handler)!: use subcommands and subcommand groups ([`254c83e`](https://github.com/z0w13/tulpje/commit/254c83e6fbfa9d906145c1f5199c365adde84710))
+ * feat(framework)!: added support for subcommands and subcommand groups ([`007709f`](https://github.com/z0w13/tulpje/commit/007709f5a27dfa44e961653d134ece2e4820f3e1))
+ * build: specify GitHub release title ([`3198eea`](https://github.com/z0w13/tulpje/commit/3198eeaa2eecee28c1bef92f0f33b59d61b7edc5))
+</details>
+
 ## [0.12.1] - 2025-01-12
 
 ### Changed

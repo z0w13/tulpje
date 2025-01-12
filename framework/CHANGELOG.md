@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2025-01-12
+
+### Breaking Changes
+
+ - Added support for subcommands and subcommand groups
+
+### Removed
+
+ - Remove unused file module/module.rs
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * feat(framework)!: added support for subcommands and subcommand groups ([`007709f`](https://github.com/z0w13/tulpje/commit/007709f5a27dfa44e961653d134ece2e4820f3e1))
+ * chore: remove unused file module/module.rs ([`a514ee2`](https://github.com/z0w13/tulpje/commit/a514ee27c975c5487c88f18c296fca59f7fbdff9))
+</details>
+
 ## [0.11.1] - 2025-01-08
 
 ### Added
