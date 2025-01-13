@@ -254,7 +254,6 @@ RELEASE_FILENAME_MATCHLIST_WORKSPACE = {
     "Cargo.lock",
     "compose.*.yml",
     "Dockerfile*",
-    "!framework/**/*",
 }
 
 
@@ -372,7 +371,7 @@ def gather_release(
     else:
         file_whitelist = RELEASE_FILENAME_MATCHLIST.union(
             RELEASE_FILENAME_MATCHLIST_WORKSPACE
-        )
+        ).union({f"!{crate.path}/**/*" for crate in independent_crates})
 
     latest_tag = get_latest_tag(prefix)
     # fall back to main tag if there's none for the prefix yet
