@@ -14,7 +14,10 @@ use crate::context::EventContext;
 use tulpje_framework::Error;
 use tulpje_shared::is_pk_proxy;
 
-use super::{db, shared};
+use super::{
+    db::{self, delete_emojis_not_in_list_for_guild},
+    shared,
+};
 
 pub async fn handle_message(ctx: EventContext) -> Result<(), Error> {
     let Event::MessageCreate(msg) = &ctx.event else {
@@ -166,6 +169,46 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
             //       are underused, unicode emojis are global anyway
         }
     }
+
+    Ok(())
+}
+
+pub(crate) async fn guild_create(ctx: EventContext) -> Result<(), Error> {
+    let Event::GuildCreate(guild) = &ctx.event else {
+        unreachable!()
+    };
+
+    let count = delete_emojis_not_in_list_for_guild(
+        &ctx.services.db,
+        guild.id,
+        guild.emojis.iter().map(|emoji| emoji.id).collect(),
+    )
+    .await?;
+    tracing::debug!(
+        "guild_create: cleaned up {} emojis for guild {}",
+        count,
+        guild.id
+    );
+
+    Ok(())
+}
+
+pub(crate) async fn guild_emojis_update(ctx: EventContext) -> Result<(), Error> {
+    let Event::GuildEmojisUpdate(update) = &ctx.event else {
+        unreachable!()
+    };
+
+    let count = delete_emojis_not_in_list_for_guild(
+        &ctx.services.db,
+        update.guild_id,
+        update.emojis.iter().map(|emoji| emoji.id).collect(),
+    )
+    .await?;
+    tracing::debug!(
+        "guild_emojis_update: cleaned up {} emojis for guild {}",
+        count,
+        update.guild_id
+    );
 
     Ok(())
 }

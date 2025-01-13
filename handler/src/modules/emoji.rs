@@ -92,6 +92,14 @@ pub(crate) fn build() -> Module<Services> {
             EventType::ReactionAdd,
             handler_func!(event_handlers::reaction_add),
         )
+        .event(
+            EventType::GuildCreate,
+            handler_func!(event_handlers::guild_create),
+        )
+        .event(
+            EventType::GuildEmojisUpdate,
+            handler_func!(event_handlers::guild_emojis_update),
+        )
         // tasks
         .task(
             "emoji:clean-deleted",
