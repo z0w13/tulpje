@@ -2,11 +2,19 @@
 # Utility to inject service IP addresses from docker, rather than using the hostnames
 # which doesn't work when running on the host
 
+set -euo pipefail
+test -n "${DEBUG:-}" && set -x
+
+# Set the script and project directory
+SCRIPT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+
 get_container_ip() {
   docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$1"
 }
 
-source .env
+source "$PROJECT_DIR/.env"
 
 export RABBITMQ_ADDRESS=amqp://$(get_container_ip "tulpje-rabbitmq-1"):5672
 export DISCORD_PROXY=$(get_container_ip "tulpje-discord_proxy-1"):80
