@@ -141,7 +141,7 @@ async fn create_emoji_stats_embed(
         );
     }
 
-    Ok(builder.build())
+    Ok(builder.validate()?.build())
 }
 
 fn extract_page_and_sort(event: &InteractionCreate) -> Option<(u16, StatsSort)> {
