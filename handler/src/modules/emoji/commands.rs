@@ -9,7 +9,10 @@ use twilight_model::{
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
-    id::{marker::GuildMarker, Id},
+    id::{
+        marker::{EmojiMarker, GuildMarker},
+        Id,
+    },
 };
 use twilight_util::builder::{
     embed::{EmbedBuilder, EmbedFooterBuilder},
@@ -18,7 +21,7 @@ use twilight_util::builder::{
 
 use tulpje_framework::Error;
 
-use super::{db, tasks};
+use super::db;
 use crate::{
     context::{CommandContext, ComponentInteractionContext},
     modules::emoji::shared::StatsSort,
@@ -325,8 +328,18 @@ pub async fn cmd_emoji_maintenance(ctx: CommandContext) -> Result<(), Error> {
     let guild = ctx.guild().await?.ok_or("not in guild")?;
     ctx.defer().await?;
 
+    let emoji_ids: Vec<Id<EmojiMarker>> = ctx
+        .client()
+        .emojis(guild.id)
+        .await?
+        .models()
+        .await?
+        .into_iter()
+        .map(|emoji| emoji.id)
+        .collect();
+
     let count =
-        tasks::clean_deleted_emojis_for_guild(&ctx.services.db, &ctx.client(), guild.id).await?;
+        db::delete_emojis_not_in_list_for_guild(&ctx.services.db, guild.id, emoji_ids).await?;
 
     ctx.update(format!("cleaned up {} deleted emotes", count))
         .await?;

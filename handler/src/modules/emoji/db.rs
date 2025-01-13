@@ -1,4 +1,3 @@
-use futures_util::{Stream, TryStreamExt as _};
 use sqlx::types::chrono;
 
 use tulpje_framework::Error;
@@ -167,14 +166,6 @@ pub(crate) async fn get_emoji_stats(
     .await?;
 
     Ok(result)
-}
-
-pub(crate) fn get_tracked_guilds(
-    db: &sqlx::PgPool,
-) -> impl Stream<Item = Result<DbId<GuildMarker>, sqlx::Error>> + use<'_> {
-    sqlx::query_scalar!("SELECT DISTINCT guild_id FROM emoji_uses")
-        .fetch(db)
-        .map_ok(DbId::from)
 }
 
 pub(crate) async fn delete_emojis_not_in_list_for_guild(

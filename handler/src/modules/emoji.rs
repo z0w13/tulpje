@@ -3,7 +3,6 @@ pub mod commands;
 pub mod db;
 pub mod event_handlers;
 pub mod shared;
-pub mod tasks;
 
 use twilight_gateway::EventType;
 use twilight_model::{application::command::CommandType, guild::Permissions};
@@ -99,12 +98,6 @@ pub(crate) fn build() -> Module<Services> {
         .event(
             EventType::GuildEmojisUpdate,
             handler_func!(event_handlers::guild_emojis_update),
-        )
-        // tasks
-        .task(
-            "emoji:clean-deleted",
-            "0 0 0 * * *", // daily at midnight
-            handler_func!(tasks::clean_deleted_emojis),
         )
         .build()
 }
