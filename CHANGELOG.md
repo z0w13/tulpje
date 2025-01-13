@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2025-01-13
+
+### Added
+
+ - Added manual and automatic removal of emoji stats for deleted emojis
+ - Add missing commas in RELEASE_FILENAME_MATCHLIST_WORKSPACE
+
+### Changed
+
+ - Implement pagination for `/emoji stats`
+ - Split modules::stats into multiple files
+ - Implement fallback for /stats when we can't get stats from redis
+ - Split core module into multiple files
+
+### Fixed
+
+ - Always source .env from project root
+ - Don't hardcode independent crates in RELEASE_FILENAME_MATCHLIST_WORKSPACE
+ - Use latest main tag (vX.Y.Z) in push.sh
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(build): always source .env from project root ([`ce72ec8`](https://github.com/z0w13/tulpje/commit/ce72ec846e332ce3d1d9c6cc2ecd202d2cd41eee))
+ * feat(handler): added manual and automatic removal of emoji stats for deleted emojis ([`79dc31c`](https://github.com/z0w13/tulpje/commit/79dc31ceb9d16e38ee20da519a574fa0f1db774e))
+ * feat(handler): implement pagination for `/emoji stats` ([`f6e120a`](https://github.com/z0w13/tulpje/commit/f6e120a6733c08c4699baaef58cf139c1812468c))
+ * refactor(handler): split modules::stats into multiple files ([`ab4da15`](https://github.com/z0w13/tulpje/commit/ab4da1535c6d82d47c8a4bac6ef3a647941538c7))
+ * feat(handler): implement fallback for /stats when we can't get stats from redis ([`6dca9e7`](https://github.com/z0w13/tulpje/commit/6dca9e704c7342772e9c98055bbd1638c31803c6))
+ * refactor(handler): split core module into multiple files ([`6315247`](https://github.com/z0w13/tulpje/commit/6315247b33664ec520e0ba770fea5da3b31aa70f))
+ * fix(build): don't hardcode independent crates in RELEASE_FILENAME_MATCHLIST_WORKSPACE ([`d2e36d9`](https://github.com/z0w13/tulpje/commit/d2e36d9dba95bd6b18ba13c935442a5f2a772bd3))
+ * fix(build): add missing commas in RELEASE_FILENAME_MATCHLIST_WORKSPACE ([`fbbe9c3`](https://github.com/z0w13/tulpje/commit/fbbe9c375f80c0031160542bf1c3c0fd424c3266))
+ * fix(build): use latest main tag (vX.Y.Z) in push.sh ([`13c3495`](https://github.com/z0w13/tulpje/commit/13c34955c5c67c72473262d8f6b5e9a14ed2e53e))
+</details>
+
 ## [0.13.0] - 2025-01-12
 
 ### Breaking Changes
