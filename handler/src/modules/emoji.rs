@@ -3,6 +3,7 @@ pub mod commands;
 pub mod db;
 pub mod event_handlers;
 pub mod shared;
+pub mod tasks;
 
 use twilight_gateway::EventType;
 use twilight_model::{application::command::CommandType, guild::Permissions};
@@ -44,6 +45,10 @@ pub(crate) fn build() -> Module<Services> {
                         ))
                         .option(StringBuilder::new("prefix", "prefix for new emoji(s)"))
                         .handler(handler_func!(clone::command)),
+                )
+                .subcommand(
+                    SubCommandBuilder::new("maintenance", "remove deleted emojis from stats")
+                        .handler(handler_func!(commands::cmd_emoji_maintenance)),
                 ),
         )
         .command(
@@ -86,6 +91,12 @@ pub(crate) fn build() -> Module<Services> {
         .event(
             EventType::ReactionAdd,
             handler_func!(event_handlers::reaction_add),
+        )
+        // tasks
+        .task(
+            "emoji:clean-deleted",
+            "0 0 0 * * *", // daily at midnight
+            handler_func!(tasks::clean_deleted_emojis),
         )
         .build()
 }

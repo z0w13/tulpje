@@ -18,7 +18,7 @@ use twilight_util::builder::{
 
 use tulpje_framework::Error;
 
-use super::db;
+use super::{db, tasks};
 use crate::{
     context::{CommandContext, ComponentInteractionContext},
     modules::emoji::shared::StatsSort,
@@ -317,6 +317,19 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Error> {
     };
 
     ctx.response(response).await?;
+
+    Ok(())
+}
+
+pub async fn cmd_emoji_maintenance(ctx: CommandContext) -> Result<(), Error> {
+    let guild = ctx.guild().await?.ok_or("not in guild")?;
+    ctx.defer().await?;
+
+    let count =
+        tasks::clean_deleted_emojis_for_guild(&ctx.services.db, &ctx.client(), guild.id).await?;
+
+    ctx.update(format!("cleaned up {} deleted emotes", count))
+        .await?;
 
     Ok(())
 }

@@ -1,3 +1,4 @@
+use futures_util::{Stream, TryStreamExt as _};
 use sqlx::types::chrono;
 
 use tulpje_framework::Error;
@@ -126,6 +127,7 @@ pub(crate) async fn get_emoji_stat_count(
     .await?
     .unwrap_or(0))
 }
+
 pub(crate) async fn get_emoji_stats(
     db: &sqlx::PgPool,
     guild_id: Id<GuildMarker>,
@@ -165,4 +167,29 @@ pub(crate) async fn get_emoji_stats(
     .await?;
 
     Ok(result)
+}
+
+pub(crate) fn get_tracked_guilds(
+    db: &sqlx::PgPool,
+) -> impl Stream<Item = Result<DbId<GuildMarker>, sqlx::Error>> + use<'_> {
+    sqlx::query_scalar!("SELECT DISTINCT guild_id FROM emoji_uses")
+        .fetch(db)
+        .map_ok(DbId::from)
+}
+
+pub(crate) async fn delete_emojis_not_in_list_for_guild(
+    db: &sqlx::PgPool,
+    guild_id: Id<GuildMarker>,
+    emojis: Vec<Id<EmojiMarker>>,
+) -> Result<u64, Error> {
+    // convert ids to i64
+    let emoji_ids: Vec<i64> = emojis.into_iter().map(DbId).map(i64::from).collect();
+
+    let result = sqlx::query("DELETE FROM emoji_uses WHERE guild_id = $1 AND emoji_id != ALL($2)")
+        .bind(i64::from(DbId(guild_id)))
+        .bind(emoji_ids)
+        .execute(db)
+        .await?;
+
+    Ok(result.rows_affected())
 }
