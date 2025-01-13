@@ -249,7 +249,9 @@ RELEASE_FILENAME_MATCHLIST = {
     "Cargo.toml",
 }
 RELEASE_FILENAME_MATCHLIST_WORKSPACE = {
-    ".sqlx/*" "*.sql" "Cargo.lock",
+    ".sqlx/*",
+    "*.sql",
+    "Cargo.lock",
     "compose.*.yml",
     "Dockerfile*",
     "!framework/**/*",
