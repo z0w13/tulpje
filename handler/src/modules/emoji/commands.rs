@@ -131,13 +131,17 @@ async fn create_emoji_stats_embed(
         "No Data".to_string()
     };
 
-    Ok(EmbedBuilder::new()
+    let mut builder = EmbedBuilder::new()
         .title(format!("{} Emotes in {}", sort.name(), guild.name))
-        .description(emoji_str)
-        .footer(
+        .description(emoji_str);
+
+    if total_pages > 0 {
+        builder = builder.footer(
             EmbedFooterBuilder::new(format!("Page {} of {}", current_page, total_pages)).build(),
-        )
-        .build())
+        );
+    }
+
+    Ok(builder.build())
 }
 
 fn extract_page_and_sort(event: &InteractionCreate) -> Option<(u16, StatsSort)> {
@@ -348,6 +352,10 @@ pub async fn cmd_emoji_maintenance(ctx: CommandContext) -> Result<(), Error> {
 }
 
 fn get_components(current_page: u16, total_pages: u16) -> Vec<Component> {
+    if total_pages == 0 {
+        return vec![];
+    }
+
     vec![
         ActionRow {
             components: vec![create_emoji_stats_sort_menu().into()],
