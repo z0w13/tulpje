@@ -58,17 +58,58 @@ pub async fn get_all_shard_stats(
         .collect())
 }
 
+async fn minimal_stats_response(ctx: CommandContext, api_latency: i64) -> Result<(), Error> {
+    if let Err(err) = ctx
+        .interaction()
+        .update_response(&ctx.event.token)
+        .content(Some(
+            &format!(
+                "
+                    Stats unavailable (either the bot just restarted or something is wrong)
+
+                    **Basic Info:**
+                    Tulpje {}
+                    Current Shard: #{}
+                    API Latency: {} ms
+                ",
+                version!(),
+                ctx.meta.shard,
+                api_latency.to_formatted_string(&Locale::en),
+            )
+            // remove leading whitespace
+            .lines()
+            .map(str::trim_start)
+            .collect::<Vec<&str>>()
+            .join("\n"),
+        ))
+        .await
+    {
+        tracing::warn!(?err, "failed to respond to command");
+    }
+
+    Ok(())
+}
+
 pub async fn cmd_stats(ctx: CommandContext) -> Result<(), Error> {
     let time_before = chrono::Utc::now().timestamp_millis();
     ctx.reply("...").await?;
     let time_after = chrono::Utc::now().timestamp_millis();
     let api_latency = time_after - time_before;
 
-    let shard_stats = get_all_shard_stats(ctx.services.redis.clone()).await?;
+    let shard_stats = match get_all_shard_stats(ctx.services.redis.clone()).await {
+        Ok(stats) => stats,
+        Err(err) => {
+            tracing::warn!("error getting shard stats: {}", err);
+            return minimal_stats_response(ctx, api_latency).await;
+        }
+    };
+
     let total_shards = shard_stats.len();
     let Some(current_shard_state) = shard_stats.get(&ctx.meta.shard) else {
-        return Err(format!("couldn't get current shard state {}", ctx.meta.shard).into());
+        tracing::warn!(shard = ctx.meta.shard, "couldn't find current shard state",);
+        return minimal_stats_response(ctx, api_latency).await;
     };
+
     // TODO: Handle dead shards somehow, they don't get cleaned up automatically
     let shards_up = shard_stats.iter().filter(|(_, s)| s.is_up()).count();
     let guild_count: u64 = shard_stats.values().map(|s| s.guild_count).sum();
