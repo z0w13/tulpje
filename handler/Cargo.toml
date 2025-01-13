@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-shared = { version = "0.14.0", path = "../shared" }
+tulpje-shared = { version = "0.14.1", path = "../shared" }
 tulpje-framework = { version = "0.13.0", path = "../framework" }
 futures-util = "0.3.31"
 serde_json = "1.0.133"
