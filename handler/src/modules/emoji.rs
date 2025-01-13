@@ -57,6 +57,23 @@ pub(crate) fn build() -> Module<Services> {
             "emoji_stats_sort",
             handler_func!(commands::handle_emoji_stats_sort),
         )
+        //// pagination
+        .component(
+            "emoji_stats_first_page",
+            handler_func!(commands::handle_emoji_pagination),
+        )
+        .component(
+            "emoji_stats_prev_page",
+            handler_func!(commands::handle_emoji_pagination),
+        )
+        .component(
+            "emoji_stats_next_page",
+            handler_func!(commands::handle_emoji_pagination),
+        )
+        .component(
+            "emoji_stats_last_page",
+            handler_func!(commands::handle_emoji_pagination),
+        )
         // event handlers
         .event(
             EventType::MessageCreate,

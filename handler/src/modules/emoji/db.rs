@@ -114,10 +114,24 @@ pub(crate) async fn save_emoji_use(
     Ok(())
 }
 
+pub(crate) async fn get_emoji_stat_count(
+    db: &sqlx::PgPool,
+    guild_id: Id<GuildMarker>,
+) -> Result<i64, Error> {
+    Ok(sqlx::query_scalar!(
+        "SELECT COUNT(DISTINCT emoji_id) FROM emoji_uses WHERE guild_id = $1",
+        i64::from(DbId(guild_id)),
+    )
+    .fetch_one(db)
+    .await?
+    .unwrap_or(0))
+}
 pub(crate) async fn get_emoji_stats(
     db: &sqlx::PgPool,
     guild_id: Id<GuildMarker>,
     sort: &StatsSort,
+    offset: u16,
+    limit: u16,
 ) -> Result<Vec<EmojiStats>, Error> {
     let order_by_clause = match sort {
         StatsSort::CountDesc => "times_used DESC",
@@ -139,10 +153,14 @@ pub(crate) async fn get_emoji_stats(
             WHERE guild_id = $1
             GROUP BY emoji_id
             ORDER BY {}
+            OFFSET $2
+            LIMIT $3
         ",
         order_by_clause
     ))
     .bind(DbId(guild_id))
+    .bind(i32::from(offset))
+    .bind(i32::from(limit))
     .fetch_all(db)
     .await?;
 

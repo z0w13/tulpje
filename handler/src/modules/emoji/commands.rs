@@ -1,13 +1,20 @@
+use std::cmp::{max, min};
+
 use twilight_model::{
     application::interaction::application_command::CommandOptionValue,
     channel::message::{
-        component::{ActionRow, SelectMenu, SelectMenuType},
-        Embed,
+        component::{ActionRow, Button, ButtonStyle, SelectMenu, SelectMenuType},
+        Component, Embed, ReactionType,
     },
+    gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
+    id::{marker::GuildMarker, Id},
 };
-use twilight_util::builder::{embed::EmbedBuilder, InteractionResponseDataBuilder};
+use twilight_util::builder::{
+    embed::{EmbedBuilder, EmbedFooterBuilder},
+    InteractionResponseDataBuilder,
+};
 
 use tulpje_framework::Error;
 
@@ -16,6 +23,8 @@ use crate::{
     context::{CommandContext, ComponentInteractionContext},
     modules::emoji::shared::StatsSort,
 };
+
+const EMOJIS_PER_PAGE: u16 = 15;
 
 fn create_emoji_stats_sort_menu() -> SelectMenu {
     SelectMenu {
@@ -38,12 +47,70 @@ fn create_emoji_stats_sort_menu() -> SelectMenu {
     }
 }
 
+fn create_emoji_stats_pagination_buttons(current_page: u16, total_pages: u16) -> Vec<Component> {
+    vec![
+        Component::Button(Button {
+            custom_id: Some(String::from("emoji_stats_first_page")),
+            disabled: current_page == 1,
+            style: ButtonStyle::Primary,
+            emoji: Some(ReactionType::Unicode {
+                name: String::from("⏮️"),
+            }),
+
+            label: None,
+            url: None,
+        }),
+        Component::Button(Button {
+            custom_id: Some(String::from("emoji_stats_prev_page")),
+            disabled: current_page == 1,
+            style: ButtonStyle::Primary,
+            emoji: Some(ReactionType::Unicode {
+                name: String::from("◀️"),
+            }),
+
+            label: None,
+            url: None,
+        }),
+        Component::Button(Button {
+            custom_id: Some(String::from("emoji_stats_next_page")),
+            disabled: current_page == total_pages,
+            style: ButtonStyle::Primary,
+            emoji: Some(ReactionType::Unicode {
+                name: String::from("▶️"),
+            }),
+
+            label: None,
+            url: None,
+        }),
+        Component::Button(Button {
+            custom_id: Some(String::from("emoji_stats_last_page")),
+            disabled: current_page == total_pages,
+            style: ButtonStyle::Primary,
+            emoji: Some(ReactionType::Unicode {
+                name: String::from("⏭️"),
+            }),
+
+            label: None,
+            url: None,
+        }),
+    ]
+}
+
 async fn create_emoji_stats_embed(
     db: &sqlx::PgPool,
     guild: &Guild,
     sort: &StatsSort,
+    current_page: u16,
+    total_pages: u16,
 ) -> Result<Embed, Error> {
-    let emoji_stats = db::get_emoji_stats(db, guild.id, sort).await?;
+    let emoji_stats = db::get_emoji_stats(
+        db,
+        guild.id,
+        sort,
+        (current_page - 1) * EMOJIS_PER_PAGE,
+        EMOJIS_PER_PAGE,
+    )
+    .await?;
     let emoji_str = if !emoji_stats.is_empty() {
         emoji_stats
             .into_iter()
@@ -64,9 +131,115 @@ async fn create_emoji_stats_embed(
     Ok(EmbedBuilder::new()
         .title(format!("{} Emotes in {}", sort.name(), guild.name))
         .description(emoji_str)
+        .footer(
+            EmbedFooterBuilder::new(format!("Page {} of {}", current_page, total_pages)).build(),
+        )
         .build())
 }
 
+fn extract_page_and_sort(event: &InteractionCreate) -> Option<(u16, StatsSort)> {
+    let Some(ref message) = event.message else {
+        tracing::trace!("extract_page: message is None");
+        return None;
+    };
+
+    let Some(embed) = message.embeds.first() else {
+        tracing::trace!("extract_page: first embed is None");
+        return None;
+    };
+
+    let Some(ref title) = embed.title else {
+        tracing::trace!("extract_page: title is None");
+        return None;
+    };
+
+    let Some(ref footer) = embed.footer else {
+        tracing::trace!("extract_page: footer is None");
+        return None;
+    };
+
+    let Some(page_string) = footer.text.split_whitespace().nth(1) else {
+        tracing::trace!("extract_page: page_string is None, {}", footer.text);
+        return None;
+    };
+
+    // extract the current sorting method
+    let sort = if title.starts_with(StatsSort::CountDesc.name()) {
+        StatsSort::CountDesc
+    } else if title.starts_with(StatsSort::CountAsc.name()) {
+        StatsSort::CountAsc
+    } else if title.starts_with(StatsSort::DateDesc.name()) {
+        StatsSort::DateDesc
+    } else if title.starts_with(StatsSort::DateAsc.name()) {
+        StatsSort::DateAsc
+    } else {
+        // fallback to CountDesc if we can't figure it out
+        StatsSort::CountDesc
+    };
+
+    // parse the current page number
+    match page_string.parse::<u16>() {
+        Ok(page) => Some((page, sort)),
+        Err(err) => {
+            tracing::trace!(
+                "extract_page: error parsing page_string '{}': {}",
+                page_string,
+                err,
+            );
+            None
+        }
+    }
+}
+
+pub async fn handle_emoji_pagination(ctx: ComponentInteractionContext) -> Result<(), Error> {
+    let guild = ctx.guild().await?.ok_or("not in guild")?;
+
+    ctx.response(InteractionResponse {
+        kind: InteractionResponseType::DeferredUpdateMessage,
+        data: None,
+    })
+    .await?;
+
+    let Some((page, sort)) = extract_page_and_sort(&ctx.event) else {
+        tracing::warn!("handle_emoji_pagination: couldn't parse page id from event");
+        return Ok(());
+    };
+
+    let total_pages = get_total_pages(&ctx.services.db, guild.id).await?;
+
+    let new_page = match ctx.interaction.custom_id.as_str() {
+        "emoji_stats_first_page" => 1,
+        "emoji_stats_prev_page" => max(page - 1, 1),
+        "emoji_stats_next_page" => min(page + 1, total_pages),
+        "emoji_stats_last_page" => total_pages,
+        other => {
+            return Err(format!(
+                "unknown interaction id for handle_emoji_pagination: {}",
+                other
+            )
+            .into())
+        }
+    };
+
+    if let Err(err) = ctx
+        .interaction()
+        .update_response(&ctx.event.token)
+        .embeds(Some(&[create_emoji_stats_embed(
+            &ctx.services.db,
+            &guild,
+            &sort,
+            new_page,
+            total_pages,
+        )
+        .await?]))
+        .components(Some(&get_components(new_page, total_pages)))
+        .await
+    {
+        tracing::warn!(?err, "failed to update message");
+    }
+
+    Ok(())
+}
 pub async fn handle_emoji_stats_sort(ctx: ComponentInteractionContext) -> Result<(), Error> {
     if ctx.interaction.custom_id != "emoji_stats_sort" {
         tracing::debug!(
@@ -92,6 +265,7 @@ pub async fn handle_emoji_stats_sort(ctx: ComponentInteractionContext) -> Result
     tracing::trace!(sort = ?sort);
 
     let guild = ctx.guild().await?.ok_or("outside of guild")?;
+    let total_pages = get_total_pages(&ctx.services.db, guild.id).await?;
 
     if let Err(err) = ctx
         .interaction()
@@ -100,12 +274,11 @@ pub async fn handle_emoji_stats_sort(ctx: ComponentInteractionContext) -> Result
             &ctx.services.db,
             &guild,
             &sort,
+            1, // we reset back to first page after resetting sorting method
+            total_pages,
         )
         .await?]))
-        .components(Some(&[ActionRow {
-            components: vec![create_emoji_stats_sort_menu().into()],
-        }
-        .into()]))
+        .components(Some(&get_components(1, total_pages)))
         .await
     {
         tracing::warn!(?err, "failed to update message");
@@ -128,16 +301,17 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Error> {
     };
 
     let guild = ctx.guild().await?.ok_or("not in guild")?;
+    let total_pages = get_total_pages(&ctx.services.db, guild.id).await?;
 
     let response = InteractionResponse {
         kind: InteractionResponseType::ChannelMessageWithSource,
         data: Some(
             InteractionResponseDataBuilder::new()
-                .embeds([create_emoji_stats_embed(&ctx.services.db, &guild, &sort).await?])
-                .components([ActionRow {
-                    components: vec![create_emoji_stats_sort_menu().into()],
-                }
-                .into()])
+                .embeds([
+                    create_emoji_stats_embed(&ctx.services.db, &guild, &sort, 1, total_pages)
+                        .await?,
+                ])
+                .components(get_components(1, total_pages))
                 .build(),
         ),
     };
@@ -145,4 +319,28 @@ pub async fn cmd_emoji_stats(ctx: CommandContext) -> Result<(), Error> {
     ctx.response(response).await?;
 
     Ok(())
+}
+
+fn get_components(current_page: u16, total_pages: u16) -> Vec<Component> {
+    vec![
+        ActionRow {
+            components: vec![create_emoji_stats_sort_menu().into()],
+        }
+        .into(),
+        ActionRow {
+            components: create_emoji_stats_pagination_buttons(current_page, total_pages),
+        }
+        .into(),
+    ]
+}
+
+async fn get_total_pages(db: &sqlx::PgPool, guild_id: Id<GuildMarker>) -> Result<u16, Error> {
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "page counts won't ever get big enough to cause data loss"
+    )]
+    Ok(
+        (db::get_emoji_stat_count(db, guild_id).await? as f64 / f64::from(EMOJIS_PER_PAGE)).ceil()
+            as u16,
+    )
 }
