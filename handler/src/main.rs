@@ -149,7 +149,7 @@ async fn main() {
                     .map_err(|err| format!(".set_global_commands() error: {}", err))?;
 
                 // register guild commands
-                let guild_modules = modules::core::db_all_guild_modules(&ctx.services.db)
+                let guild_modules = modules::core::db::all_guild_modules(&ctx.services.db)
                     .await
                     .map_err(|err| format!("error fetching guild modules: {}", err))?;
 

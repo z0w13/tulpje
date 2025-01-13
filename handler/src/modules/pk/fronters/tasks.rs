@@ -13,7 +13,7 @@ use crate::{
 pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
     let fronter_cats = super::db::get_fronter_categories(&ctx.services.db).await?;
     let guild_settings = pk::db::get_guild_settings(&ctx.services.db).await?;
-    let pk_guilds = core::db_guilds_with_module(&ctx.services.db, "pluralkit").await?;
+    let pk_guilds = core::db::guilds_with_module(&ctx.services.db, "pluralkit").await?;
 
     for cat in fronter_cats {
         if !pk_guilds.contains(&cat.guild_id) {
