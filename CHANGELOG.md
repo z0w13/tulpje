@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2025-01-16
+
+### Breaking Changes
+
+ - Use env var for RUST_LOG instead of secret
+ - Update twilight to 0.16.0
+
+### Changed
+
+ - Reduce log level for gateway messages to trace
+ - Reduce amqp message logging level to trace
+ - Use cache for checking if emojis belong to a guild
+
+### Fixed
+
+ - Add length limit to fronter category name
+ - Update references to PluralKit command names in error messages
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * build(release): correctly tag independent crates without a release ([`f9ee0b6`](https://github.com/z0w13/tulpje/commit/f9ee0b6bdae27c28aa75403b75ba0c449bcf3232))
+ * build(release): correctly detect tags for independent crates ([`2ad38f0`](https://github.com/z0w13/tulpje/commit/2ad38f006274e6ec9d65de083856c963aa80294b))
+ * build(compose)!: use env var for RUST_LOG instead of secret ([`36b59e7`](https://github.com/z0w13/tulpje/commit/36b59e75f657bfa151959c45a5b963d9d6e7487f))
+ * build(compose): remove unnecessary env var expansion ([`5942a66`](https://github.com/z0w13/tulpje/commit/5942a66e9e6b2e1098ec413fbd41149a9ea4f273))
+ * fix(handler/pk): add length limit to fronter category name ([`acb0f5a`](https://github.com/z0w13/tulpje/commit/acb0f5aaf207fccc135a9d5d860405b893c27b4c))
+ * fix(handler/pk): update references to PluralKit command names in error messages ([`3b102da`](https://github.com/z0w13/tulpje/commit/3b102da825bff01dc4b7acea0d71b2f462911de2))
+ * chore(gateway): reduce log level for gateway messages to trace ([`d77205e`](https://github.com/z0w13/tulpje/commit/d77205e023730a0ec3d50c0a70ea68f23e080aae))
+ * chore: reduce amqp message logging level to trace ([`4b9a0b7`](https://github.com/z0w13/tulpje/commit/4b9a0b7bedf7dc4869386d7b3fa5e9083bfffc52))
+ * feat(handler/emoji): use cache for checking if emojis belong to a guild ([`a5dc9d1`](https://github.com/z0w13/tulpje/commit/a5dc9d1098553eec7f7daebb62257fd2aa5e60a7))
+ * feat: implemented tulpje-cache, a redis based caching library ([`6710502`](https://github.com/z0w13/tulpje/commit/6710502612beb7e00fd5324502f6ea55bd4b0ea7))
+ * chore!: update twilight to 0.16.0 ([`a974856`](https://github.com/z0w13/tulpje/commit/a9748566df2e386a97c6921c649cec57879fc456))
+</details>
+
 ## [0.14.1] - 2025-01-13
 
 ### Changed

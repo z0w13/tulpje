@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2025-01-16
+
+### Breaking Changes
+
+ - Update twilight to 0.16.0
+
+### Removed
+
+ - Remove unnecessary logging of unhandled events
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(framework): remove unnecessary logging of unhandled events ([`0ec373f`](https://github.com/z0w13/tulpje/commit/0ec373f8bb8cc2ff5a0ae7d00a78d8e30dec981a))
+ * chore!: update twilight to 0.16.0 ([`a974856`](https://github.com/z0w13/tulpje/commit/a9748566df2e386a97c6921c649cec57879fc456))
+</details>
+
 ## [0.13.0] - 2025-01-12
 
 ### Breaking Changes

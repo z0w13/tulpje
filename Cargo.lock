@@ -3113,7 +3113,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-framework"
-version = "0.13.0"
+version = "0.14.0"
 dependencies = [
  "async-cron-scheduler",
  "chrono",
@@ -3130,7 +3130,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "amqprs",
  "bb8",
@@ -3158,7 +3158,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "amqprs",
  "async-cron-scheduler",
@@ -3195,7 +3195,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "dotenvy",
  "tokio",
@@ -3204,7 +3204,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "bb8",
  "bb8-redis",
@@ -3223,7 +3223,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.14.1"
+version = "0.15.0"
 dependencies = [
  "reqwest",
 ]
