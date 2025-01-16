@@ -14,7 +14,7 @@ services:
                 order: start-first
         environment:
             TASK_SLOT: "{{ .Task.Slot }}"
-            SHARD_COUNT: "${SHARD_COUNT}"
+            SHARD_COUNT:
         secrets:
             - "rust_log"
             - "discord_token"
@@ -40,7 +40,7 @@ services:
                 order: start-first
         environment:
             TASK_SLOT: "{{ .Task.Slot }}"
-            HANDLER_COUNT: "${HANDLER_COUNT}"
+            HANDLER_COUNT:
         secrets:
             - "rust_log"
             - "rabbitmq_address"
