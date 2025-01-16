@@ -85,7 +85,7 @@ impl AsyncConsumer for AmqpConsumer {
         _basic_properties: BasicProperties,
         content: Vec<u8>,
     ) -> () {
-        tracing::info!(
+        tracing::trace!(
             "consume delivery {} on channel {}, content size: {}",
             deliver,
             channel,

@@ -17,7 +17,7 @@ pub(crate) struct AmqprsProducer {
 }
 impl AmqprsProducer {
     pub(crate) async fn send(&self, data: &[u8]) -> Result<(), Box<dyn Error>> {
-        tracing::debug!("sending amqp message");
+        tracing::trace!(content_size = data.len(), "sending amqp message");
 
         self.chan
             .basic_publish(
