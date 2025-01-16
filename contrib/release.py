@@ -36,48 +36,6 @@ def find_file_upwards(path: str, name: str) -> Optional[str]:
             return find_file_upwards(os.path.dirname(path), name)
 
 
-class CrateInfo(NamedTuple):
-    name: str
-    path: str
-    independent: bool
-    workspace_dependencies: frozenset[str]
-    lock_file: str
-
-    @property
-    def manifest(self) -> str:
-        return os.path.join(self.path, "Cargo.toml")
-
-    @classmethod
-    def from_manifest(cls, path: str) -> Self:
-        try:
-            independent = not (
-                tomllib.load(open(path, "rb"))["package"]["version"]["workspace"]
-                == True
-            )
-        except (IndexError, TypeError):
-            independent = True
-
-        manifest_json = process_run(
-            ["cargo", "read-manifest", "--frozen", "--manifest-path", path]
-        )
-        parsed_manifest = json.loads(manifest_json)
-        workspace_dependencies = {
-            d["name"] for d in parsed_manifest["dependencies"] if "path" in d
-        }
-
-        lock_file = find_file_upwards(path, "Cargo.lock")
-        if lock_file is None:
-            raise Exception("Couldn't find Cargo.lock")
-
-        return cls(
-            name=parsed_manifest["name"],
-            path=os.path.dirname(path),
-            independent=independent,
-            workspace_dependencies=frozenset(workspace_dependencies),
-            lock_file=lock_file,
-        )
-
-
 class Version(NamedTuple):
     # X.Y.Z
     REGEX = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
@@ -113,6 +71,65 @@ class Version(NamedTuple):
 
         groups = match.groups()
         return cls(int(groups[0]), int(groups[1]), int(groups[2]))
+
+
+class CrateInfo(NamedTuple):
+    name: str
+    version: Version
+    path: str
+    independent: bool
+    workspace_dependencies: frozenset[str]
+    lock_file: str
+
+    @property
+    def manifest(self) -> str:
+        return os.path.join(self.path, "Cargo.toml")
+
+    @classmethod
+    def from_manifest(cls, path: str) -> Self:
+        with open(path, "rb") as manifest_file:
+            manifest = tomllib.load(manifest_file)
+
+        workspace_manifest_path = find_file_upwards(
+            os.path.dirname(os.path.dirname(path)), "Cargo.toml"
+        )
+        if workspace_manifest_path is None:
+            raise Exception("Couldn't find workspace manifest")
+
+        with open(workspace_manifest_path, "rb") as workspace_manifest_file:
+            workspace_manifest = tomllib.load(workspace_manifest_file)
+
+        try:
+            independent = not (manifest["package"]["version"]["workspace"] == True)
+        except (IndexError, TypeError):
+            independent = True
+
+        version = Version.parse(
+            manifest["package"]["version"]
+            if independent
+            else workspace_manifest["workspace"]["package"]["version"]
+        )
+
+        manifest_json = process_run(
+            ["cargo", "read-manifest", "--frozen", "--manifest-path", path]
+        )
+        parsed_manifest = json.loads(manifest_json)
+        workspace_dependencies = {
+            d["name"] for d in parsed_manifest["dependencies"] if "path" in d
+        }
+
+        lock_file = find_file_upwards(path, "Cargo.lock")
+        if lock_file is None:
+            raise Exception("Couldn't find Cargo.lock")
+
+        return cls(
+            name=parsed_manifest["name"],
+            version=version,
+            path=os.path.dirname(path),
+            independent=independent,
+            workspace_dependencies=frozenset(workspace_dependencies),
+            lock_file=lock_file,
+        )
 
 
 def sort_versions(versions: list[str]) -> list[str]:
@@ -374,8 +391,10 @@ def gather_release(
         ).union({f"!{crate.path}/**/*" for crate in independent_crates})
 
     latest_tag = get_latest_tag(f"{prefix}-" if len(prefix) > 0 else "")
+    has_independent_tag = independent_crate and latest_tag is not None
+
     # fall back to main tag if there's none for the prefix yet
-    if len(prefix) > 0 and latest_tag is None:
+    if independent_crate and latest_tag is None:
         latest_tag = get_latest_tag()
 
     if latest_tag is None:
@@ -396,11 +415,18 @@ def gather_release(
         latest_tag, crates[0].name if independent_crate else None
     )
     should_release = should_create_release(commits, file_whitelist, prefix)
-    old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
-    new_version = old_version.bumped(
-        has_feature_commit,
-        has_breaking_change_commit or has_breaking_change_semver_checks,
-    )
+    if independent_crate:
+        old_version = crates[0].version
+    else:
+        old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
+
+    if independent_crate and not has_independent_tag:
+        new_version = old_version
+    else:
+        new_version = old_version.bumped(
+            has_feature_commit,
+            has_breaking_change_commit or has_breaking_change_semver_checks,
+        )
 
     new_changelog = create_changelog_update(
         prefix, new_version, independent_crate, independent_crates
