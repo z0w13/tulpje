@@ -117,7 +117,7 @@ async fn main() {
                     }
                 };
 
-                tracing::debug!(?opcode, "opcode received");
+                tracing::trace!(?opcode, "opcode received");
 
                 if let Ok(Some(event)) =
                     twilight_gateway::parse(text.clone(), EventTypeFlags::all())
