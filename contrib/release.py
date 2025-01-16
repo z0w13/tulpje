@@ -137,7 +137,7 @@ def git_tags_with_prefix(prefix: str = "") -> list[str]:
 
 def get_latest_tag(prefix: str = "") -> Optional[str]:
     tags = git_tags_with_prefix(prefix)
-    latest = latest_version([t.removeprefix(f"v{prefix}") for t in tags])
+    latest = latest_version([t.removeprefix(f"{prefix}v") for t in tags])
     if latest is None:
         return None
 
@@ -373,7 +373,7 @@ def gather_release(
             RELEASE_FILENAME_MATCHLIST_WORKSPACE
         ).union({f"!{crate.path}/**/*" for crate in independent_crates})
 
-    latest_tag = get_latest_tag(prefix)
+    latest_tag = get_latest_tag(f"{prefix}-" if len(prefix) > 0 else "")
     # fall back to main tag if there's none for the prefix yet
     if len(prefix) > 0 and latest_tag is None:
         latest_tag = get_latest_tag()
