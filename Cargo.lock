@@ -559,6 +559,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashmap"
+version = "6.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5041cc499144891f3790297212f32a74fb938e5136a14943f338ef9e0ae276cf"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+ "hashbrown 0.14.5",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
+
+[[package]]
 name = "der"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3087,6 +3101,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "tulpje-cache"
+version = "0.1.0"
+dependencies = [
+ "bb8-redis",
+ "serde",
+ "serde_json",
+ "twilight-cache-inmemory",
+ "twilight-model",
+]
+
+[[package]]
 name = "tulpje-framework"
 version = "0.13.0"
 dependencies = [
@@ -3200,6 +3225,18 @@ name = "tulpje-utils"
 version = "0.14.1"
 dependencies = [
  "reqwest",
+]
+
+[[package]]
+name = "twilight-cache-inmemory"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc9de5f02fa89a48d3fa989811d67a3f3cc3179a46ce71089afa5412ff21fb41"
+dependencies = [
+ "bitflags",
+ "dashmap",
+ "serde",
+ "twilight-model",
 ]
 
 [[package]]

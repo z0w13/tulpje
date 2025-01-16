@@ -1,0 +1,21 @@
+[package]
+name = "tulpje-cache"
+edition = "2021"
+version = "0.1.0"
+description = "A redis cache for twilight"
+# tulpje-cache is heavily based on twilight-cache-inmemory
+# I don't know how the licensing would work here so ISC it is
+license = "ISC"
+
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = "1.0.133"
+bb8-redis = "0.18.0"
+twilight-model = "0.16.0"
+twilight-cache-inmemory = "0.16.0"
+
+[lints]
+workspace = true
