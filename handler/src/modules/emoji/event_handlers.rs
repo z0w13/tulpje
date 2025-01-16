@@ -42,7 +42,7 @@ pub async fn handle_message(ctx: EventContext) -> Result<(), Error> {
     trace!(message = msg.content, emotes = ?emotes, "message");
 
     for emote in emotes {
-        if shared::is_guild_emoji(&ctx.client, guild_id, *emote.id).await {
+        if shared::is_guild_emoji(&ctx.client, &ctx.services.cache, guild_id, *emote.id).await? {
             if let Err(err) = db::save_emoji_use(&ctx.services.db, &emote, timestamp).await {
                 error!(err, guild_id = guild_id.get(), "db::save_emoji_use");
             };
@@ -145,7 +145,7 @@ pub async fn reaction_add(ctx: EventContext) -> Result<(), Error> {
                 return Ok(());
             };
 
-            if !shared::is_guild_emoji(&ctx.client, guild_id, *id).await {
+            if !shared::is_guild_emoji(&ctx.client, &ctx.services.cache, guild_id, *id).await? {
                 return Ok(());
             }
 

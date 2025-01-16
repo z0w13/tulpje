@@ -1,5 +1,6 @@
 use std::{collections::HashMap, str::FromStr as _};
 
+use tulpje_cache::Cache;
 use twilight_http::Client;
 use twilight_model::{
     channel::message::component::SelectMenuOption,
@@ -97,10 +98,12 @@ pub(crate) fn count_emojis(emojis: Vec<db::Emoji>) -> HashMap<db::Emoji, i16> {
 //       safely it's an emoji in a different guild
 pub(crate) async fn is_guild_emoji(
     http: &Client,
+    cache: &Cache,
     guild_id: Id<GuildMarker>,
     emoji_id: Id<EmojiMarker>,
-) -> bool {
-    http.emoji(guild_id, emoji_id).await.is_ok()
+) -> Result<bool, Error> {
+    Ok(cache.guild_emojis.contains(&guild_id, &emoji_id).await?
+        || http.emoji(guild_id, emoji_id).await.is_ok())
 }
 
 #[cfg(test)]

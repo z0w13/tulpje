@@ -16,6 +16,7 @@ use sqlx::{
 use tracing::log::LevelFilter;
 use twilight_gateway::Event;
 
+use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
 use tulpje_shared::DiscordEvent;
 
@@ -80,6 +81,12 @@ async fn main() {
     tracing::info!("installing metrics collector and exporter...");
     metrics::install(redis.clone(), config.handler_id).expect("error setting up metrics");
 
+    // set-up cache
+    let cache = Arc::new(Cache::new(
+        redis.clone(),
+        CacheConfig::new().resource_types(ResourceType::EMOJI),
+    ));
+
     // create postgres connection
     let connect_opts = config
         .database_url
@@ -125,6 +132,7 @@ async fn main() {
     let services = Arc::new(context::Services {
         handler_id: config.handler_id,
 
+        cache: Arc::clone(&cache),
         redis,
         db,
         registry: Arc::clone(&registry),
@@ -191,6 +199,10 @@ async fn main() {
                     continue;
                 }
             };
+
+            if let Err(err) = cache.update(&event).await {
+                tracing::warn!("error updating cache: {}", err);
+            }
 
             tracing::debug!(
                 event = ?event.kind(),

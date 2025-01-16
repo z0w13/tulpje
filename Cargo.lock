@@ -3183,6 +3183,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "tulpje-cache",
  "tulpje-framework",
  "tulpje-shared",
  "twilight-gateway",

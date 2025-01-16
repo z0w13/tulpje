@@ -2,12 +2,14 @@ use std::sync::Arc;
 
 use bb8_redis::RedisConnectionManager;
 
+use tulpje_cache::Cache;
 use tulpje_framework::{context, Registry};
 
 #[derive(Clone)]
 pub struct Services {
     pub handler_id: u32,
 
+    pub cache: Arc<Cache>,
     // NOTE: Internally uses an Arc, "cheap" to clone
     pub redis: bb8::Pool<RedisConnectionManager>,
     // NOTE: Internally uses an Arc, "cheap" to clone
