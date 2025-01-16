@@ -70,14 +70,10 @@ pub async fn handle<T: Clone + Send + Sync + 'static>(
     registry: &Registry<T>,
     event: Event,
 ) {
-    match event.clone() {
-        twilight_gateway::Event::InteractionCreate(event) => {
-            if let Err(err) = handle_interaction(*event, ctx.clone(), &meta, registry).await {
-                tracing::warn!(err);
-            }
+    if let twilight_gateway::Event::InteractionCreate(event) = event.clone() {
+        if let Err(err) = handle_interaction(*event, ctx.clone(), &meta, registry).await {
+            tracing::warn!(err);
         }
-        // TODO: Better tracking of this, if there's no module or interaction handlers?
-        e => tracing::warn!(event = ?e.kind(), "unhandled event"),
     }
 
     if let Some(handlers) = registry.events.get(&event.kind()) {
