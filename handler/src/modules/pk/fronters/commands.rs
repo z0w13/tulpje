@@ -198,13 +198,13 @@ pub(crate) async fn update_fronters(ctx: CommandContext) -> Result<(), Error> {
     ctx.defer_ephemeral().await?;
 
     let Some(cat_id) = db::get_fronter_category(&ctx.services.db, guild.id).await? else {
-        ctx.update("fronter category not set-up, please run /setup-fronters")
+        ctx.update("fronter category not set-up, please run /pk fronters setup")
             .await?;
         return Ok(());
     };
 
     let Some(gs) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
-        ctx.update("PluralKit module not set-up, please run /setup-pk")
+        ctx.update("PluralKit module not set-up, please run /pk setup")
             .await?;
         return Ok(());
     };
