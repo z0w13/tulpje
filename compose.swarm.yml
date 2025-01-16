@@ -15,8 +15,8 @@ services:
         environment:
             TASK_SLOT: "{{ .Task.Slot }}"
             SHARD_COUNT:
+            RUST_LOG:
         secrets:
-            - "rust_log"
             - "discord_token"
             - "discord_gateway_queue"
             - "rabbitmq_address"
@@ -41,8 +41,8 @@ services:
         environment:
             TASK_SLOT: "{{ .Task.Slot }}"
             HANDLER_COUNT:
+            RUST_LOG:
         secrets:
-            - "rust_log"
             - "rabbitmq_address"
             - "discord_proxy"
             - "redis_url"
@@ -122,7 +122,6 @@ secrets:
     discord_proxy:         { file: "_secrets/discord_proxy" }
     discord_gateway_queue: { file: "_secrets/discord_gateway_queue" }
     redis_url:             { file: "_secrets/redis_url" }
-    rust_log:              { file: "_secrets/rust_log" }
 
 volumes:
     postgres:
