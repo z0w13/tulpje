@@ -44,6 +44,7 @@ pub fn build() -> Module<Services> {
                             SubCommandBuilder::new("setup", "set-up fronter channels")
                                 .option(
                                     StringBuilder::new("name", "Name of the fronters category")
+                                        .max_length(100)
                                         .required(true),
                                 )
                                 .handler(handler_func!(fronters::commands::setup_fronters)),
