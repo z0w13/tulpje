@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 metrics = "0.24.1"
-metrics-exporter-prometheus = "0.16.0"
+metrics-exporter-prometheus = { version = "0.16.0", features = ["http-listener"], default-features = false }
 metrics-process = "2.4.0"
 procfs = "0.17.0"
 serde = { version = "1.0.216", features = ["derive"] }
