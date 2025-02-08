@@ -95,6 +95,7 @@ async fn main() {
     // start main loop
     tracing::info!("starting main loop...");
     loop {
+        tracing::trace!("loop start");
         match shard.next().await {
             Some(Ok(twilight_gateway::Message::Close(frame))) => {
                 tracing::warn!(?frame, "gateway connection closed");
@@ -109,6 +110,7 @@ async fn main() {
                 }
             }
             Some(Ok(twilight_gateway::Message::Text(text))) => {
+                tracing::trace!("parsing opcode");
                 let opcode = match parse_opcode(&text) {
                     Err(err) => {
                         tracing::error!(?err, "couldn't parse opcode");
@@ -123,14 +125,17 @@ async fn main() {
 
                 tracing::trace!(?opcode, "opcode received");
 
+                tracing::trace!("metrics");
                 if let Ok(Some(event)) =
                     twilight_gateway::parse(text.clone(), EventTypeFlags::all())
                 {
                     let event = twilight_model::gateway::event::Event::from(event);
 
+                    tracing::trace!("updating metrics");
                     // track event metrics
                     metrics::track_gateway_event(shard_id.number(), &event);
 
+                    tracing::trace!("updating shard state");
                     if let Err(err) = shard_state_manager
                         .handle_event(event.clone(), shard.latency())
                         .await
@@ -138,7 +143,9 @@ async fn main() {
                         tracing::error!("error updating shard state: {}", err);
                     }
                 }
+                tracing::trace!("metrics done");
 
+                tracing::trace!("dispatch");
                 // only publish non-gateway events, aka everything DISPATCH
                 if opcode == OpCode::Dispatch {
                     let event = DiscordEvent::new(shard_id.number(), text);
@@ -161,6 +168,7 @@ async fn main() {
                         "event sent"
                     );
                 }
+                tracing::trace!("dispatch and loop done");
             }
             Some(Err(err)) => {
                 tracing::error!(?err, "error receiving discord message");
