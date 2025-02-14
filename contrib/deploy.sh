@@ -15,7 +15,7 @@ export IMAGE_SUFFIX
 
 echo " [-] Writing secrets from .env to file..."
 rm -f _secrets/*
-grep -vE '^(#|$)' .env | while IFS= read -r L; do
+while IFS= read -r L; do
   # Parse the variable name and value
   varName="$(echo "$L" | cut -d'=' -f1)"
 
@@ -28,7 +28,7 @@ grep -vE '^(#|$)' .env | while IFS= read -r L; do
   # Store each var in .env in a separate secrets file
   echo "     - ${varName}"
   echo "${!varName}" > "_secrets/$(echo "$varName" | tr '[:upper:]' '[:lower:]')"
-done
+done < <(grep -vE '^(#|$)' .env)
 
 # Request shard count from discord if we haven't specified it in env
 if [[ -z "${SHARD_COUNT:-}" ]]; then
