@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use bb8_redis::RedisConnectionManager;
+use redis::aio::ConnectionManager as RedisConnectionManager;
 
 use tulpje_cache::Cache;
 use tulpje_framework::{context, Registry};
@@ -11,7 +11,7 @@ pub struct Services {
 
     pub cache: Arc<Cache>,
     // NOTE: Internally uses an Arc, "cheap" to clone
-    pub redis: bb8::Pool<RedisConnectionManager>,
+    pub redis: RedisConnectionManager,
     // NOTE: Internally uses an Arc, "cheap" to clone
     pub db: sqlx::PgPool,
     // NOTE: Cloning Registry would be very expensive and clones all the internal

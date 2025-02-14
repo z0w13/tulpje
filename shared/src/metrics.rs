@@ -3,17 +3,17 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-use bb8_redis::{
-    redis::{self, AsyncCommands as _, FromRedisValue, ToRedisArgs},
-    RedisConnectionManager,
-};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_process::Collector as ProcessCollector;
+use redis::{
+    self, aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _, FromRedisValue,
+    ToRedisArgs,
+};
 use serde::{Deserialize, Serialize};
 
 pub fn install(
     builder: PrometheusBuilder,
-    redis: bb8::Pool<RedisConnectionManager>,
+    redis: RedisConnectionManager,
     process_name: String,
     version: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -98,7 +98,7 @@ struct MetricsManager {
     interval_ms: u64,
     prev_cpu_ms: u64,
 
-    redis: bb8::Pool<RedisConnectionManager>,
+    redis: RedisConnectionManager,
     collector: ProcessCollector,
 }
 
@@ -106,7 +106,7 @@ impl MetricsManager {
     fn new(
         name: String,
         version: String,
-        redis: bb8::Pool<RedisConnectionManager>,
+        redis: RedisConnectionManager,
         collector: ProcessCollector,
     ) -> Self {
         Self {
@@ -156,8 +156,6 @@ impl MetricsManager {
 
         // TODO: Implement IDs for the instances
         self.redis
-            .get()
-            .await?
             .hset::<&str, &str, &Metrics, ()>("tulpje:metrics", &self.metrics.name, &self.metrics)
             .await?;
 

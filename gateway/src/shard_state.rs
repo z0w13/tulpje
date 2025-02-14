@@ -3,20 +3,20 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use bb8_redis::{redis::AsyncCommands, RedisConnectionManager};
+use redis::{aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _};
 use twilight_gateway::{Event, Latency};
 
 use tulpje_shared::shard_state::ShardState;
 use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Hello, Ready};
 
 pub struct ShardManager {
-    pub redis: bb8::Pool<RedisConnectionManager>,
+    pub redis: RedisConnectionManager,
     pub guild_ids: HashSet<u64>,
     pub shard: ShardState,
 }
 
 impl ShardManager {
-    pub fn new(redis: bb8::Pool<RedisConnectionManager>, shard_id: u32) -> Self {
+    pub fn new(redis: RedisConnectionManager, shard_id: u32) -> Self {
         Self {
             redis,
             guild_ids: HashSet::new(),
@@ -43,8 +43,7 @@ impl ShardManager {
 
     async fn save_shard(&self) -> Result<(), Box<dyn std::error::Error>> {
         self.redis
-            .get()
-            .await?
+            .clone()
             .hset::<&str, String, &ShardState, ()>(
                 "tulpje:shard_status",
                 self.shard.shard_id.to_string(),

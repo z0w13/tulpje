@@ -1,7 +1,7 @@
-use std::{env, error::Error};
+use std::{env, error::Error, time::Duration};
 
-use bb8_redis::RedisConnectionManager;
 use futures_util::StreamExt;
+use redis::aio::ConnectionManagerConfig;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::{
     event::{Event, GatewayEventDeserializer},
@@ -52,11 +52,15 @@ async fn main() {
     let amqp = amqp::create(&config.rabbitmq_address).await;
 
     // create the redis connection
-    let manager = RedisConnectionManager::new(config.redis_url).expect("error initialising redis");
-    let redis = bb8::Pool::builder()
-        .build(manager)
+    let redis_client = redis::Client::open(config.redis_url).expect("error initialising redis");
+    let redis = redis_client
+        .get_connection_manager_with_config(
+            ConnectionManagerConfig::new()
+                .set_connection_timeout(Duration::from_secs(5))
+                .set_response_timeout(Duration::from_secs(5)),
+        )
         .await
-        .expect("error initialising redis pool");
+        .expect("error creating connection manager");
 
     // set-up metrics
     tracing::info!("installing metrics collector and exporter...");

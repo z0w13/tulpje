@@ -18,10 +18,9 @@ serde_json = "1.0.133"
 tokio = "1.42.0"
 twilight-model = "0.16.0"
 uuid = { version = "1.11.0", features = ["v7", "serde"] }
-bb8-redis = "0.18.0"
-bb8 = "0.9.0"
 tracing = "0.1.41"
 tulpje-framework = { version = "0.14.0", path = "../framework" }
+redis = { version = "0.28.2", default-features = false }
 
 [lints]
 workspace = true

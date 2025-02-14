@@ -10,7 +10,7 @@ use std::{
     ops::Deref as _,
 };
 
-use bb8_redis::{bb8, RedisConnectionManager};
+use redis::aio::ConnectionManager;
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     gateway::event::Event,
@@ -92,7 +92,7 @@ pub(crate) fn hash<T: Hash>(val: T) -> u64 {
 }
 
 impl Cache {
-    pub fn new(redis: bb8::Pool<RedisConnectionManager>, config: Config) -> Self {
+    pub fn new(redis: ConnectionManager, config: Config) -> Self {
         Self {
             guilds: Repository::new("guilds", config.wants(ResourceType::GUILD), redis.clone()),
             guild_channels: MappedSetRepository::new(

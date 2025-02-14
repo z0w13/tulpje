@@ -1,6 +1,6 @@
 use std::{collections::HashSet, hash::Hash, marker::PhantomData};
 
-use bb8_redis::{bb8, redis::AsyncCommands as _, RedisConnectionManager};
+use redis::{aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::hash;
@@ -9,14 +9,14 @@ pub struct Repository<K: Hash, V: Serialize + DeserializeOwned> {
     name: String,
     wanted: bool,
 
-    redis: bb8::Pool<RedisConnectionManager>,
+    redis: RedisConnectionManager,
 
     key: PhantomData<K>,
     value: PhantomData<V>,
 }
 
 impl<K: Hash, V: Serialize + DeserializeOwned> Repository<K, V> {
-    pub(crate) fn new(name: &str, wanted: bool, redis: bb8::Pool<RedisConnectionManager>) -> Self {
+    pub(crate) fn new(name: &str, wanted: bool, redis: RedisConnectionManager) -> Self {
         Self {
             name: format!("cache:{}", name),
             wanted,
@@ -31,8 +31,7 @@ impl<K: Hash, V: Serialize + DeserializeOwned> Repository<K, V> {
     pub async fn get(&self, key: &K) -> Result<Option<V>, crate::Error> {
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .hget::<_, _, Option<String>>(&self.name, hash(key))
             .await?
             .map(|json| serde_json::from_str(&json))
@@ -46,8 +45,7 @@ impl<K: Hash, V: Serialize + DeserializeOwned> Repository<K, V> {
 
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .hset::<_, _, _, usize>(&self.name, hash(key), serde_json::to_string(value)?)
             .await?
             > 0)
@@ -60,8 +58,7 @@ impl<K: Hash, V: Serialize + DeserializeOwned> Repository<K, V> {
 
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .hdel::<_, _, usize>(&self.name, hash(key))
             .await?
             > 0)
@@ -83,7 +80,7 @@ impl<K: Hash, V: Serialize + DeserializeOwned> Repository<K, V> {
             return Ok(0);
         }
 
-        Ok(self.redis.get().await?.hdel(&self.name, &keys).await?)
+        Ok(self.redis.clone().hdel(&self.name, &keys).await?)
     }
 }
 
@@ -91,13 +88,13 @@ pub struct SetRepository<T: Serialize + DeserializeOwned + Eq + Hash> {
     name: String,
     wanted: bool,
 
-    redis: bb8::Pool<RedisConnectionManager>,
+    redis: RedisConnectionManager,
 
     value: PhantomData<T>,
 }
 
 impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
-    pub(crate) fn new(name: &str, wanted: bool, redis: bb8::Pool<RedisConnectionManager>) -> Self {
+    pub(crate) fn new(name: &str, wanted: bool, redis: RedisConnectionManager) -> Self {
         Self {
             name: format!("cache:{}", name),
             wanted,
@@ -109,7 +106,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
     }
 
     pub async fn members(&self) -> Result<HashSet<T>, crate::Error> {
-        let json_set: HashSet<String> = self.redis.get().await?.smembers(&self.name).await?;
+        let json_set: HashSet<String> = self.redis.clone().smembers(&self.name).await?;
 
         let mut result_set = HashSet::new();
         if json_set.is_empty() {
@@ -126,8 +123,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
     pub async fn contains(&self, value: &T) -> Result<bool, crate::Error> {
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .sismember::<_, _, usize>(&self.name, serde_json::to_string(value)?)
             .await?
             > 0)
@@ -138,7 +134,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
             return Ok(false);
         }
 
-        Ok(self.redis.get().await?.exists(&self.name).await?)
+        Ok(self.redis.clone().exists(&self.name).await?)
     }
 
     pub(crate) async fn insert(&self, value: &T) -> Result<bool, crate::Error> {
@@ -148,8 +144,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
 
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .sadd::<_, _, usize>(&self.name, serde_json::to_string(value)?)
             .await?
             > 0)
@@ -162,8 +157,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
 
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .srem::<_, _, usize>(&self.name, serde_json::to_string(value)?)
             .await?
             > 0)
@@ -189,12 +183,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
             return Ok(0);
         }
 
-        Ok(self
-            .redis
-            .get()
-            .await?
-            .srem(&self.name, json_values)
-            .await?)
+        Ok(self.redis.clone().srem(&self.name, json_values).await?)
     }
 
     pub(crate) async fn clear(&self) -> Result<bool, crate::Error> {
@@ -202,7 +191,7 @@ impl<T: Serialize + DeserializeOwned + Eq + Hash> SetRepository<T> {
             return Ok(false);
         }
 
-        Ok(self.redis.get().await?.del::<_, usize>(&self.name).await? > 0)
+        Ok(self.redis.clone().del::<_, usize>(&self.name).await? > 0)
     }
 }
 
@@ -210,14 +199,14 @@ pub struct MappedSetRepository<K: Hash, V: Serialize + DeserializeOwned + Eq + H
     name: String,
     wanted: bool,
 
-    redis: bb8::Pool<RedisConnectionManager>,
+    redis: RedisConnectionManager,
 
     key: PhantomData<K>,
     value: PhantomData<V>,
 }
 
 impl<K: Hash, V: Serialize + DeserializeOwned + Eq + Hash> MappedSetRepository<K, V> {
-    pub(crate) fn new(name: &str, wanted: bool, redis: bb8::Pool<RedisConnectionManager>) -> Self {
+    pub(crate) fn new(name: &str, wanted: bool, redis: RedisConnectionManager) -> Self {
         Self {
             name: String::from(name),
             wanted,
@@ -277,13 +266,13 @@ pub struct SingleRepository<T: Serialize + DeserializeOwned> {
     name: String,
     wanted: bool,
 
-    redis: bb8::Pool<RedisConnectionManager>,
+    redis: RedisConnectionManager,
 
     value: PhantomData<T>,
 }
 
 impl<T: Serialize + DeserializeOwned> SingleRepository<T> {
-    pub(crate) fn new(name: &str, wanted: bool, redis: bb8::Pool<RedisConnectionManager>) -> Self {
+    pub(crate) fn new(name: &str, wanted: bool, redis: RedisConnectionManager) -> Self {
         Self {
             name: format!("cache:{}", name),
             wanted,
@@ -301,8 +290,7 @@ impl<T: Serialize + DeserializeOwned> SingleRepository<T> {
 
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .set(&self.name, serde_json::to_string(&value)?)
             .await?)
     }
@@ -314,8 +302,7 @@ impl<T: Serialize + DeserializeOwned> SingleRepository<T> {
 
         Ok(self
             .redis
-            .get()
-            .await?
+            .clone()
             .get::<_, Option<String>>(&self.name)
             .await?
             .map(|json| serde_json::from_str(&json))
