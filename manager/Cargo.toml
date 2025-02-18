@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 dotenvy = "0.15.7"
-tokio = { version = "1.42.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
 twilight-http = { version = "0.16.0", features = ["decompression", "rustls-ring", "rustls-webpki-roots"], default-features = false }
 
 [lints]
