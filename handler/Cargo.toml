@@ -34,7 +34,7 @@ pkrs-fork = { version = "0.4.0", default-features = false, features = ["reqwest-
 serde_either = "0.2.1"
 async-trait = "0.1.83"
 metrics = "0.24.1"
-metrics-exporter-prometheus = { version = "0.16.0", default-features = false }
+metrics-exporter-prometheus = { version = "0.16.2", default-features = false }
 amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"] }
 tulpje-cache = { version = "0.1.0", path = "../cache" }
 redis = { version = "0.28.2", features = ["aio", "connection-manager"] }
