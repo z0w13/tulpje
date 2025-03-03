@@ -19,7 +19,7 @@ tracing = "0.1.41"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = { version = "0.4.39", features = ["alloc", "clock", "std"], default-features = false }
 tokio = "1.43.0"
-uuid = { version = "1.13.2", features = ["v7", "serde"] }
+uuid = { version = "1.15.1", features = ["v7", "serde"] }
 tokio-util = { version = "0.7.13", features = ["rt"] }
 serde = { version = "1.0.219", features = ["derive"] }
 
