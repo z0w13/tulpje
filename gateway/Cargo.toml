@@ -20,7 +20,7 @@ twilight-model = "0.16.0"
 twilight-util = { version = "0.16.0", features = ["builder"] }
 uuid = { version = "1.13.2", features = ["v7", "serde"] }
 serde-envfile = "0.1.0"
-serde = { version = "1.0.216", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 dotenvy = "0.15.7"
 reqwest = { version = "0.12.9", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 redis = { version = "0.28.2", features = ["connection-manager", "tokio-comp"] }
