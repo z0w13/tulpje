@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-03-10
+
+### Breaking Changes
+
+ - Use redis-rs directly instead of through bb8 pool
+
+### Changed
+
+ - Bump redis from 0.28.2 to 0.29.1 in [#11](https://github.com/z0w13/tulpje/pull/11)
+ - Bump serde from 1.0.216 to 1.0.219 in [#14](https://github.com/z0w13/tulpje/pull/14)
+ - Bump serde_json from 1.0.133 to 1.0.138 in [#1](https://github.com/z0w13/tulpje/pull/1)
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * build(deps): bump redis from 0.28.2 to 0.29.1 ([`0c7fea0`](https://github.com/z0w13/tulpje/commit/0c7fea0b667bb7dd32bf6f0aa9212c5b630a0568))
+ * build(deps): bump serde from 1.0.216 to 1.0.219 ([`2d4e975`](https://github.com/z0w13/tulpje/commit/2d4e975abe6f93c8e06ef20d63928f0156d4389f))
+ * build(deps): bump serde_json from 1.0.133 to 1.0.138 ([`66da8bd`](https://github.com/z0w13/tulpje/commit/66da8bdc2851a0e5ca287742bb11c455b8258976))
+ * refactor!: use redis-rs directly instead of through bb8 pool ([`61a548a`](https://github.com/z0w13/tulpje/commit/61a548abb36de63ee410cfa8a662e221478f14a8))
+</details>
+
 ## [0.1.0] - 2025-01-16
 
 ### Changed

@@ -2922,7 +2922,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tulpje-cache"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "redis",
  "serde",
@@ -2933,7 +2933,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-framework"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "async-cron-scheduler",
  "chrono",
@@ -2950,7 +2950,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "amqprs",
  "dotenvy",
@@ -2977,7 +2977,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "amqprs",
  "async-cron-scheduler",
@@ -3013,7 +3013,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "dotenvy",
  "tokio",
@@ -3022,7 +3022,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
@@ -3040,7 +3040,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.15.0"
+version = "0.16.0"
 dependencies = [
  "reqwest",
 ]

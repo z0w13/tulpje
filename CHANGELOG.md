@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2025-03-10
+
+### Breaking Changes
+
+ - Use redis-rs directly instead of through bb8 pool
+
+### Changed
+
+ - Bump vergen-gitcl from 1.0.2 to 1.0.5 in [#6](https://github.com/z0w13/tulpje/pull/6)
+ - Bump redis from 0.28.2 to 0.29.1 in [#11](https://github.com/z0w13/tulpje/pull/11)
+ - Bump sqlx from 0.8.2 to 0.8.3 in [#9](https://github.com/z0w13/tulpje/pull/9)
+ - Bump uuid from 1.13.2 to 1.15.1 in [#12](https://github.com/z0w13/tulpje/pull/12)
+ - Bump ring from 0.17.8 to 0.17.13 in [#13](https://github.com/z0w13/tulpje/pull/13)
+ - Bump serde from 1.0.216 to 1.0.219 in [#14](https://github.com/z0w13/tulpje/pull/14)
+ - Bump uuid from 1.11.0 to 1.13.2 in [#2](https://github.com/z0w13/tulpje/pull/2)
+ - Bump async-trait from 0.1.83 to 0.1.86 in [#4](https://github.com/z0w13/tulpje/pull/4)
+ - Bump serde_json from 1.0.133 to 1.0.138 in [#1](https://github.com/z0w13/tulpje/pull/1)
+ - Bump metrics-exporter-prometheus from 0.16.0 to 0.16.2 in [#5](https://github.com/z0w13/tulpje/pull/5)
+ - Bump tokio from 1.42.0 to 1.43.0 in [#3](https://github.com/z0w13/tulpje/pull/3)
+ - Disable chrono wasmbind feature for our code
+ - Enable dependabot
+
+### Fixed
+
+ - Update tokio-websockets to v0.11.3
+ - Don't use a subshell while parsing .env into env vars
+
+### Removed
+
+ - Remove indirect dependency on aws-lc-rs
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * build(deps): bump vergen-gitcl from 1.0.2 to 1.0.5 ([`1d815db`](https://github.com/z0w13/tulpje/commit/1d815dbc37c5fc122a0fd8f559990a42a473454d))
+ * build(deps): bump redis from 0.28.2 to 0.29.1 ([`0c7fea0`](https://github.com/z0w13/tulpje/commit/0c7fea0b667bb7dd32bf6f0aa9212c5b630a0568))
+ * build(deps): bump sqlx from 0.8.2 to 0.8.3 ([`0f98dae`](https://github.com/z0w13/tulpje/commit/0f98dae9dfcf24e792bb65b9dc0fd9366f9b838f))
+ * build(deps): bump uuid from 1.13.2 to 1.15.1 ([`03bd122`](https://github.com/z0w13/tulpje/commit/03bd122951b391c4c56b233e7745f230925bf167))
+ * build(deps): bump ring from 0.17.8 to 0.17.13 ([`0bf283a`](https://github.com/z0w13/tulpje/commit/0bf283a31c38d8c8e1600ea25ecd50ace16bf7c5))
+ * build(deps): bump serde from 1.0.216 to 1.0.219 ([`2d4e975`](https://github.com/z0w13/tulpje/commit/2d4e975abe6f93c8e06ef20d63928f0156d4389f))
+ * build(deps): bump uuid from 1.11.0 to 1.13.2 ([`723de3d`](https://github.com/z0w13/tulpje/commit/723de3d1e143c95a1d9c6013905a2a4d81070854))
+ * build(deps): bump async-trait from 0.1.83 to 0.1.86 ([`da99ce7`](https://github.com/z0w13/tulpje/commit/da99ce7c4242dd76762caec46565805827286fcd))
+ * build(deps): bump serde_json from 1.0.133 to 1.0.138 ([`66da8bd`](https://github.com/z0w13/tulpje/commit/66da8bdc2851a0e5ca287742bb11c455b8258976))
+ * build(deps): bump metrics-exporter-prometheus from 0.16.0 to 0.16.2 ([`372fc08`](https://github.com/z0w13/tulpje/commit/372fc08f2a7ada13fd7c6f5ed200369b5be5f3f6))
+ * build(deps): bump tokio from 1.42.0 to 1.43.0 ([`d4e6ba6`](https://github.com/z0w13/tulpje/commit/d4e6ba620d929564a901dbdba7e73796e07b33b6))
+ * chore: disable chrono wasmbind feature for our code ([`429b4a4`](https://github.com/z0w13/tulpje/commit/429b4a4a6513837d5cd22ce5bcaad4ea04bab40a))
+ * fix: update tokio-websockets to v0.11.3 ([`429eb6c`](https://github.com/z0w13/tulpje/commit/429eb6cd91b700f5a7931af85e29a6595d6d10a1))
+ * build: enable dependabot ([`fcf5461`](https://github.com/z0w13/tulpje/commit/fcf54611022eab07fe64a3246a9262af7dd56eaf))
+ * fix(build): don't use a subshell while parsing .env into env vars ([`3033cd1`](https://github.com/z0w13/tulpje/commit/3033cd197851cdd69cf17928bfb54a76bea245a1))
+ * refactor!: use redis-rs directly instead of through bb8 pool ([`61a548a`](https://github.com/z0w13/tulpje/commit/61a548abb36de63ee410cfa8a662e221478f14a8))
+ * fix(shared): remove indirect dependency on aws-lc-rs ([`55a3bbf`](https://github.com/z0w13/tulpje/commit/55a3bbff4ed263437d01d90bb56fd63d2e728ef1))
+</details>
+
 ## [0.15.0] - 2025-01-16
 
 ### Breaking Changes
