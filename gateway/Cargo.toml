@@ -31,4 +31,4 @@ amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispe
 metrics-process = "2.4.0"
 
 [build-dependencies]
-vergen-gitcl = { version = "1.0.1", features = ["build"] }
+vergen-gitcl = { version = "1.0.5", features = ["build"] }
