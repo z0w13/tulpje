@@ -18,7 +18,7 @@ twilight-gateway = { version = "0.16.0", features = ["rustls-ring", "rustls-webp
 twilight-http = { version = "0.16.0", features = ["decompression", "rustls-ring", "rustls-webpki-roots"], default-features = false }
 twilight-model = "0.16.0"
 twilight-util = { version = "0.16.0", features = ["builder"] }
-uuid = { version = "1.15.1", features = ["v7", "serde"] }
+uuid = { version = "1.16.0", features = ["v7", "serde"] }
 serde-envfile = "0.1.0"
 serde = { version = "1.0.219", features = ["derive"] }
 dotenvy = "0.15.7"
