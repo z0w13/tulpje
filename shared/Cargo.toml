@@ -14,7 +14,7 @@ metrics-exporter-prometheus = { version = "0.16.2", features = ["http-listener"]
 metrics-process = "2.4.0"
 procfs = "0.17.0"
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.138"
+serde_json = "1.0.140"
 tokio = "1.43.0"
 twilight-model = "0.16.0"
 uuid = { version = "1.15.1", features = ["v7", "serde"] }
