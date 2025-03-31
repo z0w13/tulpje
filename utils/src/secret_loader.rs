@@ -3,9 +3,11 @@ use std::os::unix::process::CommandExt;
 use std::process::Command;
 
 fn main() {
-    println!("* injecting env vars from secrets...");
+    let path = std::env::var("SECRET_LOADER_PATH").unwrap_or(String::from("/run/secrets"));
 
-    for entry in fs::read_dir("/run/secrets").expect("couldn't read secrets dir") {
+    println!("* injecting env vars from secrets in {} ...", path);
+
+    for entry in fs::read_dir(path).expect("couldn't read secrets dir") {
         let Ok(entry) = entry else {
             println!("error reading path {}", entry.unwrap_err());
             continue;
