@@ -13,6 +13,12 @@ fn main() {
             continue;
         };
 
+        if entry.file_name().to_string_lossy().starts_with(".") {
+            // skip hidden files
+            println!("skipping hidden {}", entry.file_name().to_string_lossy());
+            continue;
+        }
+
         let var_name = entry.file_name().to_string_lossy().to_ascii_uppercase();
         let var_value = fs::read_to_string(entry.path()).expect("couldn't read file");
 
