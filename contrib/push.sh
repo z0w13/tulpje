@@ -22,7 +22,7 @@ else
   export IMAGE_SUFFIX=":${IMAGE_TAG}"
 fi
 
-echo " [*] image tag:" "${TULPJE_VERSION}"
+echo " [*] image tag:" "${TULPJE_VERSION:-$IMAGE_TAG}"
 
 # Build binaries
 echo " [-] building binaries..."
