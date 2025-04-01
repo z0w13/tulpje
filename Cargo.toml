@@ -11,6 +11,8 @@ description = "Multi-purpose discord bot & framework"
 homepage = "https://github.com/z0w13/tulpje"
 repository = "https://github.com/z0w13/tulpje"
 license = "CC-BY-NC-SA-4.0"
+# See also `rust-toolchain.toml`
+rust-version = "1.80.1"
 
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks
