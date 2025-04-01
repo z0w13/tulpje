@@ -12,7 +12,10 @@ homepage = "https://github.com/z0w13/tulpje"
 repository = "https://github.com/z0w13/tulpje"
 license = "CC-BY-NC-SA-4.0"
 # See also `rust-toolchain.toml`
-rust-version = "1.80.1"
+rust-version = "1.85.1"
+
+[workspace.metadata]
+crane.name = "tulpje"
 
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks

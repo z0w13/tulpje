@@ -24,22 +24,24 @@ fi
 
 echo " [*] image tag:" "${TULPJE_VERSION:-$IMAGE_TAG}"
 
-# Build binaries
-echo " [-] building binaries..."
-cargo build --target=x86_64-unknown-linux-musl --release
-
-# Build images
 echo " [-] building images..."
-docker compose --profile=full build
+IMAGE_PATHS=(
+  $(nix build \
+    --no-link \
+    --print-out-paths \
+    .#docker-handler \
+    .#docker-gateway \
+    .#docker-http-proxy \
+    .#docker-gateway-queue)
+)
 
-echo " [-] tagging images..."
-docker tag "discord-proxy$IMAGE_SUFFIX"  "$DOCKER_REPO/tulpje/discord-proxy$IMAGE_SUFFIX"
-docker tag "tulpje-handler$IMAGE_SUFFIX" "$DOCKER_REPO/tulpje/handler$IMAGE_SUFFIX"
-docker tag "tulpje-gateway$IMAGE_SUFFIX" "$DOCKER_REPO/tulpje/gateway$IMAGE_SUFFIX"
-docker tag "gateway-queue$IMAGE_SUFFIX"  "$DOCKER_REPO/tulpje/gateway-queue$IMAGE_SUFFIX"
-
-echo " [-] pushing images..."
-docker push "$DOCKER_REPO/tulpje/discord-proxy$IMAGE_SUFFIX"
-docker push "$DOCKER_REPO/tulpje/handler$IMAGE_SUFFIX"
-docker push "$DOCKER_REPO/tulpje/gateway$IMAGE_SUFFIX"
-docker push "$DOCKER_REPO/tulpje/gateway-queue$IMAGE_SUFFIX"
+# Push the images
+for imagePath in ${IMAGE_PATHS[@]}; do
+  imageName=$(tar -axf "$imagePath" manifest.json -O | jq -r '.[0].RepoTags[0]| split(":") | .[0]')
+  echo " [-] pushing ${DOCKER_REPO}/$imageName:${IMAGE_SUFFIX} ..."
+  skopeo \
+    --insecure-policy \
+    copy \
+    "docker-archive:$imagePath" \
+    "docker://${DOCKER_REPO}/${imageName}${IMAGE_SUFFIX}"
+done

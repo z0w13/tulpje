@@ -1,5 +1,12 @@
-/target
-
 .env
 compose.override.yml
-_secrets
+
+# rust
+/target
+
+# devenv.sh
+/.devenv
+/.direnv
+
+# nix
+/result
