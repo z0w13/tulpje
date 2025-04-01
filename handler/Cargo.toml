@@ -40,8 +40,5 @@ amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispe
 tulpje-cache = { version = "0.2.0", path = "../cache" }
 redis = { version = "0.29.1", features = ["connection-manager", "tokio-comp"] }
 
-[build-dependencies]
-vergen-gitcl = { version = "1.0.5", features = ["build"] }
-
 [lints]
 workspace = true

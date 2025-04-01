@@ -54,15 +54,10 @@ pub fn is_pk_proxy(application_id: &Option<Id<ApplicationMarker>>) -> bool {
 #[macro_export]
 macro_rules! version {
     () => {
-        format!(
-            "{} ({}{})",
-            env!("CARGO_PKG_VERSION"),
-            env!("VERGEN_GIT_SHA"),
-            match env!("VERGEN_GIT_DIRTY") {
-                "true" => "-dirty",
-                _ => "",
-            }
-        )
+        match option_env!("TULPJE_VERSION_EXTRA") {
+            Some(extra) => format!("{} ({})", env!("CARGO_PKG_VERSION"), extra),
+            _ => String::from(env!("CARGO_PKG_VERSION")),
+        }
     };
 }
 
