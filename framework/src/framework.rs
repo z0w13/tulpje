@@ -2,8 +2,8 @@ use std::{future::Future, pin::Pin, sync::Arc};
 
 use tokio::{sync::mpsc, task::JoinHandle};
 
-use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use crate::Metadata;
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use twilight_gateway::Event;
 use twilight_http::Client;
 use twilight_model::id::{marker::ApplicationMarker, Id};
@@ -217,21 +217,25 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
     async fn run(&mut self) {
         loop {
             tokio::select! {
-                Some((meta, event)) = self.receiver.recv() => {
-                    let registry = Arc::clone(&self.registry);
-                    let ctx = self.ctx.clone();
+                msg = self.receiver.recv() => {
+                    match msg {
+                        Some((meta, event)) => {
+                            let registry = Arc::clone(&self.registry);
+                            let ctx = self.ctx.clone();
 
-                    self.tracker.spawn(async move {
-                        crate::handle(meta, ctx, &registry, event).await;
-                    });
-                },
-                () = self.shutdown.cancelled() => break,
+                            self.tracker.spawn(async move {
+                                crate::handle(meta, ctx, &registry, event).await;
+                            });
+                        },
+                        None => break,
+                    }
+                }
+                // we close the receiver so remaining messages can be drained before we break
+                () = self.shutdown.cancelled() => self.receiver.close(),
             }
         }
 
-        self.receiver.close();
         self.tracker.close();
-
         self.tracker.wait().await;
     }
 }

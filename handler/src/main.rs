@@ -13,12 +13,13 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions as _,
 };
+use tokio_util::sync::CancellationToken;
 use tracing::log::LevelFilter;
 use twilight_gateway::Event;
 
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::{parse_task_slot, DiscordEvent};
+use tulpje_shared::{parse_task_slot, shutdown_signal, DiscordEvent};
 
 use config::Config;
 
@@ -171,39 +172,61 @@ async fn main() {
     framework.start().await.expect("error starting framework");
 
     let sender = framework.sender();
+    let shutdown = CancellationToken::new();
+    let main_shutdown = shutdown.clone();
     let main_handle = tokio::spawn(async move {
         loop {
-            let Some(message) = amqp.recv().await else {
-                break;
-            };
+            tokio::select! {
+                msg = amqp.recv() => {
+                    match msg {
+                        Some(message) => {
+                            let (meta, event) = match parse_delivery(message) {
+                                Ok((meta, event)) => (meta, event),
+                                Err(err) => {
+                                    tracing::error!(?err, "couldn't parse delivery");
+                                    continue;
+                                }
+                            };
 
-            let (meta, event) = match parse_delivery(message) {
-                Ok((meta, event)) => (meta, event),
-                Err(err) => {
-                    tracing::error!(?err, "couldn't parse delivery");
-                    continue;
+                            if let Err(err) = cache.update(&event).await {
+                                tracing::warn!("error updating cache: {}", err);
+                            }
+
+                            tracing::debug!(
+                                event = ?event.kind(),
+                                uuid = ?meta.uuid,
+                                shard = meta.shard,
+                                "event received",
+                            );
+
+                            if let Err(err) = sender.send(meta, event) {
+                                tracing::error!("error queueing event: {}", err);
+                            };
+                        }
+                        None => break,
+                    }
+                },
+                () = main_shutdown.cancelled() => {
+                    if let Err(err) = amqp.shutdown().await {
+                        tracing::error!("error while shutting down amqp: {}", err);
+                    };
                 }
-            };
-
-            if let Err(err) = cache.update(&event).await {
-                tracing::warn!("error updating cache: {}", err);
             }
-
-            tracing::debug!(
-                event = ?event.kind(),
-                uuid = ?meta.uuid,
-                shard = meta.shard,
-                "event received",
-            );
-
-            if let Err(err) = sender.send(meta, event) {
-                tracing::error!("error queueing event: {}", err);
-            };
         }
     });
 
-    framework.join().await.expect("error joining framework");
+    shutdown_signal().await;
+    tracing::info!("shutting down ... ");
+
+    shutdown.cancel();
+    tracing::info!("stopping amqp receiver ... ");
     main_handle.await.expect("error joining main_handle");
+
+    tracing::info!("stopping framework ... ");
+    framework.shutdown().await;
+    framework.join().await.expect("error joining framework");
+
+    tracing::info!("goodbye o/");
 }
 
 fn parse_delivery(message: Vec<u8>) -> Result<(Metadata, Event), Box<dyn std::error::Error>> {

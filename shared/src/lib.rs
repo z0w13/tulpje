@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::id::{marker::ApplicationMarker, Id};
+use tokio::signal::unix::{signal, SignalKind};
 
 use tulpje_framework::Metadata;
 
@@ -31,6 +32,16 @@ pub fn parse_task_slot(target_var: &str) {
 
         std::env::set_var(target_var, task_slot_parsed.to_string());
     }
+}
+
+pub async fn shutdown_signal() {
+    let mut sigint = signal(SignalKind::interrupt()).expect("failed to install SIGINT handler");
+    let mut sigterm = signal(SignalKind::terminate()).expect("failed to install SIGTERM handler");
+
+    tokio::select! {
+        _ = sigint.recv() => {},
+        _ = sigterm.recv() => {},
+    };
 }
 
 #[expect(

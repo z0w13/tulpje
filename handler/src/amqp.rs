@@ -11,20 +11,41 @@ use tokio::sync::mpsc;
 
 pub(crate) struct AmqprsConsumer {
     queue: mpsc::UnboundedReceiver<Vec<u8>>,
-    #[expect(
-        dead_code,
-        reason = "we just don't want them to go out of scope, hence they're here"
-    )]
-    conn: Connection,
-    #[expect(
-        dead_code,
-        reason = "we just don't want them to go out of scope, hence they're here"
-    )]
-    chan: Channel,
+    conn: Option<Connection>,
+    chan: Option<Channel>,
 }
 impl AmqprsConsumer {
+    pub(crate) fn new(
+        queue: mpsc::UnboundedReceiver<Vec<u8>>,
+        conn: Connection,
+        chan: Channel,
+    ) -> Self {
+        Self {
+            queue,
+            conn: Some(conn),
+            chan: Some(chan),
+        }
+    }
     pub(crate) async fn recv(&mut self) -> Option<Vec<u8>> {
         self.queue.recv().await
+    }
+
+    pub(crate) async fn shutdown(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        self.chan
+            .take()
+            .ok_or("chan is None, did you already call AmqprsConsumer::shutdown?")?
+            .close()
+            .await?;
+
+        self.conn
+            .take()
+            .ok_or("conn is None, did you already call AmqprsConsumer::shutdown?")?
+            .close()
+            .await?;
+
+        self.queue.close();
+
+        Ok(())
     }
 }
 
@@ -65,11 +86,7 @@ pub(crate) async fn create(addr: &str) -> AmqprsConsumer {
         .await
         .expect("error declaring amqp consumer");
 
-    AmqprsConsumer {
-        conn: amqp_conn,
-        chan: amqp_chan,
-        queue: message_queue_recv,
-    }
+    AmqprsConsumer::new(message_queue_recv, amqp_conn, amqp_chan)
 }
 
 struct AmqpConsumer {
