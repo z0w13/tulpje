@@ -22,6 +22,17 @@ impl DiscordEvent {
     }
 }
 
+pub fn parse_task_slot(target_var: &str) {
+    if let Ok(task_slot) = std::env::var("TASK_SLOT") {
+        tracing::info!("TASK_SLOT env var found, using it for {}", target_var);
+        tracing::debug!("TASK_SLOT = {}", task_slot);
+
+        let task_slot_parsed = task_slot.parse::<u64>().expect("couldn't parse task_slot") - 1;
+
+        std::env::set_var(target_var, task_slot_parsed.to_string());
+    }
+}
+
 #[expect(
     clippy::integer_division,
     reason = "we only care about the whole numbers, so truncating is fine"

@@ -5,7 +5,7 @@ mod db;
 mod metrics;
 mod modules;
 
-use std::{env, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use context::Services;
 use redis::aio::ConnectionManagerConfig;
@@ -18,25 +18,14 @@ use twilight_gateway::Event;
 
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::DiscordEvent;
+use tulpje_shared::{parse_task_slot, DiscordEvent};
 
 use config::Config;
 
 #[tokio::main]
 async fn main() {
     // parse TASK_SLOT env var if it exists and use it for the handler id
-    if let Ok(task_slot) = env::var("TASK_SLOT") {
-        tracing::info!("TASK_SLOT env var found, using it for handler id");
-        tracing::debug!("TASK_SLOT = {}", task_slot);
-
-        env::set_var(
-            "HANDLER_ID",
-            format!(
-                "{}",
-                task_slot.parse::<u64>().expect("couldn't parse task_slot") - 1
-            ),
-        );
-    }
+    parse_task_slot("HANDLER_DIR");
 
     // create config from environment vars
     let config = Config::load().expect("error loading config");

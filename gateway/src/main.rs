@@ -10,7 +10,7 @@ use twilight_model::gateway::{
     OpCode,
 };
 
-use tulpje_shared::{version, DiscordEvent};
+use tulpje_shared::{parse_task_slot, version, DiscordEvent};
 
 mod amqp;
 mod config;
@@ -22,18 +22,7 @@ use config::Config;
 #[tokio::main]
 async fn main() {
     // parse TASK_SLOT env var if it exists and use it for the shard id
-    if let Ok(task_slot) = env::var("TASK_SLOT") {
-        tracing::info!("TASK_SLOT env var found, using it for shard id");
-        tracing::debug!("TASK_SLOT = {}", task_slot);
-
-        env::set_var(
-            "SHARD_ID",
-            format!(
-                "{}",
-                task_slot.parse::<u64>().expect("couldn't parse task_slot") - 1
-            ),
-        );
-    }
+    parse_task_slot("SHARD_ID");
 
     // create config from environment vars
     let config = Config::load().expect("error loading config from env");
