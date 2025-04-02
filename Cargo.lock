@@ -2933,7 +2933,6 @@ name = "tulpje-gateway"
 version = "0.16.0"
 dependencies = [
  "amqprs",
- "dotenvy",
  "figment",
  "figment_file_provider_adapter",
  "futures-util",
@@ -2964,7 +2963,6 @@ dependencies = [
  "async-trait",
  "base64",
  "chrono",
- "dotenvy",
  "figment",
  "figment_file_provider_adapter",
  "futures-util",
@@ -2995,7 +2993,6 @@ dependencies = [
 name = "tulpje-manager"
 version = "0.16.0"
 dependencies = [
- "dotenvy",
  "tokio",
  "twilight-http",
 ]

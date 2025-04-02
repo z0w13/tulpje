@@ -24,14 +24,6 @@ use config::Config;
 
 #[tokio::main]
 async fn main() {
-    // load .env into environment vars, ignore if not found
-    match dotenvy::dotenv().map(|_| ()) {
-        Err(err) if err.not_found() => {
-            tracing::warn!("no .env file found");
-        }
-        result => result.expect("error loading .env file"),
-    };
-
     // parse TASK_SLOT env var if it exists and use it for the handler id
     if let Ok(task_slot) = env::var("TASK_SLOT") {
         tracing::info!("TASK_SLOT env var found, using it for handler id");
