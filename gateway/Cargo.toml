@@ -21,7 +21,6 @@ twilight-http = { version = "0.16.0", features = ["decompression", "rustls-ring"
 twilight-model = "0.16.0"
 twilight-util = { version = "0.16.0", features = ["builder"] }
 uuid = { version = "1.16.0", features = ["v7", "serde"] }
-serde-envfile = "0.1.0"
 serde = { version = "1.0.219", features = ["derive"] }
 dotenvy = "0.15.7"
 reqwest = { version = "0.12.15", default-features = false, features = ["rustls-tls", "charset", "http2"] }
@@ -31,3 +30,5 @@ metrics = "0.24.1"
 metrics-exporter-prometheus = { version = "0.16.2", default-features = false }
 amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"] }
 metrics-process = "2.4.0"
+figment = { version = "0.10.19", features = ["env"] }
+figment_file_provider_adapter = "0.1.1"

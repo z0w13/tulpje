@@ -1,5 +1,6 @@
+use figment::{providers::Env, Figment};
+use figment_file_provider_adapter::FileAdapter;
 use serde::{Deserialize, Serialize};
-use serde_envfile::Error;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -13,7 +14,9 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn from_env() -> Result<Self, Error> {
-        serde_envfile::from_env()
+    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Figment::new()
+            .merge(FileAdapter::wrap(Env::raw()))
+            .extract()?)
     }
 }

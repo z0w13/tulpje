@@ -44,7 +44,7 @@ async fn main() {
     }
 
     // create config from environment vars
-    let config = Config::from_env().expect("error loading config from env");
+    let config = Config::load().expect("error loading config from env");
 
     // set-up logging
     tracing_subscriber::fmt::init();
