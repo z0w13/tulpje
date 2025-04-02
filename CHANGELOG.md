@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2025-04-02
+
+### Breaking Changes
+
+ - Switch to nix based images and devenv
+ - Remove dotenvy
+ - Use figment instead of serde_envfile
+
+### Added
+
+ - Add rust-toolchain.toml
+
+### Changed
+
+ - Move TASK_SLOT parsing into shared crate
+ - Use single build.rs for both handler & gateway
+ - Replace vergen_gitcl with simple code doing the same thing
+ - Skip hidden files (dotfiles)
+ - Make secret path configurable using SECRET_LOADER_PATH env var
+ - Bump tokio-util from 0.7.13 to 0.7.14 in [#19](https://github.com/z0w13/tulpje/pull/19)
+ - Bump chrono from 0.4.39 to 0.4.40 in [#17](https://github.com/z0w13/tulpje/pull/17)
+ - Bump uuid from 1.15.1 to 1.16.0 in [#16](https://github.com/z0w13/tulpje/pull/16)
+ - Bump serde_json from 1.0.138 to 1.0.140 in [#15](https://github.com/z0w13/tulpje/pull/15)
+ - Bump reqwest from 0.12.9 to 0.12.15 in [#20](https://github.com/z0w13/tulpje/pull/20)
+
+### Fixed
+
+ - Don't need init on the twilight containers
+ - Don't error with custom IMAGE_TAG
+ - Redis should have feature `tokio-comp` not `aio`
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * feat!: switch to nix based images and devenv ([`17bdc9c`](https://github.com/z0w13/tulpje/commit/17bdc9c9b0695f03ee84848f738022bc2102e407))
+ * fix(compose): don't need init on the twilight containers ([`dab326d`](https://github.com/z0w13/tulpje/commit/dab326da33bf43bb91f0afb4ce6fe0036a0983e0))
+ * refactor: move TASK_SLOT parsing into shared crate ([`40ba656`](https://github.com/z0w13/tulpje/commit/40ba656449294f26e3c268a0c75708967093f3a3))
+ * refactor!: remove dotenvy ([`abb674e`](https://github.com/z0w13/tulpje/commit/abb674e15db05f744b2f899700bfbef4c3f81e9e))
+ * refactor!: use figment instead of serde_envfile ([`88b0993`](https://github.com/z0w13/tulpje/commit/88b09931468ff14d977c841cda9edf9bd724135c))
+ * refactor: use single build.rs for both handler & gateway ([`41245cd`](https://github.com/z0w13/tulpje/commit/41245cd86896a5f0ed5780ddd7f1d172d7a34f18))
+ * refactor: replace vergen_gitcl with simple code doing the same thing ([`47a8608`](https://github.com/z0w13/tulpje/commit/47a8608ae89b094df18d1d9f31fa80bd4a402be3))
+ * feat(utils/secret-loader): skip hidden files (dotfiles) ([`8b0a50a`](https://github.com/z0w13/tulpje/commit/8b0a50afca3d4cc1d623f5c7e6ce69f92dedc78d))
+ * feat(utils/secret-loader): make secret path configurable using SECRET_LOADER_PATH env var ([`cb52886`](https://github.com/z0w13/tulpje/commit/cb528866dc8183b93167224154f841452e09bc96))
+ * chore(build): add rust-toolchain.toml ([`7c275c0`](https://github.com/z0w13/tulpje/commit/7c275c0420434b93aab1447be725d29800e6c594))
+ * fix(build/push): don't error with custom IMAGE_TAG ([`17adfa9`](https://github.com/z0w13/tulpje/commit/17adfa96adddb8642e10389e17e8d28888ea081b))
+ * fix(handler): redis should have feature `tokio-comp` not `aio` ([`89b3522`](https://github.com/z0w13/tulpje/commit/89b35222f4bc99d8a03baceb6ee66d0da80ed4e6))
+ * build(deps): bump tokio-util from 0.7.13 to 0.7.14 ([`bf5a40c`](https://github.com/z0w13/tulpje/commit/bf5a40cbcb61972300bde05ce833e12a8fcc0f6c))
+ * build(deps): bump chrono from 0.4.39 to 0.4.40 ([`65a2452`](https://github.com/z0w13/tulpje/commit/65a2452173fec94286489bde93caad9af5b02ae8))
+ * build(deps): bump uuid from 1.15.1 to 1.16.0 ([`7cc4bd4`](https://github.com/z0w13/tulpje/commit/7cc4bd428166d713690c8e6a6b6cc3cc77099d61))
+ * build(deps): bump serde_json from 1.0.138 to 1.0.140 ([`551fc09`](https://github.com/z0w13/tulpje/commit/551fc09bce0e23187a2271c076726170f0de3170))
+ * build(deps): bump reqwest from 0.12.9 to 0.12.15 ([`d076ae8`](https://github.com/z0w13/tulpje/commit/d076ae8aae986397a86efde3a1d80a3761bb9790))
+</details>
+
 ## [0.16.0] - 2025-03-10
 
 ### Breaking Changes

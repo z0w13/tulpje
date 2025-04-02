@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-04-02
+
+### Changed
+
+ - Bump serde_json from 1.0.138 to 1.0.140 in [#15](https://github.com/z0w13/tulpje/pull/15)
+
+### Fixed
+
+ - Redis should have feature `tokio-comp` not `aio`
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(handler): redis should have feature `tokio-comp` not `aio` ([`89b3522`](https://github.com/z0w13/tulpje/commit/89b35222f4bc99d8a03baceb6ee66d0da80ed4e6))
+ * build(deps): bump serde_json from 1.0.138 to 1.0.140 ([`551fc09`](https://github.com/z0w13/tulpje/commit/551fc09bce0e23187a2271c076726170f0de3170))
+</details>
+
 ## [0.2.0] - 2025-03-10
 
 ### Breaking Changes
