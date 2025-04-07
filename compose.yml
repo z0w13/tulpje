@@ -3,10 +3,8 @@ name: "tulpje"
 services:
     gateway:
         image: "tulpje-gateway${IMAGE_SUFFIX}"
+        pull_policy: never
         profiles: [ "full" ]
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.gateway"
         init: true
         environment:
             - SHARD_ID
@@ -24,16 +22,15 @@ services:
             gateway_queue: { condition: service_started }
     handler:
         image: "tulpje-handler${IMAGE_SUFFIX}"
+        pull_policy: never
         profiles: [ "full" ]
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.handler"
         init: true
         environment:
             - HANDLER_ID
             - HANDLER_COUNT
             - RUST_BACKTRACE=1
             - RUST_LOG
+            - DATABASE_URL
             - RABBITMQ_ADDRESS
             - DISCORD_PROXY
             - REDIS_URL
@@ -43,33 +40,22 @@ services:
             rabbitmq: { condition: service_healthy }
             discord_proxy: { condition: service_started }
     gateway_queue:
-        image: "gateway-queue${IMAGE_SUFFIX}"
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.gateway-queue"
-            additional_contexts:
-                upstream: "docker-image://ghcr.io/twilight-rs/gateway-queue@sha256:b6614d239663e3bcc10d9a72bd42d68a41f693d738a55605324b590f0f798417"
+        image: "twilight-gateway-queue${IMAGE_SUFFIX}"
+        pull_policy: never
         # NOTE: Unfortunately can't health check, only endpoint is the queue for rate limiting
-        environment:
-            - DISCORD_TOKEN
+        secrets:
+           - discord_token
     discord_proxy:
-        image: "discord-proxy${IMAGE_SUFFIX}"
-        build:
-            context: "."
-            dockerfile: "docker/Dockerfile.discord-proxy"
-            additional_contexts:
-                # https://github.com/twilight-rs/http-proxy/pkgs/container/http-proxy
-                # NOTE: ghcr.io/twilight-rs/http-proxy:metrics but pinned to hash
-                # NOTE: using own fork github.com/z0w13/twilight-http-proxy because some routes are missing in upstream
-                upstream: "docker-image://ghcr.io/z0w13/twilight-http-proxy@sha256:d6ed4aa50cc69d52d042f586947b45d84ac10715006c4606d1c3567b103faf6f"
+        image: "twilight-http-proxy${IMAGE_SUFFIX}"
+        pull_policy: never
         healthcheck:
-            test: ["CMD", "/bin/check-http", "HEAD", "http://localhost/metrics"]
-            interval: 10s
-            timeout: 5s
-            retries: 3
-            start_period: 5s
-        environment:
-            - DISCORD_TOKEN
+          test: ["CMD", "/bin/check-http", "HEAD", "http://localhost/metrics"]
+          interval: 10s
+          timeout: 5s
+          retries: 3
+          start_period: 5s
+        secrets:
+           - discord_token
     postgres:
         # https://hub.docker.com/_/postgres
         image: "postgres:17.2"
@@ -107,6 +93,10 @@ services:
             timeout: 10s
             retries: 3
             start_period: 30s
+
+secrets:
+  discord_token:
+    environment: DISCORD_TOKEN
 
 volumes:
     postgres:

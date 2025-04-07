@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
 ##############
 #
 # Run through a bunch of checks, tests, etc to see if we can actually deploy
 #
 ##############
+
+set -euo pipefail
+test -n "${DEBUG:-}" && set -x
+
+# Set the script and project directory
+SCRIPT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Make sure we're in the project directory
+cd "$PROJECT_DIR"
 
 export RUSTFLAGS="-Dwarnings"
 
@@ -27,5 +35,9 @@ for target in "${TARGETS[@]}"; do
   cargo test --target="$target" --release --quiet
 done
 
-echo "* building containers..."
-docker compose --profile=full build
+echo "* building docker images..."
+nix build --no-link --print-out-paths \
+  ".#docker-handler" \
+  ".#docker-gateway" \
+  ".#docker-http-proxy" \
+  ".#docker-gateway-queue"
