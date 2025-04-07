@@ -13,6 +13,10 @@ jobs:
           fetch-depth: 0
       - name: "Install Nix"
         uses: nixbuild/nix-quick-install-action@v30
+      - uses: cachix/cachix-action@v14
+        with:
+          name: tulpje
+          authToken: '${{ secrets.CACHIX_TOKEN }}'
       - name: Build binaries
         run: nix build .
       - name: Build docker images
