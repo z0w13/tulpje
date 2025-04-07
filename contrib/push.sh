@@ -38,7 +38,7 @@ IMAGE_PATHS=(
 # Push the images
 for imagePath in ${IMAGE_PATHS[@]}; do
   imageName=$(tar -axf "$imagePath" manifest.json -O | jq -r '.[0].RepoTags[0]| split(":") | .[0]')
-  echo " [-] pushing ${DOCKER_REPO}/$imageName:${IMAGE_SUFFIX} ..."
+  echo " [-] pushing ${DOCKER_REPO}/$imageName${IMAGE_SUFFIX} ..."
   skopeo \
     --insecure-policy \
     copy \
