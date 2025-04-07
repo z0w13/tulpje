@@ -35,7 +35,7 @@ serde_either = "0.2.1"
 async-trait = "0.1.86"
 metrics = "0.24.1"
 metrics-exporter-prometheus = { version = "0.16.2", default-features = false }
-amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"] }
+amqprs = { version = "2.1.1", features = ["compliance_assert", "traces", "urispec"] }
 tulpje-cache = { version = "0.3.0", path = "../cache" }
 redis = { version = "0.29.1", features = ["connection-manager", "tokio-comp"] }
 figment = { version = "0.10.19", features = ["env"] }
