@@ -2,9 +2,11 @@
   nixConfig = {
     extra-substituters = [
       "https://nix-community.cachix.org"
+      "https://tulpje.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "tulpje.cachix.org-1:ISTRSvsZPKD+bCTDAq3lz6XusN2dWaSE7jcOcCIhqN4="
     ];
   };
 
@@ -56,11 +58,14 @@
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               jq
+              cachix
               skopeo
               toolchain
               cargo-semver-checks
             ];
           };
+
+          packages.rust-toolchain = toolchain;
 
           packages.tulpje-handler = buildCrate "tulpje-handler";
           packages.tulpje-gateway = buildCrate "tulpje-gateway";
