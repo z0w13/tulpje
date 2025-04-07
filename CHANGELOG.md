@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.1] - 2025-04-07
+
+### Added
+
+ - Add cachix-action
+ - Add nix-community substituter
+ - Add github ci and docker image workflows
+
+### Changed
+
+ - Use personal cachix cache
+ - Bump tokio from 1.43.0 to 1.44.2
+ - Get local development with docker working again
+ - Update twilight-gateway-queue to 5f5e0c1
+
+### Fixed
+
+ - Make dependabot target dev branch
+ - Don't show double : in image name
+ - Fix ability to run `docker compose up`
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * build(github): add cachix-action ([`152016f`](https://github.com/z0w13/tulpje/commit/152016f14904166b22c0ff2014a2a019d8ea0df6))
+ * build: use personal cachix cache ([`beef3d0`](https://github.com/z0w13/tulpje/commit/beef3d069a28174f12c3a9560d2c7dd9a8cf5b22))
+ * fix(build): add nix-community substituter ([`c89cbea`](https://github.com/z0w13/tulpje/commit/c89cbeae1bfbad9fdcfb1d9f925e648d098e05ea))
+ * feat(ci): add github ci and docker image workflows ([`cd150ab`](https://github.com/z0w13/tulpje/commit/cd150ab5a79d3c25d4a3c0aea74831be79ce3026))
+ * build(deps): bump tokio from 1.43.0 to 1.44.2 ([`7bb5707`](https://github.com/z0w13/tulpje/commit/7bb5707683ebb1de6fd89d84a6e1ed447eb197ca))
+ * fix(ci): make dependabot target dev branch ([`c8209fa`](https://github.com/z0w13/tulpje/commit/c8209fad24f17348fbb002b229da7dbdf8d172ea))
+ * build: get local development with docker working again ([`1206529`](https://github.com/z0w13/tulpje/commit/12065291b3ec449bd23fe11c7c5a5e0d76420e1f))
+ * chore: update twilight-gateway-queue to 5f5e0c1 ([`48d0763`](https://github.com/z0w13/tulpje/commit/48d07634508ac8285fd12f4d85fb64489c1e97c4))
+ * fix(build/push): don't show double : in image name ([`e7375a0`](https://github.com/z0w13/tulpje/commit/e7375a019b3f270fb6fd7aec54b0cf9bbe40dd32))
+ * wip: fix ability to run `docker compose up` ([`82e1f2a`](https://github.com/z0w13/tulpje/commit/82e1f2ad4a90f8f5dc41b6c0159b65910dba8b19))
+</details>
+
 ## [0.17.0] - 2025-04-02
 
 ### Breaking Changes
