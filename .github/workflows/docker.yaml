@@ -34,7 +34,6 @@ jobs:
         run: nix build -o ${{ matrix.image.output }}.tar.gz .#${{ matrix.image.output }}
       - name: Push ${{ matrix.image.name }} image
         run: >
-          skopeo --insecure-policy
-            copy
-              "docker-archive:${{ matrix.image.output }}.tar.gz"
-              "docker://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.image.name }}:${{ steps.image-tag.outputs.name }}"
+          skopeo --insecure-policy copy
+          "docker-archive:${{ matrix.image.output }}.tar.gz"
+          "docker://ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{ matrix.image.name }}:${{ steps.image-tag.outputs.name }}"
