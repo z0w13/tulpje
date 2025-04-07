@@ -1,0 +1,19 @@
+name: "Continuous Integration"
+on: [ push ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: "Install Nix"
+        uses: nixbuild/nix-quick-install-action@v30
+      - name: Build binaries
+        run: nix build .
+      - name: Build docker images
+        run: nix build .#docker-gateway .#docker-handler .#docker-gateway-queue .#docker-http-proxy
