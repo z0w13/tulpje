@@ -64,7 +64,8 @@ async fn main() {
 
     // set-up metrics
     tracing::info!("installing metrics collector and exporter...");
-    metrics::install(redis.clone(), config.handler_id).expect("error setting up metrics");
+    metrics::install(config.metrics_listen_addr, redis.clone(), config.handler_id)
+        .expect("error setting up metrics");
 
     // set-up cache
     let cache = Arc::new(Cache::new(

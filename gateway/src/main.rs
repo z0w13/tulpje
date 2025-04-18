@@ -45,7 +45,8 @@ async fn main() {
 
     // set-up metrics
     tracing::info!("installing metrics collector and exporter...");
-    metrics::install(redis.clone(), config.shard_id).expect("error setting up metrics");
+    metrics::install(config.metrics_listen_addr, redis.clone(), config.shard_id)
+        .expect("error setting up metrics");
 
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);

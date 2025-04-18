@@ -3,13 +3,19 @@ use std::error::Error;
 use metrics::{counter, describe_counter};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use redis::aio::ConnectionManager as RedisConnectionManager;
-use tulpje_shared::version;
 use twilight_gateway::{Event, EventType};
 
-pub(crate) fn install(redis: RedisConnectionManager, shard_id: u32) -> Result<(), Box<dyn Error>> {
+use tulpje_shared::{metrics::MetricsListenAddr, version};
+
+pub(crate) fn install(
+    listen_addr: MetricsListenAddr,
+    redis: RedisConnectionManager,
+    shard_id: u32,
+) -> Result<(), Box<dyn Error>> {
     // install metrics collector and exporter
     tulpje_shared::metrics::install(
         PrometheusBuilder::new(),
+        listen_addr,
         redis,
         format!("gateway-{}", shard_id),
         version!(),

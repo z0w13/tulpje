@@ -1,5 +1,8 @@
 use std::{
     error::Error,
+    fmt::Display,
+    net::SocketAddr,
+    str::FromStr as _,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -11,14 +14,39 @@ use redis::{
 };
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MetricsListenAddr(SocketAddr);
+
+impl Default for MetricsListenAddr {
+    fn default() -> Self {
+        Self(SocketAddr::from_str("0.0.0.0:9000").expect("this socket addr should always be valid"))
+    }
+}
+
+impl Display for MetricsListenAddr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl From<MetricsListenAddr> for SocketAddr {
+    fn from(value: MetricsListenAddr) -> Self {
+        value.0
+    }
+}
+
 pub fn install(
     builder: PrometheusBuilder,
+    listen_addr: MetricsListenAddr,
     redis: RedisConnectionManager,
     process_name: String,
     version: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    tracing::info!("creating prometheus endpoint on http://{}", listen_addr);
+
     // install recorder and exporter
     builder
+        .with_http_listener(listen_addr)
         .add_global_label("process", &process_name)
         .install()?;
 
