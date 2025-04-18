@@ -1,11 +1,12 @@
 use std::error::Error;
 
 use amqprs::{
-    callbacks::{DefaultChannelCallback, DefaultConnectionCallback},
-    channel::{BasicPublishArguments, Channel, QueueDeclareArguments},
-    connection::{Connection, OpenConnectionArguments},
+    channel::{BasicPublishArguments, Channel},
+    connection::Connection,
     BasicProperties,
 };
+
+use tulpje_shared::amqp;
 
 pub(crate) struct AmqprsProducer {
     #[expect(
@@ -16,6 +17,10 @@ pub(crate) struct AmqprsProducer {
     chan: Channel,
 }
 impl AmqprsProducer {
+    pub(crate) fn new(conn: Connection, chan: Channel) -> Self {
+        Self { conn, chan }
+    }
+
     pub(crate) async fn send(&self, data: &[u8]) -> Result<(), Box<dyn Error>> {
         tracing::trace!(content_size = data.len(), "sending amqp message");
 
@@ -32,31 +37,9 @@ impl AmqprsProducer {
 }
 
 pub(crate) async fn create(addr: &str) -> AmqprsProducer {
-    let amqp_addr: OpenConnectionArguments = addr.try_into().expect("couldn't parse amqp uri");
+    let (conn, chan) = amqp::create(addr, "discord")
+        .await
+        .expect("couldn't create amqp client");
 
-    let amqp_conn = Connection::open(&amqp_addr)
-        .await
-        .expect("error connecting to amqp");
-    amqp_conn
-        .register_callback(DefaultConnectionCallback)
-        .await
-        .expect("failed to register amqp connection callback");
-
-    let amqp_chan = amqp_conn
-        .open_channel(None)
-        .await
-        .expect("couldn't create amqp channel");
-    amqp_chan
-        .register_callback(DefaultChannelCallback)
-        .await
-        .expect("failed to register amqp channel callback");
-    amqp_chan
-        .queue_declare(QueueDeclareArguments::new("discord").durable(true).finish())
-        .await
-        .expect("error declaring 'discord' amqp queue");
-
-    AmqprsProducer {
-        conn: amqp_conn,
-        chan: amqp_chan,
-    }
+    AmqprsProducer::new(conn, chan)
 }

@@ -3001,6 +3001,7 @@ dependencies = [
 name = "tulpje-shared"
 version = "0.17.1"
 dependencies = [
+ "amqprs",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-process",

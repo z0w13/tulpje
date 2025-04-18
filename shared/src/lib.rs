@@ -3,6 +3,7 @@ use twilight_model::id::{marker::ApplicationMarker, Id};
 
 use tulpje_framework::Metadata;
 
+pub mod amqp;
 pub mod color;
 pub mod metrics;
 pub mod shard_state;

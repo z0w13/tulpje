@@ -1,13 +1,14 @@
+use async_trait::async_trait;
+use tokio::sync::mpsc;
+
 use amqprs::{
-    callbacks::{DefaultChannelCallback, DefaultConnectionCallback},
-    channel::{BasicConsumeArguments, Channel, QueueDeclareArguments},
-    connection::{Connection, OpenConnectionArguments},
+    channel::{BasicConsumeArguments, Channel},
+    connection::Connection,
     consumer::AsyncConsumer,
     BasicProperties, Deliver,
 };
 
-use async_trait::async_trait;
-use tokio::sync::mpsc;
+use tulpje_shared::amqp;
 
 pub(crate) struct AmqprsConsumer {
     queue: mpsc::UnboundedReceiver<Vec<u8>>,
@@ -29,45 +30,25 @@ impl AmqprsConsumer {
 }
 
 pub(crate) async fn create(addr: &str) -> AmqprsConsumer {
-    let amqp_addr: OpenConnectionArguments = addr.try_into().expect("couldn't parse amqp uri");
-
-    let amqp_conn = Connection::open(&amqp_addr)
+    let (conn, chan) = amqp::create(addr, "discord")
         .await
-        .expect("error connecting to amqp");
-    amqp_conn
-        .register_callback(DefaultConnectionCallback)
-        .await
-        .expect("failed to register amqp connection callback");
-
-    let amqp_chan = amqp_conn
-        .open_channel(None)
-        .await
-        .expect("couldn't create amqp channel");
-    amqp_chan
-        .register_callback(DefaultChannelCallback)
-        .await
-        .expect("failed to register amqp channel callback");
-    amqp_chan
-        .queue_declare(QueueDeclareArguments::new("discord").durable(true).finish())
-        .await
-        .expect("error declaring 'discord' amqp queue");
+        .expect("couldn't create amqp client");
 
     let (message_queue_send, message_queue_recv) = mpsc::unbounded_channel::<Vec<u8>>();
-    amqp_chan
-        .basic_consume(
-            AmqpConsumer {
-                queue: message_queue_send,
-            },
-            BasicConsumeArguments::new("discord", "")
-                .manual_ack(false)
-                .finish(),
-        )
-        .await
-        .expect("error declaring amqp consumer");
+    chan.basic_consume(
+        AmqpConsumer {
+            queue: message_queue_send,
+        },
+        BasicConsumeArguments::new("discord", "")
+            .manual_ack(false)
+            .finish(),
+    )
+    .await
+    .expect("error declaring amqp consumer");
 
     AmqprsConsumer {
-        conn: amqp_conn,
-        chan: amqp_chan,
+        conn,
+        chan,
         queue: message_queue_recv,
     }
 }
