@@ -1,4 +1,3 @@
-mod amqp;
 mod config;
 mod context;
 mod db;
@@ -13,12 +12,13 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions as _,
 };
+use tokio::sync::mpsc;
 use tracing::log::LevelFilter;
 use twilight_gateway::Event;
 
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::{parse_task_slot, DiscordEvent};
+use tulpje_shared::{amqp, parse_task_slot, DiscordEvent};
 
 use config::Config;
 
@@ -87,7 +87,11 @@ async fn main() {
         .expect("error connecting to db");
 
     // create AMQP connection
-    let mut amqp = amqp::create(&config.rabbitmq_address).await;
+    let (amqp_tx, mut amqp_rx) = mpsc::unbounded_channel::<Vec<u8>>();
+    let mut amqp_conn = amqp::create(&config.rabbitmq_address, "discord", Some(amqp_tx))
+        .await
+        .expect("couldn't create amqp client");
+    let amqp_handle = tokio::spawn(async move { amqp_conn.run().await });
 
     tracing::info!("running migrations...");
     sqlx::migrate!("./migrations")
@@ -174,7 +178,7 @@ async fn main() {
     let sender = framework.sender();
     let main_handle = tokio::spawn(async move {
         loop {
-            let Some(message) = amqp.recv().await else {
+            let Some(message) = amqp_rx.recv().await else {
                 break;
             };
 
@@ -205,6 +209,7 @@ async fn main() {
 
     framework.join().await.expect("error joining framework");
     main_handle.await.expect("error joining main_handle");
+    amqp_handle.await.expect("error joining amqp");
 }
 
 fn parse_delivery(message: Vec<u8>) -> Result<(Metadata, Event), Box<dyn std::error::Error>> {

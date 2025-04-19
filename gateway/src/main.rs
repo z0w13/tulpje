@@ -10,9 +10,8 @@ use twilight_model::gateway::{
     OpCode,
 };
 
-use tulpje_shared::{parse_task_slot, version, DiscordEvent};
+use tulpje_shared::{amqp, parse_task_slot, version, DiscordEvent};
 
-mod amqp;
 mod config;
 mod metrics;
 mod shard_state;
@@ -30,7 +29,12 @@ async fn main() {
     // set-up logging
     tracing_subscriber::fmt::init();
 
-    let amqp = amqp::create(&config.rabbitmq_address).await;
+    // create AMQP connection
+    let mut amqp_conn = amqp::create(&config.rabbitmq_address, "discord", None)
+        .await
+        .expect("couldn't create amqp client");
+    let amqp_chan = amqp_conn.send_chan();
+    let amqp_handle = tokio::spawn(async move { amqp_conn.run().await });
 
     // create the redis connection
     let redis_client = redis::Client::open(config.redis_url).expect("error initialising redis");
@@ -76,83 +80,89 @@ async fn main() {
 
     // start main loop
     tracing::info!("starting main loop...");
-    loop {
-        match shard.next().await {
-            Some(Ok(twilight_gateway::Message::Close(frame))) => {
-                tracing::warn!(?frame, "gateway connection closed");
 
-                // have to handle this hear separate as twilight_gateway::parse doesn't
-                // parse into Event::GatewayClose as that's a separate event type
-                if let Err(err) = shard_state_manager
-                    .handle_event(Event::GatewayClose(frame), shard.latency())
-                    .await
-                {
-                    tracing::error!("error updating shard state: {}", err);
-                }
-            }
-            Some(Ok(twilight_gateway::Message::Text(text))) => {
-                let opcode = match parse_opcode(&text) {
-                    Err(err) => {
-                        tracing::error!(?err, "couldn't parse opcode");
-                        continue;
-                    }
-                    Ok(Some(opcode)) => opcode,
-                    Ok(None) => {
-                        tracing::error!("received empty opcode");
-                        continue;
-                    }
-                };
+    let main_handle = tokio::spawn(async move {
+        loop {
+            match shard.next().await {
+                Some(Ok(twilight_gateway::Message::Close(frame))) => {
+                    tracing::warn!(?frame, "gateway connection closed");
 
-                tracing::trace!(?opcode, "opcode received");
-
-                if let Ok(Some(event)) =
-                    twilight_gateway::parse(text.clone(), EventTypeFlags::all())
-                {
-                    let event = twilight_model::gateway::event::Event::from(event);
-
-                    // track event metrics
-                    metrics::track_gateway_event(shard_id.number(), &event);
-
+                    // have to handle this hear separate as twilight_gateway::parse doesn't
+                    // parse into Event::GatewayClose as that's a separate event type
                     if let Err(err) = shard_state_manager
-                        .handle_event(event.clone(), shard.latency())
+                        .handle_event(Event::GatewayClose(frame), shard.latency())
                         .await
                     {
                         tracing::error!("error updating shard state: {}", err);
                     }
                 }
-
-                // only publish non-gateway events, aka everything DISPATCH
-                if opcode == OpCode::Dispatch {
-                    let event = DiscordEvent::new(shard_id.number(), text);
-                    let serialized_event = match serde_json::to_vec(&event) {
-                        Ok(val) => val,
+                Some(Ok(twilight_gateway::Message::Text(text))) => {
+                    let opcode = match parse_opcode(&text) {
                         Err(err) => {
-                            tracing::error!("error serializing event: {}", err);
+                            tracing::error!(?err, "couldn't parse opcode");
+                            continue;
+                        }
+                        Ok(Some(opcode)) => opcode,
+                        Ok(None) => {
+                            tracing::error!("received empty opcode");
                             continue;
                         }
                     };
 
-                    if let Err(err) = amqp.send(&serialized_event).await {
-                        tracing::error!("error sending event to amqp: {}", err);
-                        continue;
+                    tracing::trace!(?opcode, "opcode received");
+
+                    if let Ok(Some(event)) =
+                        twilight_gateway::parse(text.clone(), EventTypeFlags::all())
+                    {
+                        let event = twilight_model::gateway::event::Event::from(event);
+
+                        // track event metrics
+                        metrics::track_gateway_event(shard_id.number(), &event);
+
+                        if let Err(err) = shard_state_manager
+                            .handle_event(event.clone(), shard.latency())
+                            .await
+                        {
+                            tracing::error!("error updating shard state: {}", err);
+                        }
                     }
 
-                    tracing::debug!(
-                        uuid = ?event.meta.uuid,
-                        shard = event.meta.shard,
-                        "event sent"
-                    );
+                    // only publish non-gateway events, aka everything DISPATCH
+                    if opcode == OpCode::Dispatch {
+                        let event = DiscordEvent::new(shard_id.number(), text);
+                        let serialized_event = match serde_json::to_vec(&event) {
+                            Ok(val) => val,
+                            Err(err) => {
+                                tracing::error!("error serializing event: {}", err);
+                                continue;
+                            }
+                        };
+
+                        if let Err(err) = amqp_chan.send(serialized_event) {
+                            tracing::error!("error sending event to amqp: {}", err);
+                            continue;
+                        }
+
+                        tracing::debug!(
+                            uuid = ?event.meta.uuid,
+                            shard = event.meta.shard,
+                            "event sent"
+                        );
+                    }
                 }
-            }
-            Some(Err(err)) => {
-                tracing::error!(?err, "error receiving discord message");
-            }
-            None => {
-                tracing::error!("empty message, connection irrecoverably closed, exiting...");
-                break;
-            }
-        };
-    }
+                Some(Err(err)) => {
+                    tracing::error!(?err, "error receiving discord message");
+                }
+                None => {
+                    tracing::error!("empty message, connection irrecoverably closed, exiting...");
+                    break;
+                }
+            };
+        }
+    });
+
+    main_handle.await.expect("error joining main_handle");
+    amqp_handle.await.expect("error joining amqp");
 }
 
 fn create_presence() -> UpdatePresencePayload {
