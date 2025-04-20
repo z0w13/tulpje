@@ -2,6 +2,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
+#     "semver",
 #     "tomlkit",
 # ]
 # ///
@@ -11,6 +12,7 @@ from collections import defaultdict
 from typing import Iterable, NamedTuple, Optional, Self
 from fnmatch import fnmatchcase
 from graphlib import TopologicalSorter
+from semver import Version
 import tomllib
 import subprocess
 import json
@@ -42,41 +44,21 @@ def find_file_upwards(path: str, name: str) -> Optional[str]:
             return find_file_upwards(os.path.dirname(path), name)
 
 
-class Version(NamedTuple):
-    # X.Y.Z
-    REGEX = re.compile(r"^([0-9]+)\.([0-9]+)\.([0-9]+)$")
-
-    major: int
-    minor: int
-    patch: int
-
-    def dot_zero(self) -> bool:
-        return self.major == 0
-
-    def __str__(self) -> str:
-        return f"{self.major}.{self.minor}.{self.patch}"
-
-    def bumped(self, feature: bool, breaking: bool) -> "Version":
-        if self.dot_zero():
-            if breaking:
-                return Version(self.major, self.minor + 1, 0)
-            else:
-                return Version(self.major, self.minor, self.patch + 1)
+def version_bump_type(
+    sem_ver: Version, feature: bool, breaking: bool
+) -> str:
+    if sem_ver.major == 0:
+        if breaking:
+            return "minor"
         else:
-            if breaking:
-                return Version(self.major + 1, 0, 0)
-            elif feature:
-                return Version(self.major, self.minor + 1, 0)
-            else:
-                return Version(self.major, self.minor, self.patch + 1)
-
-    @classmethod
-    def parse(cls, version: str) -> Self:
-        match = cls.REGEX.match(version)
-        assert match is not None
-
-        groups = match.groups()
-        return cls(int(groups[0]), int(groups[1]), int(groups[2]))
+            return "patch"
+    else:
+        if breaking:
+            return "major"
+        elif feature:
+            return "minor"
+        else:
+            return "patch"
 
 
 class CrateInfo(NamedTuple):
@@ -138,16 +120,8 @@ class CrateInfo(NamedTuple):
         )
 
 
-def sort_versions(versions: list[str]) -> list[str]:
-    return [
-        ".".join(map(str, v))
-        for v in sorted([Version.parse(v) for v in versions], reverse=True)
-    ]
-
-
-def latest_version(versions: list[str]) -> Optional[str]:
-    versions = sort_versions(versions)
-    return versions[0] if len(versions) > 0 else None
+def latest_version(versions: list[Version]) -> Optional[Version]:
+    return max(versions) if len(versions) > 0 else None
 
 
 def git_tags_with_prefix(prefix: str = "") -> list[str]:
@@ -160,7 +134,9 @@ def git_tags_with_prefix(prefix: str = "") -> list[str]:
 
 def get_latest_tag(prefix: str = "") -> Optional[str]:
     tags = git_tags_with_prefix(prefix)
-    latest = latest_version([t.removeprefix(f"{prefix}v") for t in tags])
+    latest = latest_version(
+        [Version.parse(t.removeprefix(f"{prefix}v")) for t in tags]
+    )
     if latest is None:
         return None
 
@@ -424,15 +400,18 @@ def gather_release(
     if independent_crate:
         old_version = crates[0].version
     else:
-        old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
+        old_version = Version.parse(
+            latest_tag.removeprefix(prefix).removeprefix("v")
+        )
 
     if independent_crate and not has_independent_tag:
         new_version = old_version
     else:
-        new_version = old_version.bumped(
+        new_version = old_version.next_version(part=version_bump_type(
+            old_version,
             has_feature_commit,
             has_breaking_change_commit or has_breaking_change_semver_checks,
-        )
+        ))
 
     new_changelog = create_changelog_update(
         prefix, new_version, independent_crate, independent_crates
@@ -578,9 +557,7 @@ def process_dependencies(releases_by_deps: list[ReleaseInfo]) -> list[ReleaseInf
                     crate_release = releases_by_crate[depended_crate.name]
                     crate_release.should_release = True
                     if not crate_release.changed:
-                        crate_release.curr_version = crate_release.curr_version.bumped(
-                            False, False
-                        )
+                        crate_release.curr_version = crate_release.curr_version.next_version("patch")
     return [release for release in releases_copy if release.should_release]
 
 
