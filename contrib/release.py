@@ -44,9 +44,7 @@ def find_file_upwards(path: str, name: str) -> Optional[str]:
             return find_file_upwards(os.path.dirname(path), name)
 
 
-def version_bump_type(
-    sem_ver: Version, feature: bool, breaking: bool
-) -> str:
+def version_bump_type(sem_ver: Version, feature: bool, breaking: bool) -> str:
     if sem_ver.major == 0:
         if breaking:
             return "minor"
@@ -88,7 +86,7 @@ class CrateInfo(NamedTuple):
             workspace_manifest = tomllib.load(workspace_manifest_file)
 
         try:
-            independent = not (manifest["package"]["version"]["workspace"] == True)
+            independent = manifest["package"]["version"]["workspace"] is not True
         except (IndexError, TypeError):
             independent = True
 
@@ -134,9 +132,7 @@ def git_tags_with_prefix(prefix: str = "") -> list[str]:
 
 def get_latest_tag(prefix: str = "") -> Optional[str]:
     tags = git_tags_with_prefix(prefix)
-    latest = latest_version(
-        [Version.parse(t.removeprefix(f"{prefix}v")) for t in tags]
-    )
+    latest = latest_version([Version.parse(t.removeprefix(f"{prefix}v")) for t in tags])
     if latest is None:
         return None
 
@@ -400,18 +396,18 @@ def gather_release(
     if independent_crate:
         old_version = crates[0].version
     else:
-        old_version = Version.parse(
-            latest_tag.removeprefix(prefix).removeprefix("v")
-        )
+        old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
 
     if independent_crate and not has_independent_tag:
         new_version = old_version
     else:
-        new_version = old_version.next_version(part=version_bump_type(
-            old_version,
-            has_feature_commit,
-            has_breaking_change_commit or has_breaking_change_semver_checks,
-        ))
+        new_version = old_version.next_version(
+            part=version_bump_type(
+                old_version,
+                has_feature_commit,
+                has_breaking_change_commit or has_breaking_change_semver_checks,
+            )
+        )
 
     new_changelog = create_changelog_update(
         prefix, new_version, independent_crate, independent_crates
@@ -478,11 +474,11 @@ def manifest_bump_version(crate: CrateInfo, version: Version):
     with open(crate.manifest) as manifest_file:
         manifest = tomlkit.load(manifest_file)
         if not isinstance(
-            manifest["package"]["version"], str  # pyright: ignore[reportIndexIssue]
+            manifest["package"]["version"],  # pyright: ignore[reportIndexIssue]
+            str,
         ):
-
             raise Exception(
-                f"Crate {manifest["name"]} doesn't have a string version, likely workspace crate"
+                f"Crate {manifest['name']} doesn't have a string version, likely workspace crate"
             )
 
         manifest["package"]["version"] = str(  # pyright: ignore[reportIndexIssue]
@@ -527,7 +523,7 @@ def sort_releases_by_deps(releases: list[ReleaseInfo]) -> list[ReleaseInfo]:
     releases_by_deps: list[ReleaseInfo] = []
     for crate in dependency_order:
         release = releases_by_crate[crate]
-        if not release in releases_by_deps:
+        if release not in releases_by_deps:
             releases_by_deps.append(releases_by_crate[crate])
 
     return releases_by_deps
@@ -557,7 +553,9 @@ def process_dependencies(releases_by_deps: list[ReleaseInfo]) -> list[ReleaseInf
                     crate_release = releases_by_crate[depended_crate.name]
                     crate_release.should_release = True
                     if not crate_release.changed:
-                        crate_release.curr_version = crate_release.curr_version.next_version("patch")
+                        crate_release.curr_version = (
+                            crate_release.curr_version.next_version("patch")
+                        )
     return [release for release in releases_copy if release.should_release]
 
 
@@ -568,7 +566,7 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
         return
 
     for release in releases_by_deps:
-        print(f"Crate: {release.crates[0].name if release.single_crate else "root"}")
+        print(f"Crate: {release.crates[0].name if release.single_crate else 'root'}")
         print(f" [*] Should release: {release.should_release}")
         print(f" [*] Version: {release.prev_version} -> {release.curr_version}")
         print(f" [*] Tag: {release.prev_tag} -> {release.curr_tag}")
@@ -634,7 +632,7 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
 
     commit_message = "release: " + (
         ", ".join(
-            f"{release.crates[0].name if release.single_crate else "tulpje"} v{release.curr_version}"
+            f"{release.crates[0].name if release.single_crate else 'tulpje'} v{release.curr_version}"
             for release in reversed(filtered_releases)
         )
     )
@@ -663,7 +661,7 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
     print(" [-] Creating GitHub releases...")
     for release in filtered_releases:
         check_output_dry(
-            f"    - {release.crates[0].name if release.single_crate else "tulpje"}",
+            f"    - {release.crates[0].name if release.single_crate else 'tulpje'}",
             execute,
             [
                 "gh",

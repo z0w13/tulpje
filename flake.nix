@@ -58,6 +58,8 @@
           devShells.default = pkgs.mkShell {
             packages = with pkgs; [
               uv
+              ruff
+
               jq
               cachix
               skopeo
