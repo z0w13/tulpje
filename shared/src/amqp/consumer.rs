@@ -2,13 +2,15 @@ use amqprs::{channel::Channel, consumer::AsyncConsumer, BasicProperties, Deliver
 use async_trait::async_trait;
 use tokio::sync::mpsc;
 
+use super::event::Event;
+
 pub(crate) struct AmqpConsumer {
-    queue: mpsc::UnboundedSender<Vec<u8>>,
+    event_tx: mpsc::UnboundedSender<Event>,
 }
 
 impl AmqpConsumer {
-    pub(crate) fn new(queue: mpsc::UnboundedSender<Vec<u8>>) -> Self {
-        Self { queue }
+    pub(crate) fn new(event_tx: mpsc::UnboundedSender<Event>) -> Self {
+        Self { event_tx }
     }
 }
 
@@ -18,7 +20,7 @@ impl AsyncConsumer for AmqpConsumer {
         &mut self,
         channel: &Channel,
         deliver: Deliver,
-        _basic_properties: BasicProperties,
+        basic_properties: BasicProperties,
         content: Vec<u8>,
     ) -> () {
         tracing::trace!(
@@ -28,8 +30,13 @@ impl AsyncConsumer for AmqpConsumer {
             content.len()
         );
 
-        if let Err(err) = self.queue.send(content) {
-            tracing::error!("error putting message on queue: {}", err);
+        if let Err(err) = self.event_tx.send(Event::MessageReceived(
+            channel.clone(),
+            deliver,
+            basic_properties,
+            content,
+        )) {
+            tracing::error!("error sending Event::MessageReceived to queue: {err}");
         }
     }
 }

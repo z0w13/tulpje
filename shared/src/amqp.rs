@@ -1,6 +1,7 @@
 mod channel_callback;
 mod connection_callback;
 mod consumer;
+pub mod event;
 
 use std::{error::Error, time::Duration};
 
@@ -10,11 +11,12 @@ use amqprs::{
     BasicProperties,
 };
 use consumer::AmqpConsumer;
+use event::Event;
 use tokio::{
+    select,
     sync::mpsc::{self, UnboundedSender},
     time::sleep,
 };
-use tokio_util::sync::CancellationToken;
 
 use channel_callback::AmqpChannelHandler;
 use connection_callback::AmqpConnectionHandler;
@@ -26,7 +28,7 @@ pub struct ConnectionArguments {
 
 enum ConnectionState {
     Disconnected,
-    Connected(Connection, Channel, CancellationToken),
+    Connected(Connection, Channel, mpsc::UnboundedReceiver<Event>),
 }
 
 pub struct AmqpConnection {
@@ -82,30 +84,35 @@ impl AmqpConnection {
             self.inner_opts.get_virtual_host(),
         );
 
-        // create a new cancellation token and clear out the old conn/chan if any
-        let reconnect_token = CancellationToken::new();
+        let (event_tx, event_rx) = mpsc::unbounded_channel();
 
         tracing::debug!("opening connection to amqp ...");
         let conn = Connection::open(&self.inner_opts)
             .await
             .map_err(|err| format!("error connecting to amqp: {err}"))?;
         tracing::debug!("registering connection callback handler ...");
-        conn.register_callback(AmqpConnectionHandler::new(reconnect_token.clone()))
+        conn.register_callback(AmqpConnectionHandler::new(event_tx.clone()))
             .await
             .map_err(|err| format!("failed to register amqp connection callback: {err}"))?;
 
+        self.declare_channel(conn, event_tx, event_rx).await
+    }
+
+    async fn declare_channel(
+        &mut self,
+        conn: Connection,
+        event_tx: mpsc::UnboundedSender<Event>,
+        event_rx: mpsc::UnboundedReceiver<Event>,
+    ) -> Result<ConnectionState, Box<dyn Error + Send + Sync>> {
         tracing::debug!("opening channel ...");
         let chan = conn
             .open_channel(None)
             .await
             .map_err(|err| format!("couldn't create amqp channel: {err}"))?;
         tracing::debug!("registering channel callback handler ...");
-        chan.register_callback(AmqpChannelHandler::new(
-            reconnect_token.clone(),
-            self.send_chan(),
-        ))
-        .await
-        .map_err(|err| format!("failed to register amqp channel callback: {err}"))?;
+        chan.register_callback(AmqpChannelHandler::new(event_tx.clone()))
+            .await
+            .map_err(|err| format!("failed to register amqp channel callback: {err}"))?;
 
         tracing::debug!("declaring queue {} ...", self.opts.queue_name);
         chan.queue_declare(
@@ -116,20 +123,31 @@ impl AmqpConnection {
         .await
         .map_err(|err| format!("error declaring queue '{}': {}", self.opts.queue_name, err))?;
 
-        if let Some(recv_sender) = &self.recv_tx {
-            tracing::debug!("declaring amqp consumer ...");
-            chan.basic_consume(
-                AmqpConsumer::new(recv_sender.clone()),
-                BasicConsumeArguments::new(&self.opts.queue_name, "")
-                    .manual_ack(false)
-                    .finish(),
-            )
-            .await
-            .map_err(|err| format!("error declaring consumer: {err}"))?;
+        if self.recv_tx.is_some() {
+            self.declare_consumer(conn, chan, event_tx, event_rx).await
+        } else {
+            Ok(ConnectionState::Connected(conn, chan, event_rx))
         }
+    }
 
-        tracing::trace!("storing amqp conn/channel ...");
-        Ok(ConnectionState::Connected(conn, chan, reconnect_token))
+    async fn declare_consumer(
+        &mut self,
+        conn: Connection,
+        chan: Channel,
+        event_tx: mpsc::UnboundedSender<Event>,
+        event_rx: mpsc::UnboundedReceiver<Event>,
+    ) -> Result<ConnectionState, Box<dyn Error + Send + Sync>> {
+        tracing::debug!("declaring amqp consumer ...");
+        chan.basic_consume(
+            AmqpConsumer::new(event_tx.clone()),
+            BasicConsumeArguments::new(&self.opts.queue_name, "")
+                .manual_ack(false)
+                .finish(),
+        )
+        .await
+        .map_err(|err| format!("error declaring consumer: {err}"))?;
+
+        Ok(ConnectionState::Connected(conn, chan, event_rx))
     }
 
     /// inner processing loop for the amqp connection
@@ -137,47 +155,69 @@ impl AmqpConnection {
         &mut self,
         conn: Connection,
         chan: Channel,
-        reconnect_token: CancellationToken,
+        mut event_rx: mpsc::UnboundedReceiver<Event>,
     ) -> ConnectionState {
         loop {
-            tokio::select! {
-                // if reconnect_token is cancelled break the inner loop, go back to connecting
-                () = reconnect_token.cancelled() => {
-                    tracing::warn!("amqp reconnection triggered");
+            select! {
+                event = event_rx.recv() => {
+                    let Some(event) = event else {
+                        tracing::warn!("event_rx was closed, reconnecting ...");
+                        break
+                    };
+                    match event {
+                        Event::ConnectionClose(_, _) | Event::ChannelClose(_, _) => {
+                            if let Err(err) = chan.close().await {
+                                tracing::warn!("error closing amqp conn: {err}");
+                            }
 
-                    if let Err(err) = chan.close().await {
-                        tracing::warn!("error closing amqp conn: {err}");
-                    }
+                            if let Err(err) = conn.close().await {
+                                tracing::warn!("error closing amqp conn: {err}");
+                            }
 
-                    if let Err(err) = conn.close().await {
-                        tracing::warn!("error closing amqp conn: {err}");
-                    }
-
-                    break ConnectionState::Disconnected
-                },
-
-                // on receiving data on send_rx send it to amqp
-                data = self.send_rx.recv() => {
-                    if let Some(data) = data {
-                        tracing::trace!(content_size = data.len(), "sending amqp message");
-                        if let Err(err) = chan.basic_publish(
-                            BasicProperties::default(),
-                            data,
-                            // We set the mandatory flag so we can handle when the
-                            // message can't be delivered to any queues, and then assume
-                            // our queue was deleted and force a reconnect in
-                            // ChannelCallback::publish_return
-                            BasicPublishArguments::new("", &self.opts.queue_name).mandatory(true).finish(),
-                        )
-                        .await {
-                            tracing::error!("error sending event to amqp: {}", err);
+                            break;
                         }
-                    } else {
-                        break ConnectionState::Disconnected
+                        Event::ChannelPublishReturn(_chan, ret, _basic_properties, data) => {
+                            if ret.reply_code() == 312 {
+                                tracing::warn!("couldn't route message, triggering reconnect and requeuing message");
+                                if let Err(err) = self.send_tx.send(data) {
+                                    tracing::error!("failed to requeue message: {err}");
+                                };
+                                break
+                            }
+                        }
+                        Event::MessageReceived(_chan, _deliver, _basic_properties, data) => {
+                            if let Some(recv_tx) = &self.recv_tx {
+                                if let Err(err) = recv_tx.send(data) {
+                                    tracing::warn!("error sending received message to library user: {err}");
+                                }
+                            }
+                        }
+                        _ => {}
                     }
-                },
+                }
+                message = self.send_rx.recv() => {
+                    let Some(message) = message else {
+                        tracing::error!("send_rx was closed, this shouldn't really happen ...");
+                        break
+                    };
+
+                    if let Err(err) = chan.basic_publish(
+                        BasicProperties::default(),
+                        message,
+                        // We set the mandatory flag so we can handle when the
+                        // message can't be delivered to any queues, and then assume
+                        // our queue was deleted and force a reconnect in
+                        // ChannelCallback::publish_return
+                        BasicPublishArguments::new("", &self.opts.queue_name).mandatory(true).finish(),
+                    )
+                    .await {
+                        tracing::error!("error sending event to amqp: {}", err);
+                    }
+                }
             }
         }
+
+        ConnectionState::Disconnected
     }
 
     /// return a channel for applications to send messages
@@ -193,6 +233,7 @@ impl AmqpConnection {
                 ConnectionState::Disconnected => {
                     // try to connect
                     match self.connect().await {
+                        Ok(state) => state,
                         Err(err) => {
                             // if we fail wait for opts.reconnect_time and then retry
                             tracing::error!("couldn't connect to amqp: {err}");
@@ -204,11 +245,10 @@ impl AmqpConnection {
 
                             ConnectionState::Disconnected
                         }
-                        Ok(state) => state,
                     }
                 }
-                ConnectionState::Connected(conn, chan, reconnect_token) => {
-                    self.inner_loop(conn, chan, reconnect_token).await
+                ConnectionState::Connected(conn, chan, event_rx) => {
+                    self.inner_loop(conn, chan, event_rx).await
                 }
             }
         }
