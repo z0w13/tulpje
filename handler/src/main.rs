@@ -92,13 +92,13 @@ async fn main() {
     // create AMQP connection
     let (amqp_tx, mut amqp_rx) = mpsc::unbounded_channel::<Vec<u8>>();
     // create AMQP connection
-    let amqp = AmqpHandle::try_from_str(
+    let mut amqp = AmqpHandle::try_from_str(
         &config.rabbitmq_address,
         ConnectionArguments::new("discord"),
         Some(amqp_tx),
     )
     .expect("couldn't create amqp client");
-    amqp.start();
+    amqp.wait_start().await.expect("couldn't connect to amqp");
 
     tracing::info!("running migrations...");
     sqlx::migrate!("./migrations")
@@ -216,7 +216,7 @@ async fn main() {
 
     framework.join().await.expect("error joining framework");
     main_handle.await.expect("error joining main_handle");
-    amqp_handle.await.expect("error joining amqp");
+    amqp.join().await.expect("error joining amqp");
 }
 
 fn parse_delivery(message: Vec<u8>) -> Result<(Metadata, Event), Box<dyn std::error::Error>> {

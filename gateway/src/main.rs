@@ -11,7 +11,7 @@ use twilight_model::gateway::{
 };
 
 use tulpje_shared::{
-    amqp::{self, AmqpHandle, ConnectionArguments},
+    amqp::{AmqpHandle, ConnectionArguments},
     parse_task_slot, version, DiscordEvent,
 };
 
@@ -33,13 +33,14 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     // create AMQP connection
-    let amqp = AmqpHandle::try_from_str(
+    let mut amqp = AmqpHandle::try_from_str(
         &config.rabbitmq_address,
         ConnectionArguments::new("discord"),
         None,
     )
     .expect("couldn't create amqp client");
-    amqp.start();
+    amqp.wait_start().await.expect("couldn't connect to amqp");
+    let amqp_chan = amqp.sender();
 
     // create the redis connection
     let redis_client = redis::Client::open(config.redis_url).expect("error initialising redis");
@@ -167,7 +168,7 @@ async fn main() {
     });
 
     main_handle.await.expect("error joining main_handle");
-    amqp_handle.await.expect("error joining amqp");
+    amqp.join().await.expect("error joining amqp");
 }
 
 fn create_presence() -> UpdatePresencePayload {

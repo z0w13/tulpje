@@ -10,7 +10,10 @@ use std::time::Duration;
 use amqprs::connection::OpenConnectionArguments;
 use connection::AmqpConnection;
 use consumer::AmqpConsumer;
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::{
+    sync::{mpsc, oneshot},
+    task::JoinHandle,
+};
 
 use channel_callback::AmqpChannelHandler;
 use connection_callback::AmqpConnectionHandler;
@@ -40,6 +43,7 @@ impl ConnectionArguments {
 pub struct AmqpHandle {
     send_tx: mpsc::UnboundedSender<Vec<u8>>,
     start: CancellationToken,
+    start_rx: Option<oneshot::Receiver<Option<Error>>>,
     shutdown: CancellationToken,
     handle: Option<JoinHandle<()>>,
 }
@@ -51,28 +55,29 @@ impl AmqpHandle {
         recv_tx: Option<mpsc::UnboundedSender<Vec<u8>>>,
     ) -> Self {
         let (send_tx, send_rx) = mpsc::unbounded_channel();
+        let (start_tx, start_rx) = oneshot::channel();
         let start = CancellationToken::new();
         let shutdown = CancellationToken::new();
 
         let amqp = AmqpConnection::new(
-            inner_opts,
             opts,
+            inner_opts,
             recv_tx,
             send_tx.clone(),
             send_rx,
+            start.clone(),
+            start_tx,
             shutdown.clone(),
         );
 
-        let start_listener = start.clone();
         let handle = Some(tokio::spawn(async move {
-            start_listener.cancelled().await;
-            tracing::info!("starting amqp connection ...");
             amqp.run().await;
         }));
 
         Self {
             send_tx,
             start,
+            start_rx: Some(start_rx),
             shutdown,
             handle,
         }
@@ -94,6 +99,22 @@ impl AmqpHandle {
 
     pub fn start(&mut self) {
         self.start.cancel();
+    }
+
+    pub async fn wait_start(&mut self) -> Result<(), Error> {
+        self.start.cancel();
+
+        let Some(start_rx) = self.start_rx.take() else {
+            return Err(
+                "`start_rx` is none, have you called `AmqpHandle::wait_start` before?".into(),
+            );
+        };
+
+        match start_rx.await {
+            Ok(None) => Ok(()),
+            Ok(Some(err)) => Err(err),
+            Err(err) => Err(err.into()),
+        }
     }
 
     pub fn shutdown(&mut self) {

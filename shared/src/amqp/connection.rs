@@ -3,12 +3,16 @@ use amqprs::{
     connection::{Connection, OpenConnectionArguments},
     BasicProperties,
 };
-use tokio::{select, sync::mpsc, time::sleep};
+use tokio::{
+    select,
+    sync::{mpsc, oneshot},
+    time::sleep,
+};
 use tokio_util::sync::CancellationToken;
 
 use crate::amqp::{AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer};
 
-use super::{close_reason::CloseReason, event::Event, ConnectionArguments};
+use super::{close_reason::CloseReason, event::Event, ConnectionArguments, Error};
 
 pub(crate) struct AmqpConnection {
     opts: ConnectionArguments,
@@ -19,16 +23,26 @@ pub(crate) struct AmqpConnection {
     send_tx: mpsc::UnboundedSender<Vec<u8>>,
     send_rx: mpsc::UnboundedReceiver<Vec<u8>>,
 
+    start: CancellationToken,
+    start_tx: oneshot::Sender<Option<Error>>,
+
     shutdown: CancellationToken,
 }
 
 impl AmqpConnection {
+    #[expect(clippy::too_many_arguments, reason = "well we need these values")]
     pub(crate) fn new(
-        inner_opts: OpenConnectionArguments,
         opts: ConnectionArguments,
+        inner_opts: OpenConnectionArguments,
+
         recv_tx: Option<mpsc::UnboundedSender<Vec<u8>>>,
+
         send_tx: mpsc::UnboundedSender<Vec<u8>>,
         send_rx: mpsc::UnboundedReceiver<Vec<u8>>,
+
+        start: CancellationToken,
+        start_tx: oneshot::Sender<Option<Error>>,
+
         shutdown: CancellationToken,
     ) -> Self {
         Self {
@@ -40,12 +54,17 @@ impl AmqpConnection {
             send_tx,
             send_rx,
 
+            start,
+            start_tx,
+
             shutdown,
         }
     }
 
     /// start the amqp connection
     pub(crate) async fn run(self) {
+        self.start.cancelled().await;
+
         if self.shutdown.is_cancelled() {
             tracing::warn!("shutdown was already called, not starting AmqpConnection");
             return;
@@ -61,6 +80,7 @@ impl AmqpConnection {
             send_tx: self.send_tx,
             send_rx: self.send_rx,
 
+            start_tx: Some(self.start_tx),
             shutdown: self.shutdown,
         };
 
@@ -85,6 +105,7 @@ struct Shared {
     send_tx: mpsc::UnboundedSender<Vec<u8>>,
     send_rx: mpsc::UnboundedReceiver<Vec<u8>>,
 
+    start_tx: Option<oneshot::Sender<Option<Error>>>,
     shutdown: CancellationToken,
 }
 
@@ -107,6 +128,8 @@ enum State {
     ClosingChannel(ClosingChannel),
     /// we're closing the connection because of server request, error or shutdown
     ClosingConnection(ClosingConnection),
+    /// connection has been closed, from here we either finish or go back to reconnecting
+    ClosedConnection(ClosedConnection),
     /// we've finished running
     Finished(CloseReason),
 }
@@ -129,6 +152,7 @@ impl State {
             Self::Connected(inner) => inner.run(shared).await,
             Self::ClosingChannel(inner) => inner.run(shared).await,
             Self::ClosingConnection(inner) => inner.run(shared).await,
+            Self::ClosedConnection(inner) => inner.run(shared).await,
             Self::Finished(reason) => Self::Finished(reason),
         }
     }
@@ -165,6 +189,9 @@ impl Connecting {
     fn close_connection(self, conn: Connection, reason: CloseReason) -> State {
         State::ClosingConnection(ClosingConnection::new(conn, reason))
     }
+    fn closed_connection(self, reason: CloseReason) -> State {
+        State::ClosedConnection(ClosedConnection { reason })
+    }
 
     async fn run(self, shared: &Shared) -> State {
         tracing::info!(
@@ -178,11 +205,18 @@ impl Connecting {
         let (event_tx, event_rx) = mpsc::unbounded_channel();
 
         tracing::debug!("opening connection to amqp ...");
-        let Ok(conn) = Connection::open(&shared.inner_opts)
-            .await
-            .inspect_err(|err| tracing::error!("error connecting to amqp: {err}"))
-        else {
-            return self.reconnect();
+        let conn = match Connection::open(&shared.inner_opts).await {
+            Ok(conn) => conn,
+            Err(err) => {
+                let err = format!("error connecting to amqp: {err}");
+                tracing::error!(err);
+
+                if shared.start_tx.is_some() {
+                    return self.closed_connection(CloseReason::StartError(Some(err.into())));
+                }
+
+                return self.reconnect();
+            }
         };
 
         tracing::debug!("registering connection callback handler ...");
@@ -190,7 +224,13 @@ impl Connecting {
             .register_callback(AmqpConnectionHandler::new(event_tx.clone()))
             .await
         {
-            tracing::error!("failed to register amqp connection callback: {err}");
+            let err = format!("failed to register amqp connection callback: {err}");
+            tracing::error!(err);
+
+            if shared.start_tx.is_some() {
+                return self.close_connection(conn, CloseReason::StartError(Some(err.into())));
+            }
+
             return self.close_connection(conn, CloseReason::Other);
         };
 
@@ -257,15 +297,24 @@ impl OpeningChannel {
         ))
     }
 
+    fn close_connection(self, reason: CloseReason) -> State {
+        State::ClosingConnection(ClosingConnection::new(self.conn, reason))
+    }
+
     async fn run(self, shared: &Shared) -> State {
         tracing::debug!("opening channel ...");
-        let Ok(chan) = self
-            .conn
-            .open_channel(None)
-            .await
-            .inspect_err(|err| tracing::error!("couldn't create amqp channel: {err}"))
-        else {
-            return self.reopen_channel();
+        let chan = match self.conn.open_channel(None).await {
+            Ok(chan) => chan,
+            Err(err) => {
+                let err = format!("couldn't create amqp channel: {err}");
+                tracing::error!(err);
+
+                if shared.start_tx.is_some() {
+                    return self.close_connection(CloseReason::StartError(Some(err.into())));
+                }
+
+                return self.reopen_channel();
+            }
         };
 
         tracing::debug!("registering channel callback handler ...");
@@ -273,7 +322,13 @@ impl OpeningChannel {
             .register_callback(AmqpChannelHandler::new(self.event_tx.clone()))
             .await
         {
-            tracing::error!("failed to register amqp channel callback: {err}");
+            let err = format!("failed to register amqp channel callback: {err}");
+            tracing::error!(err);
+
+            if shared.start_tx.is_some() {
+                return self.close_channel(chan, CloseReason::StartError(Some(err.into())));
+            }
+
             return self.close_channel(chan, CloseReason::Other);
         }
 
@@ -286,11 +341,16 @@ impl OpeningChannel {
             )
             .await
         {
-            tracing::error!(
+            let err = format!(
                 "error declaring queue '{}': {}",
-                shared.opts.queue_name,
-                err
+                shared.opts.queue_name, err
             );
+            tracing::error!(err);
+
+            if shared.start_tx.is_some() {
+                return self.close_channel(chan, CloseReason::StartError(Some(err.into())));
+            }
+
             return self.close_channel(chan, CloseReason::Other);
         }
 
@@ -365,7 +425,13 @@ impl DeclaringConsumer {
             )
             .await
         {
-            tracing::error!("error declaring consumer: {err}");
+            let err = format!("error declaring consumer: {err}");
+            tracing::error!(err);
+
+            if shared.start_tx.is_some() {
+                return self.close_channel(CloseReason::StartError(Some(err.into())));
+            }
+
             return self.close_channel(CloseReason::Other);
         }
 
@@ -391,6 +457,12 @@ impl Connected {
     }
 
     async fn run(mut self, shared: &mut Shared) -> State {
+        if let Some(start_tx) = shared.start_tx.take() {
+            if let Err(None) = start_tx.send(None) {
+                tracing::warn!("start_tx::send couldn't send succesful start result");
+            }
+        }
+
         loop {
             select! {
                 () = shared.shutdown.cancelled() => {
@@ -398,8 +470,8 @@ impl Connected {
                 },
                 event = self.event_rx.recv() => {
                     let Some(event) = event else {
-                        tracing::warn!("event_rx was closed, reconnecting ...");
-                        return self.close_channel(CloseReason::Fatal);
+                        tracing::error!("event_rx was closed, shutting down ...");
+                        return self.close_channel(CloseReason::Fatal("event_rx was closed".into()));
                     };
                     match event {
                         Event::ConnectionClose(_, _) => {
@@ -430,7 +502,7 @@ impl Connected {
                 message = shared.send_rx.recv() => {
                     let Some(message) = message else {
                         tracing::error!("send_rx was closed, this shouldn't really happen ...");
-                        return self.close_channel(CloseReason::Fatal);
+                        return self.close_channel(CloseReason::Fatal("send_rx was closed".into()));
                     };
 
                     if let Err(err) = self.chan.basic_publish(
@@ -502,9 +574,10 @@ impl ClosingChannel {
         match self.reason {
             CloseReason::ChannelClosed | CloseReason::PublishNoRoute => self.reopen_channel(),
             CloseReason::ConnectionClosed
-            | CloseReason::Fatal
+            | CloseReason::Fatal(_)
             | CloseReason::Other
-            | CloseReason::Shutdown => self.close_connection(),
+            | CloseReason::Shutdown
+            | CloseReason::StartError(_) => self.close_connection(),
         }
     }
 }
@@ -521,11 +594,10 @@ impl ClosingConnection {
         }
     }
 
-    fn disconnect(self) -> State {
-        State::Disconnected(Disconnected {})
-    }
-    fn reconnect(self) -> State {
-        State::Reconnecting(Reconnecting {})
+    fn closed_connection(self) -> State {
+        State::ClosedConnection(ClosedConnection {
+            reason: self.reason,
+        })
     }
 
     async fn run(mut self, _shared: &Shared) -> State {
@@ -537,14 +609,62 @@ impl ClosingConnection {
         // NOTE: Can unwrap safely, we consume self, and ClosingChannel::new enforces Some(chan)
         if let Err(err) = self.conn.take().unwrap().close().await {
             tracing::warn!("error closing amqp conn: {err}");
-        }
+        };
 
+        self.closed_connection()
+    }
+}
+
+struct ClosedConnection {
+    reason: CloseReason,
+}
+impl ClosedConnection {
+    fn finished(self) -> State {
+        State::Finished(self.reason)
+    }
+
+    fn finished_with_reason(self, reason: CloseReason) -> State {
+        State::Finished(reason)
+    }
+
+    fn reconnect(self) -> State {
+        State::Reconnecting(Reconnecting {})
+    }
+
+    async fn run(mut self, shared: &mut Shared) -> State {
         match self.reason {
             CloseReason::ChannelClosed
             | CloseReason::PublishNoRoute
             | CloseReason::ConnectionClosed
             | CloseReason::Other => self.reconnect(),
-            CloseReason::Fatal | CloseReason::Shutdown => self.disconnect(),
+            CloseReason::Fatal(_) | CloseReason::Shutdown => self.finished(),
+            CloseReason::StartError(ref mut err) => {
+                let Some(start_tx) = shared.start_tx.take() else {
+                    let Some(err) = err.take() else {
+                        return self.finished_with_reason(CloseReason::Fatal(
+                            String::from("start_tx already consumed, and inner error is None, neither should happen")
+                        ));
+                    };
+
+                    return self.finished_with_reason(CloseReason::Fatal(format!(
+                        "start_tx already consumed, shouldn't happen, inner error: {err}"
+                    )));
+                };
+
+                let Some(err) = err.take() else {
+                    return self.finished_with_reason(CloseReason::Fatal(String::from(
+                        "inner error is None, this shouldn't happen",
+                    )));
+                };
+
+                if let Err(Some(err)) = start_tx.send(Some(err)) {
+                    return self.finished_with_reason(CloseReason::Fatal(format!(
+                        "couldn't send error back to user: {err}"
+                    )));
+                };
+
+                self.finished_with_reason(CloseReason::Fatal("error while starting".into()))
+            }
         }
     }
 }
