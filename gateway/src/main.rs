@@ -10,7 +10,10 @@ use twilight_model::gateway::{
     OpCode,
 };
 
-use tulpje_shared::{amqp, parse_task_slot, version, DiscordEvent};
+use tulpje_shared::{
+    amqp::{self, AmqpHandle, ConnectionArguments},
+    parse_task_slot, version, DiscordEvent,
+};
 
 mod config;
 mod metrics;
@@ -30,11 +33,13 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     // create AMQP connection
-    let mut amqp_conn = amqp::create(&config.rabbitmq_address, "discord", None)
-        .await
-        .expect("couldn't create amqp client");
-    let amqp_chan = amqp_conn.send_chan();
-    let amqp_handle = tokio::spawn(async move { amqp_conn.run().await });
+    let amqp = AmqpHandle::try_from_str(
+        &config.rabbitmq_address,
+        ConnectionArguments::new("discord"),
+        None,
+    )
+    .expect("couldn't create amqp client");
+    amqp.start();
 
     // create the redis connection
     let redis_client = redis::Client::open(config.redis_url).expect("error initialising redis");

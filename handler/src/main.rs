@@ -18,7 +18,10 @@ use twilight_gateway::Event;
 
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::{amqp, parse_task_slot, DiscordEvent};
+use tulpje_shared::{
+    amqp::{AmqpHandle, ConnectionArguments},
+    parse_task_slot, DiscordEvent,
+};
 
 use config::Config;
 
@@ -88,10 +91,14 @@ async fn main() {
 
     // create AMQP connection
     let (amqp_tx, mut amqp_rx) = mpsc::unbounded_channel::<Vec<u8>>();
-    let mut amqp_conn = amqp::create(&config.rabbitmq_address, "discord", Some(amqp_tx))
-        .await
-        .expect("couldn't create amqp client");
-    let amqp_handle = tokio::spawn(async move { amqp_conn.run().await });
+    // create AMQP connection
+    let amqp = AmqpHandle::try_from_str(
+        &config.rabbitmq_address,
+        ConnectionArguments::new("discord"),
+        Some(amqp_tx),
+    )
+    .expect("couldn't create amqp client");
+    amqp.start();
 
     tracing::info!("running migrations...");
     sqlx::migrate!("./migrations")
