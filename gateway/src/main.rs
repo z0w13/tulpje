@@ -21,14 +21,15 @@ use config::Config;
 
 #[tokio::main]
 async fn main() {
+    // set-up logging
+    tracing_subscriber::fmt::init();
+    tracing::info!("starting tulpje-gateway {} ...", version!());
+
     // parse TASK_SLOT env var if it exists and use it for the shard id
     parse_task_slot("SHARD_ID");
 
     // create config from environment vars
     let config = Config::load().expect("error loading config from env");
-
-    // set-up logging
-    tracing_subscriber::fmt::init();
 
     // create AMQP connection
     let mut amqp = AmqpHandle::try_from_str(

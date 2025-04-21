@@ -19,20 +19,21 @@ use twilight_gateway::Event;
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::{parse_task_slot, DiscordEvent};
+use tulpje_shared::{parse_task_slot, version, DiscordEvent};
 
 use config::Config;
 
 #[tokio::main]
 async fn main() {
+    // set-up logging
+    tracing_subscriber::fmt::init();
+    tracing::info!("starting tulpje-handler {} ...", version!());
+
     // parse TASK_SLOT env var if it exists and use it for the handler id
     parse_task_slot("HANDLER_DIR");
 
     // create config from environment vars
     let config = Config::load().expect("error loading config");
-
-    // set-up logging
-    tracing_subscriber::fmt::init();
 
     // needed for fetching recommended shard count
     let client = Arc::new(
