@@ -10,10 +10,8 @@ use twilight_model::gateway::{
     OpCode,
 };
 
-use tulpje_shared::{
-    amqp::{AmqpHandle, ConnectionArguments},
-    parse_task_slot, version, DiscordEvent,
-};
+use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
+use tulpje_shared::{parse_task_slot, version, DiscordEvent};
 
 mod config;
 mod metrics;

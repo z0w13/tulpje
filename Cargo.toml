@@ -1,6 +1,6 @@
 [workspace]
 members = [
-	"gateway", "handler", "manager", "utils", "shared", "framework", "cache",
+	"gateway", "handler", "manager", "utils", "shared", "framework", "cache", "reconnecting-amqp",
 ]
 
 resolver = "2"

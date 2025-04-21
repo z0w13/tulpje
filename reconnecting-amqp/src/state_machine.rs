@@ -17,7 +17,7 @@ where
 #[macro_export]
 macro_rules! state_transition {
     ($from:ident => $to:ident $(,)?) => {
-        impl $crate::amqp::state_machine::FromState<$from> for $to {
+        impl $crate::state_machine::FromState<$from> for $to {
             fn from_state(state: Self) -> Self {
                 state
             }

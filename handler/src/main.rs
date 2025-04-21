@@ -16,12 +16,10 @@ use tokio::sync::mpsc;
 use tracing::log::LevelFilter;
 use twilight_gateway::Event;
 
+use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::{
-    amqp::{AmqpHandle, ConnectionArguments},
-    parse_task_slot, DiscordEvent,
-};
+use tulpje_shared::{parse_task_slot, DiscordEvent};
 
 use config::Config;
 

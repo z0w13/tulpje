@@ -1,0 +1,19 @@
+[package]
+name = "reconnecting-amqp"
+edition = "2021"
+version = "0.1.0"
+
+description.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"] }
+async-trait = "0.1.86"
+tokio = "1.43.0"
+tokio-util = { version = "0.7.14" }
+tracing = "0.1.41"
+
+[lints]
+workspace = true

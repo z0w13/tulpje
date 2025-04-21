@@ -10,10 +10,7 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-use crate::{
-    amqp::{AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer},
-    state_transition,
-};
+use crate::{state_transition, AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer};
 
 use super::{
     close_reason::CloseReason, event::Event, state_machine::IntoState as _, ConnectionArguments,
