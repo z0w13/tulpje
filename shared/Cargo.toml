@@ -10,7 +10,7 @@ license.workspace = true
 
 [dependencies]
 metrics = "0.24.1"
-metrics-exporter-prometheus = { version = "0.16.2", features = ["http-listener"], default-features = false }
+metrics-exporter-prometheus = { version = "0.17.0", features = ["http-listener"], default-features = false }
 metrics-process = "2.4.0"
 amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"] }
 procfs = "0.17.0"
