@@ -10,9 +10,15 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-use crate::amqp::{AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer};
+use crate::{
+    amqp::{AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer},
+    state_transition,
+};
 
-use super::{close_reason::CloseReason, event::Event, ConnectionArguments, Error};
+use super::{
+    close_reason::CloseReason, event::Event, state_machine::IntoState as _, ConnectionArguments,
+    Error,
+};
 
 pub(crate) struct AmqpConnection {
     opts: ConnectionArguments,
@@ -70,8 +76,7 @@ impl AmqpConnection {
             return;
         }
 
-        let mut state = State::default();
-        let mut shared = Shared {
+        let mut shared = AmqpSharedData {
             opts: self.opts,
             inner_opts: self.inner_opts,
 
@@ -83,6 +88,7 @@ impl AmqpConnection {
             start_tx: Some(self.start_tx),
             shutdown: self.shutdown,
         };
+        let mut state = State::Disconnected(Disconnected {});
 
         loop {
             match state {
@@ -96,7 +102,7 @@ impl AmqpConnection {
     }
 }
 
-struct Shared {
+struct AmqpSharedData {
     opts: ConnectionArguments,
     inner_opts: OpenConnectionArguments,
 
@@ -134,66 +140,63 @@ enum State {
     Finished(CloseReason),
 }
 
-impl Default for State {
-    fn default() -> Self {
-        Self::Disconnected(Disconnected {})
-    }
-}
-
 impl State {
-    async fn run(self, shared: &mut Shared) -> Self {
+    async fn run(self, shared: &mut AmqpSharedData) -> Self {
         match self {
-            Self::Disconnected(inner) => inner.run(shared).await,
+            Self::Disconnected(inner) => inner.run().await,
             Self::Connecting(inner) => inner.run(shared).await,
             Self::Reconnecting(inner) => inner.run(shared).await,
             Self::OpeningChannel(inner) => inner.run(shared).await,
             Self::ReopeningChannel(inner) => inner.run(shared).await,
             Self::DeclaringConsumer(inner) => inner.run(shared).await,
             Self::Connected(inner) => inner.run(shared).await,
-            Self::ClosingChannel(inner) => inner.run(shared).await,
-            Self::ClosingConnection(inner) => inner.run(shared).await,
+            Self::ClosingChannel(inner) => inner.run().await,
+            Self::ClosingConnection(inner) => inner.run().await,
             Self::ClosedConnection(inner) => inner.run(shared).await,
             Self::Finished(reason) => Self::Finished(reason),
         }
     }
 }
 
-struct Disconnected {}
-impl Disconnected {
-    fn connect(self) -> State {
-        State::Connecting(Connecting {})
-    }
+// Define state transitions
+state_transition!(Disconnected => Connecting);
+state_transition!(Reconnecting => Connecting);
+state_transition!(ClosedConnection => [Reconnecting]);
+state_transition!(ClosingChannel => [
+    ReopeningChannel,
+    ClosingConnection
+]);
+state_transition!(ClosingConnection => ClosedConnection);
+state_transition!(Connecting => [
+        OpeningChannel,
+        ClosingConnection,
+        ClosedConnection,
+        Reconnecting
+]);
+state_transition!(Connected => ClosingChannel);
+state_transition!(DeclaringConsumer => [Connected, ClosingChannel]);
+state_transition!(OpeningChannel => [
+    DeclaringConsumer,
+    Connected,
+    ClosingChannel,
+    ReopeningChannel,
+    ClosingConnection
+]);
+state_transition!(ReopeningChannel => OpeningChannel);
 
-    async fn run(self, _shared: &Shared) -> State {
-        self.connect()
+// Define states
+struct Disconnected {}
+
+impl Disconnected {
+    async fn run(self) -> State {
+        State::Connecting(Self::into_state(Connecting {}))
     }
 }
 
 struct Connecting {}
-impl Connecting {
-    fn open_channel(
-        self,
-        conn: Connection,
-        event_tx: mpsc::UnboundedSender<Event>,
-        event_rx: mpsc::UnboundedReceiver<Event>,
-    ) -> State {
-        State::OpeningChannel(OpeningChannel {
-            conn,
-            event_tx,
-            event_rx,
-        })
-    }
-    fn reconnect(self) -> State {
-        State::Reconnecting(Reconnecting {})
-    }
-    fn close_connection(self, conn: Connection, reason: CloseReason) -> State {
-        State::ClosingConnection(ClosingConnection::new(conn, reason))
-    }
-    fn closed_connection(self, reason: CloseReason) -> State {
-        State::ClosedConnection(ClosedConnection { reason })
-    }
 
-    async fn run(self, shared: &Shared) -> State {
+impl Connecting {
+    async fn run(self, shared: &AmqpSharedData) -> State {
         tracing::info!(
             "connecting to amqp at {}://{}:{}/{} ...",
             shared.inner_opts.get_scheme().unwrap_or("amqp"),
@@ -212,10 +215,12 @@ impl Connecting {
                 tracing::error!(err);
 
                 if shared.start_tx.is_some() {
-                    return self.closed_connection(CloseReason::StartError(Some(err.into())));
+                    return State::ClosedConnection(Self::into_state(ClosedConnection {
+                        reason: CloseReason::StartError(Some(err.into())),
+                    }));
                 }
 
-                return self.reconnect();
+                return State::Reconnecting(Self::into_state(Reconnecting {}));
             }
         };
 
@@ -228,80 +233,88 @@ impl Connecting {
             tracing::error!(err);
 
             if shared.start_tx.is_some() {
-                return self.close_connection(conn, CloseReason::StartError(Some(err.into())));
+                return State::ClosingConnection(Self::into_state(ClosingConnection::new(
+                    conn,
+                    CloseReason::StartError(Some(err.into())),
+                )));
             }
 
-            return self.close_connection(conn, CloseReason::Other);
+            return State::ClosingConnection(Self::into_state(ClosingConnection::new(
+                conn,
+                CloseReason::Other,
+            )));
         };
 
-        self.open_channel(conn, event_tx, event_rx)
+        State::OpeningChannel(Self::into_state(OpeningChannel {
+            conn,
+            event_tx,
+            event_rx,
+        }))
     }
 }
 
 struct Reconnecting {}
-impl Reconnecting {
-    fn connect(self) -> State {
-        State::Connecting(Connecting {})
-    }
 
-    async fn run(self, shared: &Shared) -> State {
+impl Reconnecting {
+    async fn run(self, shared: &AmqpSharedData) -> State {
         tracing::info!(
             "reconnecting in {}ms ...",
             shared.opts.reconnect_delay.as_millis(),
         );
         sleep(shared.opts.reconnect_delay).await;
 
-        self.connect()
+        State::Connecting(Self::into_state(Connecting {}))
     }
 }
 
-pub(crate) struct OpeningChannel {
+struct OpeningChannel {
     conn: Connection,
     event_tx: mpsc::UnboundedSender<Event>,
     event_rx: mpsc::UnboundedReceiver<Event>,
 }
+
 impl OpeningChannel {
     fn connected(self, chan: Channel) -> State {
-        State::Connected(Connected {
+        State::Connected(Self::into_state(Connected {
             conn: self.conn,
             chan,
             event_tx: self.event_tx,
             event_rx: self.event_rx,
-        })
+        }))
     }
 
-    fn declare_consumer(self, chan: Channel) -> State {
-        State::DeclaringConsumer(DeclaringConsumer {
-            conn: self.conn,
-            chan,
-            event_tx: self.event_tx,
-            event_rx: self.event_rx,
-        })
+    fn close_connection(self, reason: CloseReason) -> State {
+        State::ClosingConnection(Self::into_state(ClosingConnection::new(self.conn, reason)))
     }
 
     fn reopen_channel(self) -> State {
-        State::ReopeningChannel(ReopeningChannel {
+        State::ReopeningChannel(Self::into_state(ReopeningChannel {
             conn: self.conn,
             event_tx: self.event_tx,
             event_rx: self.event_rx,
-        })
+        }))
     }
 
     fn close_channel(self, chan: Channel, reason: CloseReason) -> State {
-        State::ClosingChannel(ClosingChannel::new(
+        State::ClosingChannel(Self::into_state(ClosingChannel::new(
             self.conn,
             chan,
             self.event_tx,
             self.event_rx,
             reason,
-        ))
+        )))
     }
 
-    fn close_connection(self, reason: CloseReason) -> State {
-        State::ClosingConnection(ClosingConnection::new(self.conn, reason))
+    fn declare_consumer(self, chan: Channel) -> State {
+        State::DeclaringConsumer(Self::into_state(DeclaringConsumer {
+            conn: self.conn,
+            chan,
+            event_tx: self.event_tx,
+            event_rx: self.event_rx,
+        }))
     }
 
-    async fn run(self, shared: &Shared) -> State {
+    async fn run(self, shared: &AmqpSharedData) -> State {
         tracing::debug!("opening channel ...");
         let chan = match self.conn.open_channel(None).await {
             Ok(chan) => chan,
@@ -367,23 +380,20 @@ struct ReopeningChannel {
     event_tx: mpsc::UnboundedSender<Event>,
     event_rx: mpsc::UnboundedReceiver<Event>,
 }
-impl ReopeningChannel {
-    fn open_channel(self) -> State {
-        State::OpeningChannel(OpeningChannel {
-            conn: self.conn,
-            event_tx: self.event_tx,
-            event_rx: self.event_rx,
-        })
-    }
 
-    async fn run(self, shared: &Shared) -> State {
+impl ReopeningChannel {
+    async fn run(self, shared: &AmqpSharedData) -> State {
         tracing::info!(
             "redeclaring channel in {}ms ...",
             shared.opts.reconnect_delay.as_millis(),
         );
         sleep(shared.opts.reconnect_delay).await;
 
-        self.open_channel()
+        State::OpeningChannel(Self::into_state(OpeningChannel {
+            conn: self.conn,
+            event_tx: self.event_tx,
+            event_rx: self.event_rx,
+        }))
     }
 }
 
@@ -393,27 +403,28 @@ struct DeclaringConsumer {
     event_tx: mpsc::UnboundedSender<Event>,
     event_rx: mpsc::UnboundedReceiver<Event>,
 }
+
 impl DeclaringConsumer {
     fn connected(self) -> State {
-        State::Connected(Connected {
+        State::Connected(Self::into_state(Connected {
             conn: self.conn,
             chan: self.chan,
             event_tx: self.event_tx,
             event_rx: self.event_rx,
-        })
+        }))
     }
 
     fn close_channel(self, reason: CloseReason) -> State {
-        State::ClosingChannel(ClosingChannel::new(
+        State::ClosingChannel(Self::into_state(ClosingChannel::new(
             self.conn,
             self.chan,
             self.event_tx,
             self.event_rx,
             reason,
-        ))
+        )))
     }
 
-    async fn run(self, shared: &Shared) -> State {
+    async fn run(self, shared: &AmqpSharedData) -> State {
         tracing::debug!("declaring amqp consumer ...");
         if let Err(err) = self
             .chan
@@ -445,18 +456,19 @@ struct Connected {
     event_tx: mpsc::UnboundedSender<Event>,
     event_rx: mpsc::UnboundedReceiver<Event>,
 }
+
 impl Connected {
     fn close_channel(self, reason: CloseReason) -> State {
-        State::ClosingChannel(ClosingChannel::new(
+        State::ClosingChannel(Self::into_state(ClosingChannel::new(
             self.conn,
             self.chan,
             self.event_tx,
             self.event_rx,
             reason,
-        ))
+        )))
     }
 
-    async fn run(mut self, shared: &mut Shared) -> State {
+    async fn run(mut self, shared: &mut AmqpSharedData) -> State {
         if let Some(start_tx) = shared.start_tx.take() {
             if let Err(None) = start_tx.send(None) {
                 tracing::warn!("start_tx::send couldn't send succesful start result");
@@ -467,7 +479,7 @@ impl Connected {
             select! {
                 () = shared.shutdown.cancelled() => {
                     return self.close_channel(CloseReason::Shutdown);
-                },
+                }
                 event = self.event_rx.recv() => {
                     let Some(event) = event else {
                         tracing::error!("event_rx was closed, shutting down ...");
@@ -530,6 +542,7 @@ struct ClosingChannel {
     event_rx: mpsc::UnboundedReceiver<Event>,
     reason: CloseReason,
 }
+
 impl ClosingChannel {
     fn new(
         conn: Connection,
@@ -548,18 +561,21 @@ impl ClosingChannel {
     }
 
     fn close_connection(self) -> State {
-        State::ClosingConnection(ClosingConnection::new(self.conn, self.reason))
+        State::ClosingConnection(Self::into_state(ClosingConnection::new(
+            self.conn,
+            self.reason,
+        )))
     }
 
     fn reopen_channel(self) -> State {
-        State::ReopeningChannel(ReopeningChannel {
+        State::ReopeningChannel(Self::into_state(ReopeningChannel {
             conn: self.conn,
             event_tx: self.event_tx,
             event_rx: self.event_rx,
-        })
+        }))
     }
 
-    async fn run(mut self, _shared: &Shared) -> State {
+    async fn run(mut self) -> State {
         assert!(
             self.chan.is_some(),
             "ClosingChannel::chan is None, shouldn't happen, did you not use ClosingChan::new?"
@@ -586,6 +602,7 @@ struct ClosingConnection {
     conn: Option<Connection>,
     reason: CloseReason,
 }
+
 impl ClosingConnection {
     fn new(conn: Connection, reason: CloseReason) -> Self {
         Self {
@@ -594,13 +611,7 @@ impl ClosingConnection {
         }
     }
 
-    fn closed_connection(self) -> State {
-        State::ClosedConnection(ClosedConnection {
-            reason: self.reason,
-        })
-    }
-
-    async fn run(mut self, _shared: &Shared) -> State {
+    async fn run(mut self) -> State {
         assert!(
             self.conn.is_some(),
             "ClosingChannel::chan is None, shouldn't happen, did you not use ClosingChan::new?"
@@ -611,13 +622,16 @@ impl ClosingConnection {
             tracing::warn!("error closing amqp conn: {err}");
         };
 
-        self.closed_connection()
+        State::ClosedConnection(Self::into_state(ClosedConnection {
+            reason: self.reason,
+        }))
     }
 }
 
 struct ClosedConnection {
     reason: CloseReason,
 }
+
 impl ClosedConnection {
     fn finished(self) -> State {
         State::Finished(self.reason)
@@ -628,10 +642,10 @@ impl ClosedConnection {
     }
 
     fn reconnect(self) -> State {
-        State::Reconnecting(Reconnecting {})
+        State::Reconnecting(Self::into_state(Reconnecting {}))
     }
 
-    async fn run(mut self, shared: &mut Shared) -> State {
+    async fn run(mut self, shared: &mut AmqpSharedData) -> State {
         match self.reason {
             CloseReason::ChannelClosed
             | CloseReason::PublishNoRoute

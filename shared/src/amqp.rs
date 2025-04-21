@@ -4,6 +4,7 @@ mod connection;
 mod connection_callback;
 mod consumer;
 pub mod event;
+mod state_machine;
 
 use std::time::Duration;
 
