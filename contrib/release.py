@@ -20,9 +20,12 @@ import argparse
 import sys
 import os
 import re
+import logging
 
 import tomlkit
 from tomlkit.items import AoT
+
+log = logging.getLogger(__name__)
 
 
 def argparser() -> argparse.ArgumentParser:
@@ -189,6 +192,9 @@ class SemverCheckResult(NamedTuple):
 def cargo_semver_checks(
     baseline_rev: str, crate: Optional[str] = None
 ) -> SemverCheckResult:
+    log.info(
+        f"running `cargo semver-checks` with crate={crate} baseline_rev={baseline_rev} ... "
+    )
     result = subprocess.run(
         ["cargo", "semver-checks", "--baseline-rev", baseline_rev]
         + ([] if crate is None else ["--package", crate]),
@@ -333,12 +339,20 @@ class ReleaseInfo:
         )
 
 
+def prefixed_version(prefix: str, version: Version) -> str:
+    prefix.removesuffix("-")
+    return f"v{version}" if len(prefix) == 0 else f"{prefix}-v{version}"
+
+
 def create_changelog_update(
     prefix: str,
     new_version: Version,
     independent_crate: bool,
     independent_crates: Iterable[CrateInfo],
 ) -> str:
+    log.info(
+        "creating changelog update" + (f" for {prefix}" if len(prefix) > 0 else "")
+    )
     if independent_crate:
         extra_args = ["--include-path", f"{prefix}/**/*"]
     else:
@@ -689,15 +703,23 @@ def check_output_dry(title: Optional[str], execute: bool, *args, **kwargs):
 
 
 def gather_crates() -> list[CrateInfo]:
+    log.info("gathering crates ... ")
     try:
         members = tomllib.load(open("Cargo.toml", "rb"))["workspace"]["members"]
     except IndexError:
+        log.debug("no workspace members ... ")
         members = []
 
     return [CrateInfo.from_manifest(f"{member}/Cargo.toml") for member in members]
 
 
 def main(args: argparse.Namespace) -> int:
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s %(levelname)8s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S",
+    )
+
     crates = gather_crates()
     independent_crates = [crate for crate in crates if crate.independent]
     grouped_crates = [crate for crate in crates if not crate.independent]
