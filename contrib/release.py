@@ -133,9 +133,15 @@ def git_tags_with_prefix(prefix: str = "") -> list[str]:
     ]
 
 
-def get_latest_tag(prefix: str = "") -> Optional[str]:
+def get_latest_tag(prefix: str = "", include_prerelease: bool = False) -> Optional[str]:
     tags = git_tags_with_prefix(prefix)
-    latest = latest_version([Version.parse(t.removeprefix(f"{prefix}v")) for t in tags])
+    latest = latest_version(
+        [
+            v
+            for v in (Version.parse(t.removeprefix(f"{prefix}v")) for t in tags)
+            if v.prerelease is None or include_prerelease
+        ]
+    )
     if latest is None:
         return None
 
@@ -346,6 +352,7 @@ def prefixed_version(prefix: str, version: Version) -> str:
 
 def create_changelog_update(
     prefix: str,
+    old_version: Version,
     new_version: Version,
     independent_crate: bool,
     independent_crates: Iterable[CrateInfo],
@@ -364,7 +371,15 @@ def create_changelog_update(
     command = (
         ["git-cliff"]
         + extra_args
-        + ["--strip", "all", "--unreleased", "--tag", str(new_version)]
+        + [
+            "--strip",
+            "all",
+            "--ignore-tags",
+            "alpha|beta|rc",
+            "--tag",
+            str(new_version),
+            f"{prefixed_version(prefix, old_version)}..HEAD",
+        ]
     )
     return process_run(command, encoding="utf-8").strip()
 
@@ -424,7 +439,7 @@ def gather_release(
         )
 
     new_changelog = create_changelog_update(
-        prefix, new_version, independent_crate, independent_crates
+        prefix, old_version, new_version, independent_crate, independent_crates
     )
 
     return ReleaseInfo(
