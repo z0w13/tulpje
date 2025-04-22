@@ -2943,7 +2943,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "amqprs",
  "figment",
@@ -2970,7 +2970,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "amqprs",
  "async-cron-scheduler",
@@ -3006,7 +3006,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "tokio",
  "twilight-http",
@@ -3014,7 +3014,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "amqprs",
  "async-trait",
@@ -3035,7 +3035,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "reqwest",
 ]
