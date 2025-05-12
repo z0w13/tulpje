@@ -22,7 +22,7 @@ twilight-model = "0.16.0"
 uuid = { version = "1.16.0", features = ["v7", "serde"] }
 tracing = "0.1.41"
 tulpje-framework = { version = "0.14.2", path = "../framework" }
-redis = { version = "0.29.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.31.0", default-features = false, features = ["tokio-comp", "connection-manager"] }
 async-trait = "0.1.86"
 
 [lints]
