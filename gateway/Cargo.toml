@@ -14,7 +14,7 @@ license.workspace = true
 tulpje-shared = { version = "0.17.1", path = "../shared" }
 reconnecting-amqp = { version = "0.1.0", path = "../reconnecting-amqp" }
 serde_json = "1.0.140"
-tokio = { version = "1.43.0", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.45.1", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 twilight-gateway = { version = "0.16.0", features = ["rustls-ring", "rustls-webpki-roots" ], default-features = false }
