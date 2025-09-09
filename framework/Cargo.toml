@@ -11,10 +11,10 @@ license.workspace = true
 [dependencies]
 # TODO: Add support for picking TLS implementation and PKI source
 #       is that even needed here if we pass the http client in from other crates?
-twilight-http = { version = "0.16.0", features = ["decompression", "rustls-ring", "rustls-webpki-roots"], default-features = false }
-twilight-model = "0.16.0"
-twilight-gateway = { version = "0.16.0", default-features = false }
-twilight-util = { version = "0.16.0", features = ["builder"] }
+twilight-http = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", features = ["decompression", "rustls-ring", "rustls-webpki-roots"], default-features = false }
+twilight-model = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0" }
+twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", default-features = false }
+twilight-util = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", features = ["builder"] }
 tracing = "0.1.41"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = { version = "0.4.40", features = ["alloc", "clock", "std"], default-features = false }
