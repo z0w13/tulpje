@@ -18,7 +18,7 @@ futures-util = "0.3.31"
 serde_json = "1.0.140"
 tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros", "sync"] }
 tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", default-features = false }
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", features = ["decompression", "rustls-ring", "rustls-webpki-roots"], default-features = false }
 twilight-model = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0" }
