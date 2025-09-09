@@ -291,7 +291,7 @@ impl UpdateCache for Event {
             | Event::BanRemove(_)
             | Event::CommandPermissionsUpdate(_)
             | Event::GatewayClose(_)
-            | Event::GatewayHeartbeat(_)
+            | Event::GatewayHeartbeat
             | Event::GatewayHeartbeatAck
             | Event::GatewayHello(_)
             | Event::GatewayInvalidateSession(_)
