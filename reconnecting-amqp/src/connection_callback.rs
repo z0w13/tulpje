@@ -60,4 +60,12 @@ impl ConnectionCallback for AmqpConnectionHandler {
             tracing::error!("error sending Event::ConnectionUnblock to queue: {err}");
         }
     }
+
+    async fn secret_updated(&mut self, connection: &Connection) {
+        tracing::debug!("secret updated for connection {}", connection);
+
+        if let Err(err) = self.event_tx.send(Event::SecretUpdated(connection.clone())) {
+            tracing::error!("error sending Event::SecretUpdated to queue: {err}");
+        }
+    }
 }
