@@ -11,6 +11,7 @@ let
     fileset = lib.fileset.unions [
       (craneLib.fileset.commonCargoSources unfilteredRoot)
 
+      # add migrations and sqlx related files to sources
       (unfilteredRoot + "/handler/migrations")
       (unfilteredRoot + "/handler/.sqlx")
     ];
@@ -20,6 +21,8 @@ let
 
     pname = name;
     strictDeps = true;
+
+    # to build a pecific create
     cargoExtraArgs = "-p ${name}";
   };
   cargoArtifacts = craneLib.buildDepsOnly commonArgs;
