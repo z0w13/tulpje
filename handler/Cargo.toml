@@ -11,7 +11,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-shared = { version = "0.17.1", path = "../shared" }
+tulpje-shared = { version = "0.18.0-beta.3", path = "../shared" }
 tulpje-framework = { version = "0.14.2", path = "../framework" }
 reconnecting-amqp = { version = "0.1.0", path = "../reconnecting-amqp" }
 futures-util = "0.3.31"
