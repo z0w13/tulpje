@@ -7,6 +7,7 @@ pub enum Event {
     ConnectionClose(Connection, Close),
     ConnectionBlock(Connection, String),
     ConnectionUnblock(Connection),
+    SecretUpdated(Connection),
 
     ChannelClose(Channel, CloseChannel),
     ChannelCancel(Channel, Cancel),
