@@ -13,6 +13,7 @@ from typing import Iterable, NamedTuple, Optional, Self
 from fnmatch import fnmatchcase
 from graphlib import TopologicalSorter
 from semver import Version
+import logging
 import tomllib
 import subprocess
 import json
@@ -23,6 +24,50 @@ import re
 
 import tomlkit
 from tomlkit.items import AoT
+
+logger = logging.getLogger(__name__)
+
+
+class RustishFormatter(logging.Formatter):
+    COLOR_GREY = "\033[90m"
+    COLOR_LIGHT_GREY = "\033[37m"
+    COLOR_YELLOW = "\033[33m"
+    COLOR_BLUE = "\033[34m"
+    COLOR_GREEN = "\033[32m"
+    COLOR_RED = "\033[31m"
+    COLOR_BOLD_RED = "\033[31m"
+    COLOR_CYAN = "\033[36m"
+    RESET = "\033[0m"
+
+    LEVEL_COLORS = {
+        logging.DEBUG: COLOR_BLUE,
+        logging.INFO: COLOR_GREEN,
+        logging.WARNING: COLOR_YELLOW,
+        logging.ERROR: COLOR_RED,
+        logging.CRITICAL: COLOR_BOLD_RED,
+    }
+    LEVEL_NAME_MAP = {
+        logging.DEBUG: "DEBUG",
+        logging.INFO: "INFO",
+        logging.WARNING: "WARN",
+        logging.ERROR: "ERROR",
+        logging.CRITICAL: "CRIT",
+    }
+
+    def __init__(self, *args, **kwargs):
+        kwargs["fmt"] = (
+            f"{self.COLOR_GREY}%(asctime)s.%(msecs)03dZ{self.RESET} %(levelname)14s {self.COLOR_GREY}%(name)s:{self.RESET} %(message)s"
+        )
+        kwargs["datefmt"] = "%Y-%m-%dT%H:%M:%S"
+        super().__init__(*args, **kwargs)
+
+    def format(self, record):
+        record.levelname = (
+            self.LEVEL_COLORS.get(record.levelno, "")
+            + self.LEVEL_NAME_MAP.get(record.levelno, record.levelname)
+            + self.RESET
+        )
+        return super().format(record)
 
 
 def argparser() -> argparse.ArgumentParser:
@@ -135,8 +180,8 @@ def parse_semver_from_tag(tag: str, prefix: str = "") -> Optional[Version]:
     try:
         return Version.parse(tag.removeprefix(f"{prefix}v"))
     except ValueError as error:
-        print(
-            f"WARN: Couldn't parse valid semver from `{tag}`, tried parsing `{normalized}`: {str(error)}"
+        logger.warning(
+            f"Couldn't parse valid semver from `{tag}`, tried parsing `{normalized}`: {str(error)}"
         )
 
 
@@ -202,6 +247,10 @@ class SemverCheckResult(NamedTuple):
 def cargo_semver_checks(
     baseline_rev: str, crate: Optional[str] = None
 ) -> SemverCheckResult:
+    logger.info(
+        f"running `cargo semver-checks`, baseline_rev={baseline_rev}: crate={crate} ..."
+    )
+
     result = subprocess.run(
         ["cargo", "semver-checks", "--baseline-rev", baseline_rev]
         + ([] if crate is None else ["--package", crate]),
@@ -375,8 +424,10 @@ def gather_release(
     prefix = "" if not independent_crate else crates[0].name.removeprefix("tulpje-")
 
     if independent_crate:
+        logger.info("gathering release for {} ...".format(crates[0].name))
         file_whitelist = RELEASE_FILENAME_MATCHLIST
     else:
+        logger.info("gathering release for main crate ...")
         file_whitelist = RELEASE_FILENAME_MATCHLIST.union(
             RELEASE_FILENAME_MATCHLIST_WORKSPACE
         ).union({f"!{crate.path}/**/*" for crate in independent_crates})
@@ -391,6 +442,10 @@ def gather_release(
     if latest_tag is None:
         raise Exception("ERR: couldn't find the previous tag")
 
+    logger.debug(
+        f"latest tag: {latest_tag}, has_independent_tag: {has_independent_tag}"
+    )
+
     if independent_crate:
         commits = filter_commits_by_path(get_commits_since_ref(latest_tag), [prefix])
     else:
@@ -399,6 +454,8 @@ def gather_release(
             [crate.path for crate in independent_crates],
             True,
         )
+
+    logger.debug(f"gathered {len(commits)} commits")
 
     has_feature_commit = any(commit.subject.startswith("feat") for commit in commits)
     has_breaking_change_commit = any(commit.breaking for commit in commits)
@@ -702,6 +759,7 @@ def check_output_dry(title: Optional[str], execute: bool, *args, **kwargs):
 
 
 def gather_crates() -> list[CrateInfo]:
+    logger.info("gathering crates ...")
     try:
         members = tomllib.load(open("Cargo.toml", "rb"))["workspace"]["members"]
     except IndexError:
@@ -711,6 +769,11 @@ def gather_crates() -> list[CrateInfo]:
 
 
 def main(args: argparse.Namespace) -> int:
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(RustishFormatter())
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
     crates = gather_crates()
     independent_crates = [crate for crate in crates if crate.independent]
     grouped_crates = [crate for crate in crates if not crate.independent]
