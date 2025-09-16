@@ -130,9 +130,22 @@ def git_tags_with_prefix(prefix: str = "") -> list[str]:
     ]
 
 
+def parse_semver_from_tag(tag: str, prefix: str = "") -> Optional[Version]:
+    normalized = tag.removeprefix(f"{prefix}v")
+    try:
+        return Version.parse(tag.removeprefix(f"{prefix}v"))
+    except ValueError as error:
+        print(
+            f"WARN: Couldn't parse valid semver from `{tag}`, tried parsing `{normalized}`: {str(error)}"
+        )
+
+
 def get_latest_tag(prefix: str = "") -> Optional[str]:
     tags = git_tags_with_prefix(prefix)
-    latest = latest_version([Version.parse(t.removeprefix(f"{prefix}v")) for t in tags])
+    versions = [
+        v for v in (parse_semver_from_tag(t, prefix) for t in tags) if v is not None
+    ]
+    latest = latest_version(versions)
     if latest is None:
         return None
 
