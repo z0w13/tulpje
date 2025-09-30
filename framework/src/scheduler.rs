@@ -43,23 +43,26 @@ impl<T: Clone + Send + Sync + 'static> SchedulerHandle<T> {
         self.shutdown.cancel();
     }
 
-    pub(crate) fn start(&mut self) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
-        self.sender
-            .send(SchedulerTaskMessage::Start(self.tasks.clone()))
+    pub(crate) fn start(
+        &mut self,
+    ) -> Result<(), Box<mpsc::error::SendError<SchedulerTaskMessage<T>>>> {
+        Ok(self
+            .sender
+            .send(SchedulerTaskMessage::Start(self.tasks.clone()))?)
     }
 
     pub fn enable_task(
         &mut self,
         handler: TaskHandler<T>,
-    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
-        self.sender.send(SchedulerTaskMessage::Enable(handler))
+    ) -> Result<(), Box<mpsc::error::SendError<SchedulerTaskMessage<T>>>> {
+        Ok(self.sender.send(SchedulerTaskMessage::Enable(handler))?)
     }
 
     pub fn disable_task(
         &mut self,
         name: String,
-    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
-        self.sender.send(SchedulerTaskMessage::Disable(name))
+    ) -> Result<(), Box<mpsc::error::SendError<SchedulerTaskMessage<T>>>> {
+        Ok(self.sender.send(SchedulerTaskMessage::Disable(name))?)
     }
 
     pub(crate) async fn join(&mut self) -> Result<(), Error> {
