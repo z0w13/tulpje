@@ -13,7 +13,7 @@ use crate::{
 
 pub enum SchedulerTaskMessage<T: Clone + Send + Sync> {
     Start(Vec<TaskHandler<T>>),
-    Enable(TaskHandler<T>),
+    Enable(Box<TaskHandler<T>>),
     Disable(String),
 }
 
@@ -55,7 +55,9 @@ impl<T: Clone + Send + Sync + 'static> SchedulerHandle<T> {
         &mut self,
         handler: TaskHandler<T>,
     ) -> Result<(), Box<mpsc::error::SendError<SchedulerTaskMessage<T>>>> {
-        Ok(self.sender.send(SchedulerTaskMessage::Enable(handler))?)
+        Ok(self
+            .sender
+            .send(SchedulerTaskMessage::Enable(Box::new(handler)))?)
     }
 
     pub fn disable_task(
@@ -145,7 +147,7 @@ impl<T: Clone + Send + Sync + 'static> Scheduler<T> {
                                 self.enable_task(task.clone()).await;
                             }
                         },
-                        SchedulerTaskMessage::Enable(task) => self.enable_task(task).await,
+                        SchedulerTaskMessage::Enable(task) => self.enable_task(*task).await,
                         SchedulerTaskMessage::Disable(name) => self.disable_task(&name).await,
                     }
                 },
