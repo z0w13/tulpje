@@ -18,7 +18,7 @@ tokio = "1.43.0"
 twilight-model = { workspace = true }
 tracing = "0.1.41"
 tulpje-framework = { version = "0.14.2", path = "../framework" }
-redis = { version = "0.29.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
+redis = { workspace = true }
 
 [lints]
 workspace = true
