@@ -11,7 +11,7 @@ use twilight_model::gateway::{
 };
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
-use tulpje_shared::{parse_task_slot, version, DiscordEvent};
+use tulpje_shared::{version, DiscordEvent};
 
 mod config;
 mod metrics;
@@ -24,9 +24,6 @@ async fn main() {
     // set-up logging
     tracing_subscriber::fmt::init();
     tracing::info!("starting tulpje-gateway {} ...", version!());
-
-    // parse TASK_SLOT env var if it exists and use it for the shard id
-    parse_task_slot("SHARD_ID");
 
     // create config from environment vars
     let config = Config::load().expect("error loading config from env");
