@@ -3,20 +3,20 @@ use std::cmp::{max, min};
 use twilight_model::{
     application::interaction::application_command::CommandOptionValue,
     channel::message::{
-        component::{ActionRow, Button, ButtonStyle, SelectMenu, SelectMenuType},
         Component, Embed, EmojiReactionType,
+        component::{ActionRow, Button, ButtonStyle, SelectMenu, SelectMenuType},
     },
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
     id::{
-        marker::{EmojiMarker, GuildMarker},
         Id,
+        marker::{EmojiMarker, GuildMarker},
     },
 };
 use twilight_util::builder::{
-    embed::{EmbedBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
+    embed::{EmbedBuilder, EmbedFooterBuilder},
 };
 
 use tulpje_framework::Error;
@@ -228,7 +228,7 @@ pub async fn handle_emoji_pagination(ctx: ComponentInteractionContext) -> Result
                 "unknown interaction id for handle_emoji_pagination: {}",
                 other
             )
-            .into())
+            .into());
         }
     };
 

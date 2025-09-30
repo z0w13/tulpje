@@ -9,7 +9,7 @@ use twilight_model::{
         interaction::InteractionContextType,
     },
     guild::Permissions,
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
     oauth::ApplicationIntegrationType,
 };
 

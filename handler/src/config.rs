@@ -1,4 +1,4 @@
-use figment::{providers::Env, Figment};
+use figment::{Figment, providers::Env};
 use figment_file_provider_adapter::FileAdapter;
 use serde::{Deserialize, Serialize};
 

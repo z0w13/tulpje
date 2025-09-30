@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use twilight_gateway::Event;
 use twilight_http::Client;
-use twilight_model::id::{marker::ApplicationMarker, Id};
+use twilight_model::id::{Id, marker::ApplicationMarker};
 
 use crate::Metadata;
 

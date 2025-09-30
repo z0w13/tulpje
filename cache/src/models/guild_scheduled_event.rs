@@ -1,6 +1,6 @@
 use twilight_model::{
     guild::scheduled_event::GuildScheduledEvent,
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
 };
 
 use crate::Cache;

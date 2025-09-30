@@ -1,10 +1,10 @@
-use base64::{prelude::BASE64_STANDARD, Engine as _};
+use base64::{Engine as _, prelude::BASE64_STANDARD};
 use futures_util::StreamExt as _;
 use twilight_http::Client;
 
 use tulpje_framework::Error;
-use twilight_model::id::marker::{EmojiMarker, GuildMarker};
 use twilight_model::id::Id;
+use twilight_model::id::marker::{EmojiMarker, GuildMarker};
 
 use crate::context::CommandContext;
 use crate::modules::emoji::db::Emoji;

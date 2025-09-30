@@ -2,11 +2,11 @@ use std::{future::Future, pin::Pin, sync::Arc};
 
 use tokio::{sync::mpsc, task::JoinHandle};
 
-use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use crate::Metadata;
+use tokio_util::{sync::CancellationToken, task::TaskTracker};
 use twilight_gateway::Event;
 use twilight_http::Client;
-use twilight_model::id::{marker::ApplicationMarker, Id};
+use twilight_model::id::{Id, marker::ApplicationMarker};
 
 use crate::handler::task_handler::TaskHandler;
 use crate::scheduler::{SchedulerHandle, SchedulerTaskMessage};

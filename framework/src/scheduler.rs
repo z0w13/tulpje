@@ -6,9 +6,9 @@ use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 
 use crate::{
+    Error,
     context::{Context, TaskContext},
     handler::task_handler::TaskHandler,
-    Error,
 };
 
 pub enum SchedulerTaskMessage<T: Clone + Send + Sync> {

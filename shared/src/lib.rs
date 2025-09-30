@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use twilight_model::id::{marker::ApplicationMarker, Id};
+use twilight_model::id::{Id, marker::ApplicationMarker};
 
 use tulpje_framework::Metadata;
 

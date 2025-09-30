@@ -4,7 +4,7 @@ use twilight_http::Client;
 use twilight_model::{
     application::interaction::modal::ModalInteractionData,
     gateway::payload::incoming::InteractionCreate,
-    id::{marker::ApplicationMarker, Id},
+    id::{Id, marker::ApplicationMarker},
 };
 
 use super::Context;

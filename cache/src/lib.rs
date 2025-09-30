@@ -15,11 +15,11 @@ use serde::{Deserialize, Serialize};
 use twilight_model::{
     gateway::event::Event,
     id::{
+        Id,
         marker::{
             ChannelMarker, EmojiMarker, GuildMarker, IntegrationMarker, MessageMarker, RoleMarker,
             ScheduledEventMarker, StageMarker, StickerMarker, UserMarker,
         },
-        Id,
     },
 };
 

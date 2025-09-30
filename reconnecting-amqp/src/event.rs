@@ -1,6 +1,6 @@
 use amqprs::{
-    channel::Channel, connection::Connection, Ack, BasicProperties, Cancel, Close, CloseChannel,
-    Deliver, Nack, Return,
+    Ack, BasicProperties, Cancel, Close, CloseChannel, Deliver, Nack, Return, channel::Channel,
+    connection::Connection,
 };
 
 pub enum Event {

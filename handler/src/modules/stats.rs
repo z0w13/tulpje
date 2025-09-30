@@ -1,9 +1,8 @@
 use twilight_model::application::{command::CommandType, interaction::InteractionContextType};
 
 use tulpje_framework::{
-    handler_func,
+    Module, ModuleBuilder, handler_func,
     module::command_builder::{CommandBuilder, SubCommandBuilder},
-    Module, ModuleBuilder,
 };
 
 use crate::context::Services;

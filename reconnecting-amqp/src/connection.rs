@@ -1,7 +1,7 @@
 use amqprs::{
+    BasicProperties,
     channel::{BasicConsumeArguments, BasicPublishArguments, Channel, QueueDeclareArguments},
     connection::{Connection, OpenConnectionArguments},
-    BasicProperties,
 };
 use tokio::{
     select,
@@ -10,11 +10,11 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-use crate::{state_transition, AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer};
+use crate::{AmqpChannelHandler, AmqpConnectionHandler, AmqpConsumer, state_transition};
 
 use super::{
-    close_reason::CloseReason, event::Event, state_machine::IntoState as _, ConnectionArguments,
-    Error,
+    ConnectionArguments, Error, close_reason::CloseReason, event::Event,
+    state_machine::IntoState as _,
 };
 
 pub(crate) struct AmqpConnection {

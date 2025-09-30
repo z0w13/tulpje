@@ -1,8 +1,8 @@
 use twilight_model::{
     channel::StageInstance,
     id::{
-        marker::{GuildMarker, StageMarker},
         Id,
+        marker::{GuildMarker, StageMarker},
     },
 };
 

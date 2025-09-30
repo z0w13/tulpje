@@ -5,14 +5,13 @@ use twilight_model::{
         interaction::InteractionContextType,
     },
     guild::Permissions,
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
 };
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
-    handler_func,
+    Error, Module, ModuleBuilder, Registry, handler_func,
     module::command_builder::{CommandBuilder, SubCommandBuilder},
-    Error, Module, ModuleBuilder, Registry,
 };
 
 use crate::context::Services;

@@ -3,8 +3,8 @@ use std::{future::Future, pin::Pin};
 use async_cron_scheduler::cron::Schedule;
 use chrono::{DateTime, Utc};
 
-use crate::context::TaskContext;
 use crate::Error;
+use crate::context::TaskContext;
 
 pub(crate) type TaskFunc<T> =
     fn(TaskContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;

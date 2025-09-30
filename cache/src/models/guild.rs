@@ -1,6 +1,6 @@
 use std::{hash::Hash, mem};
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use twilight_model::{
     gateway::payload::incoming::GuildUpdate,
     guild::{
@@ -8,15 +8,15 @@ use twilight_model::{
         MfaLevel, NSFWLevel, Permissions, PremiumTier, SystemChannelFlags, VerificationLevel,
     },
     id::{
-        marker::{ApplicationMarker, ChannelMarker, GuildMarker, UserMarker},
         Id,
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, UserMarker},
     },
     util::{ImageHash, Timestamp},
 };
 
 use crate::{
-    repository::{MappedSetRepository, Repository},
     Cache, Error,
+    repository::{MappedSetRepository, Repository},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

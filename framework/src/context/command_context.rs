@@ -1,15 +1,15 @@
 use std::{collections::HashMap, sync::Arc};
 
-use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
+use twilight_http::{Client, client::InteractionClient, response::marker::EmptyBody};
 use twilight_model::{
     application::interaction::application_command::{
         CommandData, CommandDataOption, CommandOptionValue,
     },
-    channel::{message::MessageFlags, Message},
+    channel::{Message, message::MessageFlags},
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::{InteractionResponse, InteractionResponseType},
-    id::{marker::ApplicationMarker, Id},
+    id::{Id, marker::ApplicationMarker},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 

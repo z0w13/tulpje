@@ -3,8 +3,8 @@ use std::collections::{HashMap, HashSet};
 use pkrs_fork::{client::PkClient, model::PkId};
 use tracing::debug;
 use twilight_model::guild::Guild;
-use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
+use twilight_model::id::marker::RoleMarker;
 
 use tulpje_framework::Error;
 
