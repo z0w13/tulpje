@@ -6,7 +6,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.18.0-beta.3"
+version = "0.18.0-beta.4"
 description = "Multi-purpose discord bot & framework"
 homepage = "https://github.com/z0w13/tulpje"
 repository = "https://github.com/z0w13/tulpje"
