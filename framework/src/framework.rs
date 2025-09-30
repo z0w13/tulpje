@@ -107,14 +107,14 @@ impl<T: Clone + Send + Sync + 'static> Framework<T> {
     pub fn enable_task(
         &mut self,
         handler: TaskHandler<T>,
-    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+    ) -> Result<(), Box<mpsc::error::SendError<SchedulerTaskMessage<T>>>> {
         self.scheduler.enable_task(handler)
     }
 
     pub fn disable_task(
         &mut self,
         name: String,
-    ) -> Result<(), mpsc::error::SendError<SchedulerTaskMessage<T>>> {
+    ) -> Result<(), Box<mpsc::error::SendError<SchedulerTaskMessage<T>>>> {
         self.scheduler.disable_task(name)
     }
 
@@ -128,7 +128,7 @@ impl<T: Clone + Send + Sync + 'static> Framework<T> {
         &mut self,
         meta: Metadata,
         event: Event,
-    ) -> Result<(), mpsc::error::SendError<(Metadata, Event)>> {
+    ) -> Result<(), Box<mpsc::error::SendError<(Metadata, Event)>>> {
         self.dispatcher.send(meta, event)
     }
 
@@ -169,8 +169,8 @@ impl DispatchHandle {
         &mut self,
         meta: Metadata,
         event: Event,
-    ) -> Result<(), mpsc::error::SendError<(Metadata, Event)>> {
-        self.sender.send((meta, event))
+    ) -> Result<(), Box<mpsc::error::SendError<(Metadata, Event)>>> {
+        Ok(self.sender.send((meta, event))?)
     }
 
     fn shutdown(&mut self) {
@@ -245,8 +245,8 @@ impl Sender {
         &self,
         meta: Metadata,
         event: Event,
-    ) -> Result<(), mpsc::error::SendError<(Metadata, Event)>> {
-        self.sender.send((meta, event))
+    ) -> Result<(), Box<mpsc::error::SendError<(Metadata, Event)>>> {
+        Ok(self.sender.send((meta, event))?)
     }
 
     pub fn closed(&self) -> bool {
