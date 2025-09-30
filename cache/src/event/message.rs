@@ -21,9 +21,10 @@ impl UpdateCache for MessageCreate {
             .unwrap_or_default();
 
         if channel_messages.len() >= cache.config.message_cache_size
-            && let Some(popped_id) = channel_messages.pop_back() {
-                cache.messages.remove(&popped_id).await?;
-            }
+            && let Some(popped_id) = channel_messages.pop_back()
+        {
+            cache.messages.remove(&popped_id).await?;
+        }
         channel_messages.push_front(self.id);
 
         cache
@@ -115,9 +116,10 @@ impl UpdateCache for MessageUpdate {
             .unwrap_or_default();
 
         if channel_messages.len() >= cache.config.message_cache_size
-            && let Some(popped_id) = channel_messages.pop_back() {
-                cache.messages.remove(&popped_id).await?;
-            }
+            && let Some(popped_id) = channel_messages.pop_back()
+        {
+            cache.messages.remove(&popped_id).await?;
+        }
         channel_messages.push_front(self.id);
 
         cache

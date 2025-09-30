@@ -15,13 +15,14 @@ impl Cache {
         guild_id: Option<Id<GuildMarker>>,
     ) -> Result<(), Error> {
         if let Some(cached_user) = self.users.get(&user.id).await?
-            && cached_user == *user {
-                if let Some(guild_id) = guild_id {
-                    self.user_guilds.insert(&user.id, &guild_id).await?;
-                }
-
-                return Ok(());
+            && cached_user == *user
+        {
+            if let Some(guild_id) = guild_id {
+                self.user_guilds.insert(&user.id, &guild_id).await?;
             }
+
+            return Ok(());
+        }
 
         self.users.insert(&user.id, user).await?;
         if let Some(guild_id) = guild_id {

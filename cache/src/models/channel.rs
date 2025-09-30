@@ -30,9 +30,10 @@ impl Cache {
 
     pub(crate) async fn delete_channel(&self, channel_id: Id<ChannelMarker>) -> Result<(), Error> {
         if let Some(channel) = self.channels.get(&channel_id).await?
-            && let Some(guild_id) = channel.guild_id {
-                self.guild_channels.remove(&guild_id, &channel.id).await?;
-            }
+            && let Some(guild_id) = channel.guild_id
+        {
+            self.guild_channels.remove(&guild_id, &channel.id).await?;
+        }
 
         self.channels.remove(&channel_id).await?;
         Ok(())
