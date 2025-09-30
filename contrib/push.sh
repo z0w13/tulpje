@@ -15,7 +15,7 @@ if test -z "${DOCKER_REPO:-}"; then
 fi
 
 if [[ -z "${IMAGE_TAG:-}" ]]; then
-  GIT_TAG="$(git describe --abbrev=0 --match 'v*')"
+  GIT_TAG="$(git describe --tags --abbrev=0 --match 'v*')"
   TULPJE_VERSION="${GIT_TAG#v}"
   export IMAGE_SUFFIX=":${TULPJE_VERSION}"
 else
