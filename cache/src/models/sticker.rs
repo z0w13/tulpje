@@ -113,9 +113,10 @@ impl Cache {
         sticker: Sticker,
     ) -> Result<(), Error> {
         if let Some(cached_sticker) = self.stickers.get(&sticker.id).await?
-            && cached_sticker.value == sticker {
-                return Ok(());
-            }
+            && cached_sticker.value == sticker
+        {
+            return Ok(());
+        }
 
         if let Some(user) = &sticker.user {
             self.cache_user(user, Some(guild_id)).await?;

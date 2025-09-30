@@ -200,15 +200,15 @@ impl PartialEq<Message> for CachedMessage {
             && self.embeds == other.embeds
             && self.flags == other.flags
             && self.guild_id == other.guild_id
-            && self
-                .interaction
-                .as_ref()
-                .map_or(other.interaction.is_none(), |interaction| {
+            && self.interaction.as_ref().map_or_else(
+                || other.interaction.is_none(),
+                |interaction| {
                     other
                         .interaction
                         .as_ref()
                         .is_some_and(|other_interaction| interaction == other_interaction)
-                })
+                },
+            )
             && self.kind == other.kind
             && self.member == other.member
             && self.mention_channels == other.mention_channels

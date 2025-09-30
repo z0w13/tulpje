@@ -100,9 +100,10 @@ impl Cache {
         }
 
         if let Some(cached_emoji) = self.emojis.get(&emoji.id).await?
-            && cached_emoji.value == *emoji {
-                return Ok(());
-            }
+            && cached_emoji.value == *emoji
+        {
+            return Ok(());
+        }
 
         let emoji_id = emoji.id;
         let cached = CachedEmoji::from(emoji.clone());

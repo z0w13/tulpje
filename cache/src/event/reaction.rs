@@ -22,9 +22,10 @@ impl UpdateCache for ReactionAdd {
         {
             if !reaction.me
                 && let Some(current_user) = cache.current_user.get().await?
-                    && current_user.id == self.0.user_id {
-                        reaction.me = true;
-                    }
+                && current_user.id == self.0.user_id
+            {
+                reaction.me = true;
+            }
 
             reaction.count += 1;
         } else {
@@ -66,9 +67,10 @@ impl UpdateCache for ReactionRemove {
         {
             if reaction.me
                 && let Some(current_user) = cache.current_user.get().await?
-                    && current_user.id == self.0.user_id {
-                        reaction.me = false;
-                    }
+                && current_user.id == self.0.user_id
+            {
+                reaction.me = false;
+            }
 
             if reaction.count > 1 {
                 reaction.count -= 1;

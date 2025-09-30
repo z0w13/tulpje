@@ -467,9 +467,10 @@ impl Connected {
 
     async fn run(mut self, shared: &mut AmqpSharedData) -> State {
         if let Some(start_tx) = shared.start_tx.take()
-            && let Err(None) = start_tx.send(None) {
-                tracing::warn!("start_tx::send couldn't send succesful start result");
-            }
+            && let Err(None) = start_tx.send(None)
+        {
+            tracing::warn!("start_tx::send couldn't send succesful start result");
+        }
 
         loop {
             select! {
