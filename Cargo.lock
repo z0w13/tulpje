@@ -1863,7 +1863,6 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "ryu",
- "sha1_smol",
  "socket2",
  "tokio",
  "tokio-util",
