@@ -99,11 +99,10 @@ impl Cache {
             self.cache_user(user, Some(guild_id)).await?;
         }
 
-        if let Some(cached_emoji) = self.emojis.get(&emoji.id).await? {
-            if cached_emoji.value == *emoji {
+        if let Some(cached_emoji) = self.emojis.get(&emoji.id).await?
+            && cached_emoji.value == *emoji {
                 return Ok(());
             }
-        }
 
         let emoji_id = emoji.id;
         let cached = CachedEmoji::from(emoji.clone());
