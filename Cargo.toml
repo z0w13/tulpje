@@ -17,6 +17,13 @@ rust-version = "1.89.0"
 [workspace.metadata]
 crane.name = "tulpje"
 
+[workspace.dependencies]
+twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0" }
+twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", default-features = false }
+twilight-http = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", default-features = false }
+twilight-model = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0" }
+twilight-util = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0" }
+
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks
 allow_attributes = "deny"
