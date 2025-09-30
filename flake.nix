@@ -67,6 +67,7 @@
               cachix
               skopeo
               toolchain
+              cargo-outdated
               cargo-semver-checks
             ];
           };
