@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use twilight_model::id::{marker::GuildMarker, Id};
+use twilight_model::id::{Id, marker::GuildMarker};
 
 use tulpje_framework::Error;
 

@@ -2,8 +2,8 @@ use async_trait::async_trait;
 
 use super::event::Event;
 use amqprs::{
-    callbacks::ChannelCallback, channel::Channel, error::Error as AmqprsError, Ack,
-    BasicProperties, Cancel, CloseChannel, Nack, Return,
+    Ack, BasicProperties, Cancel, CloseChannel, Nack, Return, callbacks::ChannelCallback,
+    channel::Channel, error::Error as AmqprsError,
 };
 use tokio::sync::mpsc;
 

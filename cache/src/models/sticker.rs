@@ -3,12 +3,12 @@ use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     channel::message::{
-        sticker::{StickerFormatType, StickerType},
         Sticker,
+        sticker::{StickerFormatType, StickerType},
     },
     id::{
-        marker::{GuildMarker, StickerMarker, StickerPackMarker, UserMarker},
         Id,
+        marker::{GuildMarker, StickerMarker, StickerPackMarker, UserMarker},
     },
 };
 

@@ -1,5 +1,5 @@
 use amqprs::{
-    callbacks::ConnectionCallback, connection::Connection, error::Error as AmqprsError, Close,
+    Close, callbacks::ConnectionCallback, connection::Connection, error::Error as AmqprsError,
 };
 use async_trait::async_trait;
 use tokio::sync::mpsc;

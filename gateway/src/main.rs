@@ -4,14 +4,14 @@ use futures_util::StreamExt;
 use redis::aio::ConnectionManagerConfig;
 use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::{
+    OpCode,
     event::{Event, GatewayEventDeserializer},
     payload::outgoing::{identify::IdentifyProperties, update_presence::UpdatePresencePayload},
     presence::{Activity, MinimalActivity, Status},
-    OpCode,
 };
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
-use tulpje_shared::{version, DiscordEvent};
+use tulpje_shared::{DiscordEvent, version};
 
 mod config;
 mod metrics;

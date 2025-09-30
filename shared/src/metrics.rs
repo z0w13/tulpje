@@ -9,8 +9,8 @@ use std::{
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_process::Collector as ProcessCollector;
 use redis::{
-    self, aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _, FromRedisValue,
-    ToRedisArgs,
+    self, AsyncCommands as _, FromRedisValue, ToRedisArgs,
+    aio::ConnectionManager as RedisConnectionManager,
 };
 use serde::{Deserialize, Serialize};
 

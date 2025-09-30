@@ -8,8 +8,8 @@ use twilight_model::{
     util::Timestamp,
 };
 use twilight_util::builder::{
-    embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
     InteractionResponseDataBuilder,
+    embed::{EmbedBuilder, EmbedFieldBuilder, EmbedFooterBuilder},
 };
 
 use super::redis;

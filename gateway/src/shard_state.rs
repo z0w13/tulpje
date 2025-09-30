@@ -3,7 +3,7 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use redis::{aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _};
+use redis::{AsyncCommands as _, aio::ConnectionManager as RedisConnectionManager};
 use twilight_gateway::{Event, Latency};
 
 use tulpje_shared::shard_state::ShardState;

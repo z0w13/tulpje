@@ -7,15 +7,15 @@ use twilight_http::Client;
 use twilight_model::channel::permission_overwrite::{PermissionOverwrite, PermissionOverwriteType};
 use twilight_model::channel::{Channel, ChannelType};
 use twilight_model::guild::{Guild, Permissions};
-use twilight_model::id::marker::{ChannelMarker, GuildMarker};
 use twilight_model::id::Id;
+use twilight_model::id::marker::{ChannelMarker, GuildMarker};
 
 use tulpje_framework::Error;
 
 use super::super::util::get_member_name;
 use super::db;
 use crate::context::CommandContext;
-use crate::modules::pk::db::{get_guild_settings_for_id, ModPkGuildRow};
+use crate::modules::pk::db::{ModPkGuildRow, get_guild_settings_for_id};
 
 async fn get_desired_fronters(system: &PkId, token: String) -> Result<HashSet<String>, Error> {
     let pk = PkClient {

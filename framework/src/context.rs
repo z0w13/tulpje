@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use twilight_http::{client::InteractionClient, Client};
-use twilight_model::id::{marker::ApplicationMarker, Id};
+use twilight_http::{Client, client::InteractionClient};
+use twilight_model::id::{Id, marker::ApplicationMarker};
 
 pub mod autocomplete_context;
 pub mod command_context;

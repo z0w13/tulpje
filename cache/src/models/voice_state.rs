@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use twilight_model::{
     id::{
-        marker::{ChannelMarker, GuildMarker, UserMarker},
         Id,
+        marker::{ChannelMarker, GuildMarker, UserMarker},
     },
     util::Timestamp,
     voice::VoiceState,

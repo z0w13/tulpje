@@ -1,7 +1,7 @@
 use std::{collections::HashSet, hash::Hash, marker::PhantomData};
 
-use redis::{aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _};
-use serde::{de::DeserializeOwned, Serialize};
+use redis::{AsyncCommands as _, aio::ConnectionManager as RedisConnectionManager};
+use serde::{Serialize, de::DeserializeOwned};
 
 use crate::hash;
 

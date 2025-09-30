@@ -2,20 +2,20 @@ use serde::{Deserialize, Serialize};
 use twilight_model::{
     application::interaction::InteractionType,
     channel::{
+        Attachment, ChannelMention, Message,
         message::{
             Component, Embed, MessageActivity, MessageApplication, MessageCall, MessageFlags,
             MessageInteraction, MessageReference, MessageSnapshot, MessageSticker, MessageType,
             Reaction, RoleSubscriptionData,
         },
-        Attachment, ChannelMention, Message,
     },
     guild::PartialMember,
     id::{
+        Id,
         marker::{
             ApplicationMarker, ChannelMarker, GuildMarker, InteractionMarker, MessageMarker,
             RoleMarker, UserMarker, WebhookMarker,
         },
-        Id,
     },
     poll::Poll,
     util::Timestamp,

@@ -1,6 +1,6 @@
 use twilight_model::{
     channel::Channel,
-    id::{marker::ChannelMarker, Id},
+    id::{Id, marker::ChannelMarker},
 };
 
 use crate::{Cache, Error};

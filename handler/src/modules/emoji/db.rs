@@ -2,8 +2,8 @@ use sqlx::types::chrono;
 
 use tulpje_framework::Error;
 use twilight_model::id::{
-    marker::{EmojiMarker, GuildMarker},
     Id,
+    marker::{EmojiMarker, GuildMarker},
 };
 
 use super::shared::StatsSort;

@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use twilight_http::{client::InteractionClient, response::marker::EmptyBody, Client};
+use twilight_http::{Client, client::InteractionClient, response::marker::EmptyBody};
 use twilight_model::{
     application::interaction::message_component::MessageComponentInteractionData,
     gateway::payload::incoming::InteractionCreate,
     guild::Guild,
     http::interaction::InteractionResponse,
-    id::{marker::ApplicationMarker, Id},
+    id::{Id, marker::ApplicationMarker},
 };
 
 use super::Context;

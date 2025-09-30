@@ -5,8 +5,8 @@ use twilight_http::Client;
 use twilight_model::{
     channel::message::component::SelectMenuOption,
     id::{
-        marker::{EmojiMarker, GuildMarker},
         Id,
+        marker::{EmojiMarker, GuildMarker},
     },
 };
 

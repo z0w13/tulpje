@@ -1,4 +1,4 @@
-use amqprs::{channel::Channel, consumer::AsyncConsumer, BasicProperties, Deliver};
+use amqprs::{BasicProperties, Deliver, channel::Channel, consumer::AsyncConsumer};
 use async_trait::async_trait;
 use tokio::sync::mpsc;
 

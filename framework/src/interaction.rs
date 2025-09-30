@@ -1,12 +1,12 @@
 use twilight_model::{
     application::interaction::{
-        application_command::{CommandDataOption, CommandOptionValue},
         InteractionData,
+        application_command::{CommandDataOption, CommandOptionValue},
     },
     gateway::payload::incoming::InteractionCreate,
 };
 
-use crate::{context, Error, Metadata};
+use crate::{Error, Metadata, context};
 
 pub fn parse<T: Clone + Send + Sync>(
     event: &InteractionCreate,

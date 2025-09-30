@@ -1,5 +1,5 @@
 use twilight_model::{
-    id::{marker::GuildMarker, Id},
+    id::{Id, marker::GuildMarker},
     user::CurrentUser,
 };
 

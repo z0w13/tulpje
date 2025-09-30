@@ -1,8 +1,8 @@
 use twilight_model::{
     guild::Role,
     id::{
-        marker::{GuildMarker, RoleMarker},
         Id,
+        marker::{GuildMarker, RoleMarker},
     },
 };
 

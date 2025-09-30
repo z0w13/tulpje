@@ -9,8 +9,8 @@ use std::{sync::Arc, time::Duration};
 use context::Services;
 use redis::aio::ConnectionManagerConfig;
 use sqlx::{
-    postgres::{PgConnectOptions, PgPoolOptions},
     ConnectOptions as _,
+    postgres::{PgConnectOptions, PgPoolOptions},
 };
 use tokio::sync::mpsc;
 use tracing::log::LevelFilter;
@@ -19,7 +19,7 @@ use twilight_gateway::Event;
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
 use tulpje_framework::{Framework, Metadata, Registry};
-use tulpje_shared::{version, DiscordEvent};
+use tulpje_shared::{DiscordEvent, version};
 
 use config::Config;
 

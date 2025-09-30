@@ -4,7 +4,7 @@ use async_cron_scheduler::cron::Schedule;
 use twilight_gateway::EventType;
 use twilight_model::application::command::Command;
 
-use super::{command_builder::CommandBuilder, Module};
+use super::{Module, command_builder::CommandBuilder};
 use crate::handler::{
     command_handler::CommandHandler,
     component_interaction_handler::{ComponentInteractionFunc, ComponentInteractionHandler},

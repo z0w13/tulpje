@@ -1,8 +1,8 @@
 use twilight_model::{
     guild::GuildIntegration,
     id::{
-        marker::{GuildMarker, IntegrationMarker},
         Id,
+        marker::{GuildMarker, IntegrationMarker},
     },
 };
 

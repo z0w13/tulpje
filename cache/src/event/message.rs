@@ -2,7 +2,7 @@ use twilight_model::gateway::payload::incoming::{
     MessageCreate, MessageDelete, MessageDeleteBulk, MessageUpdate,
 };
 
-use crate::{models::message::CachedMessage, Cache, Error, UpdateCache};
+use crate::{Cache, Error, UpdateCache, models::message::CachedMessage};
 
 impl UpdateCache for MessageCreate {
     async fn update(&self, cache: &Cache) -> Result<(), Error> {

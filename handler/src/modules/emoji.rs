@@ -12,9 +12,8 @@ use twilight_model::{
 use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
-    handler_func,
+    Module, ModuleBuilder, handler_func,
     module::command_builder::{CommandBuilder, SubCommandBuilder},
-    Module, ModuleBuilder,
 };
 
 use crate::context::Services;

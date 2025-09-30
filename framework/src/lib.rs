@@ -6,7 +6,7 @@ use twilight_model::gateway::payload::incoming::InteractionCreate;
 pub use context::{Context, EventContext, InteractionContext};
 pub use framework::Framework;
 pub use metadata::Metadata;
-pub use module::{builder::ModuleBuilder, registry::Registry, Module};
+pub use module::{Module, builder::ModuleBuilder, registry::Registry};
 
 pub mod context;
 pub mod framework;

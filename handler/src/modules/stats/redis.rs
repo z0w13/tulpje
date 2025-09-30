@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use redis::{aio::ConnectionManager as RedisConnectionManager, AsyncCommands as _};
+use redis::{AsyncCommands as _, aio::ConnectionManager as RedisConnectionManager};
 
 use tulpje_framework::Error;
 use tulpje_shared::{metrics::Metrics, shard_state::ShardState};
