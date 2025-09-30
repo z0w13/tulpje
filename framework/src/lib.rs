@@ -70,11 +70,10 @@ pub async fn handle<T: Clone + Send + Sync + 'static>(
     registry: &Registry<T>,
     event: Event,
 ) {
-    if let twilight_gateway::Event::InteractionCreate(event) = event.clone() {
-        if let Err(err) = handle_interaction(*event, ctx.clone(), &meta, registry).await {
+    if let twilight_gateway::Event::InteractionCreate(event) = event.clone()
+        && let Err(err) = handle_interaction(*event, ctx.clone(), &meta, registry).await {
             tracing::warn!(err);
         }
-    }
 
     if let Some(handlers) = registry.events.get(&event.kind()) {
         tracing::info!("running event handlers for {:?}", event.kind());

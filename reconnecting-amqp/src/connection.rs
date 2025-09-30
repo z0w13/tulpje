@@ -466,11 +466,10 @@ impl Connected {
     }
 
     async fn run(mut self, shared: &mut AmqpSharedData) -> State {
-        if let Some(start_tx) = shared.start_tx.take() {
-            if let Err(None) = start_tx.send(None) {
+        if let Some(start_tx) = shared.start_tx.take()
+            && let Err(None) = start_tx.send(None) {
                 tracing::warn!("start_tx::send couldn't send succesful start result");
             }
-        }
 
         loop {
             select! {
@@ -499,11 +498,10 @@ impl Connected {
                             }
                         }
                         Event::MessageReceived(_chan, _deliver, _basic_properties, data) => {
-                            if let Some(recv_tx) = &shared.recv_tx {
-                                if let Err(err) = recv_tx.send(data) {
+                            if let Some(recv_tx) = &shared.recv_tx
+                                && let Err(err) = recv_tx.send(data) {
                                     tracing::warn!("error sending received message to library user: {err}");
                                 }
-                            }
                         }
                         _ => {}
                     }
