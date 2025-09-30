@@ -19,7 +19,7 @@ edition = "2024"
 crane.name = "tulpje"
 
 [workspace.dependencies]
-redis = { version = "0.29.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.32.6", default-features = false, features = ["tokio-comp", "connection-manager"] }
 twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0" }
 twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", default-features = false }
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git", rev = "7f08d954c7b4f4245047f34de5116abdb53f24d9", version = "0.16.0", default-features = false }
