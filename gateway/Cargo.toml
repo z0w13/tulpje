@@ -21,7 +21,7 @@ twilight-gateway = { workspace = true, features = ["rustls-ring", "rustls-webpki
 twilight-http = { workspace = true, features = ["decompression", "rustls-ring", "rustls-webpki-roots"] }
 twilight-model = { workspace = true }
 twilight-util = { workspace = true, features = ["builder"] }
-uuid = { version = "1.16.0", features = ["v7", "serde"] }
+uuid = { version = "1.18.1", features = ["v7", "serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
 reqwest = { version = "0.12.15", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 redis = { workspace = true }
