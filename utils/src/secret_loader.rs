@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
@@ -7,6 +8,7 @@ fn main() {
 
     println!("* injecting env vars from secrets in {} ...", path);
 
+    let mut env_vars = HashMap::new();
     for entry in fs::read_dir(path).expect("couldn't read secrets dir") {
         let Ok(entry) = entry else {
             println!("error reading path {}", entry.unwrap_err());
@@ -23,7 +25,7 @@ fn main() {
         let var_value = fs::read_to_string(entry.path()).expect("couldn't read file");
 
         println!("     - {}", var_name);
-        std::env::set_var(var_name, var_value.trim());
+        env_vars.insert(var_name, var_value.trim().to_owned());
     }
 
     let args = std::env::args().skip(1).collect::<Vec<String>>();
@@ -31,6 +33,6 @@ fn main() {
 
     println!(
         "error starting command: {}",
-        Command::new(cmd).args(args).exec()
+        Command::new(cmd).envs(&env_vars).args(args).exec()
     );
 }
