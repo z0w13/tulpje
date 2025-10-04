@@ -33,7 +33,7 @@ base64 = "0.22.1"
 pkrs-fork = { version = "0.4.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
 serde_either = "0.2.1"
 metrics = "0.24.2"
-metrics-exporter-prometheus = { version = "0.16.2", default-features = false }
+metrics-exporter-prometheus = { workspace = true }
 tulpje-cache = { version = "0.3.0", path = "../cache" }
 redis = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
