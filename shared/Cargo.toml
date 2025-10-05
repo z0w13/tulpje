@@ -13,7 +13,7 @@ metrics = "0.24.2"
 metrics-exporter-prometheus = { workspace = true, features = ["http-listener"] }
 metrics-process = "2.4.1"
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.140"
+serde_json = "1.0.145"
 tokio = "1.47.1"
 twilight-model = { workspace = true }
 tracing = "0.1.41"
