@@ -67,6 +67,8 @@
               cachix
               skopeo
               toolchain
+              cargo-edit
+              cargo-machete
               cargo-outdated
               cargo-semver-checks
             ];
