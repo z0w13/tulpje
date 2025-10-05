@@ -30,13 +30,10 @@ regex = "1.11.1"
 sqlx = { version = "0.8.5", features = ["runtime-tokio", "postgres", "chrono", "json", "macros", "migrate"] }
 reqwest = { version = "0.12.15", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 base64 = "0.22.1"
-async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 pkrs-fork = { version = "0.4.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
 serde_either = "0.2.1"
-async-trait = "0.1.86"
 metrics = "0.24.2"
 metrics-exporter-prometheus = { version = "0.16.2", default-features = false }
-amqprs = { version = "2.1.0", features = ["compliance_assert", "traces", "urispec"] }
 tulpje-cache = { version = "0.3.0", path = "../cache" }
 redis = { version = "0.29.1", features = ["connection-manager", "tokio-comp"] }
 figment = { version = "0.10.19", features = ["env"] }

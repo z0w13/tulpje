@@ -398,15 +398,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19d374276b40fb8bbdee95aef7c7fa6b5316ec764510eb64b8dd0e2ed0d7e7f5"
 
 [[package]]
-name = "crc32fast"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
 name = "cron"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -607,16 +598,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "353e1e0896797efa3728309408a50d307284d5af4c733fa1859edae2bc80a314"
 dependencies = [
  "figment",
-]
-
-[[package]]
-name = "flate2"
-version = "1.0.35"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c936bfdafb507ebbf50b8074c54fa31c5be9a1e7e5f467dd659697041407d07c"
-dependencies = [
- "crc32fast",
- "miniz_oxide",
 ]
 
 [[package]]
@@ -1715,8 +1696,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc5b72d8145275d844d4b5f6d4e1eef00c8cd889edb6035c21675d1bb1f45c9f"
 dependencies = [
  "bitflags",
- "chrono",
- "flate2",
  "hex",
  "procfs-core",
  "rustix",
@@ -1729,7 +1708,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "239df02d8349b06fc07398a3a1697b06418223b1c7725085e801e7c0fc6a12ec"
 dependencies = [
  "bitflags",
- "chrono",
  "hex",
 ]
 
@@ -2914,13 +2892,11 @@ dependencies = [
 name = "tulpje-gateway"
 version = "0.18.0-beta.4"
 dependencies = [
- "amqprs",
  "figment",
  "figment_file_provider_adapter",
  "futures-util",
  "metrics",
  "metrics-exporter-prometheus",
- "metrics-process",
  "reconnecting-amqp",
  "redis",
  "reqwest",
@@ -2931,19 +2907,13 @@ dependencies = [
  "tracing-subscriber",
  "tulpje-shared",
  "twilight-gateway",
- "twilight-http",
  "twilight-model",
- "twilight-util",
- "uuid",
 ]
 
 [[package]]
 name = "tulpje-handler"
 version = "0.18.0-beta.4"
 dependencies = [
- "amqprs",
- "async-cron-scheduler",
- "async-trait",
  "base64",
  "chrono",
  "figment",
@@ -2985,21 +2955,16 @@ dependencies = [
 name = "tulpje-shared"
 version = "0.18.0-beta.4"
 dependencies = [
- "amqprs",
- "async-trait",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-process",
- "procfs",
  "redis",
  "serde",
  "serde_json",
  "tokio",
- "tokio-util",
  "tracing",
  "tulpje-framework",
  "twilight-model",
- "uuid",
 ]
 
 [[package]]
