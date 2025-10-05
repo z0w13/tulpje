@@ -1,0 +1,10 @@
+{
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-cache-inmemory@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-gateway-queue@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-gateway@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-http-ratelimiting@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-http@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-model@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-util@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax",
+  "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#twilight-validate@0.16.0": "1ycvwwx8aq7yhq5j8dkmnjkmr0b8h1l2f3b8xmh2lhd1iz7kxjax"
+}

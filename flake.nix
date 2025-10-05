@@ -23,6 +23,11 @@
     crane = {
       url = "github:ipetkov/crane";
     };
+
+    crate2nix = {
+      url = "github:nix-community/crate2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -56,6 +61,15 @@
             pkgs.callPackage ./nix/pkgs/tulpje.nix {
               inherit name inputs craneLib;
             };
+          cargoNix = pkgs.callPackage ./Cargo.nix {
+            buildRustCrateForPkgs =
+              crate:
+              pkgs.buildRustCrate.override {
+                rustc = toolchain;
+                cargo = toolchain;
+              };
+          };
+
         in
         {
           devShells.default = pkgs.mkShell {
@@ -71,6 +85,8 @@
               cargo-machete
               cargo-outdated
               cargo-semver-checks
+
+              inputs.crate2nix.packages.${system}.default
             ];
           };
 
@@ -102,6 +118,19 @@
                 self'.packages.twilight-gateway-queue
                 self'.packages.twilight-http-proxy
               ];
+            };
+            crate2nix = pkgs.symlinkJoin {
+              name = "all-workspace-members";
+              paths =
+                let
+                  members = builtins.attrValues cargoNix.workspaceMembers;
+                in
+                builtins.map (
+                  m:
+                  m.build.override {
+                    runTests = true;
+                  }
+                ) members;
             };
 
             # docker images
