@@ -28,7 +28,7 @@ chrono = { version = "0.4.42", features = ["alloc", "clock", "std"], default-fea
 num-format = "0.4.4"
 regex = "1.11.3"
 sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "chrono", "json", "macros", "migrate"] }
-reqwest = { version = "0.12.23", default-features = false, features = ["rustls-tls", "charset", "http2"] }
+reqwest = { version = "0.12.24", default-features = false, features = ["rustls-tls", "charset", "http2"] }
 base64 = "0.22.1"
 pkrs-fork = { version = "0.4.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
 serde_either = "0.2.1"
