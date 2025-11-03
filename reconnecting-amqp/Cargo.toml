@@ -12,7 +12,7 @@ license.workspace = true
 amqprs = { version = "2.1.2", features = ["compliance_assert", "traces", "urispec"] }
 async-trait = "0.1.89"
 tokio = "1.48.0"
-tokio-util = { version = "0.7.16" }
+tokio-util = { version = "0.7.17" }
 tracing = "0.1.41"
 
 [lints]
