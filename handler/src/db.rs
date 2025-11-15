@@ -38,10 +38,6 @@ impl<T> PartialEq for DbId<T> {
 impl<T> Eq for DbId<T> {}
 
 impl<T> Encode<'_, Postgres> for DbId<T> {
-    #[expect(
-        clippy::unwrap_in_result,
-        reason = "this should never occur, but we still wanna signal that"
-    )]
     fn encode_by_ref(
         &self,
         buf: &mut <Postgres as sqlx::Database>::ArgumentBuffer<'_>,
