@@ -245,9 +245,9 @@ dependencies = [
 
 [[package]]
 name = "brotli-decompressor"
-version = "4.0.1"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a45bd2e4095a8b518033b128020dd4a55aab1c0a381ba4404a472630f4bc362"
+checksum = "874bb8112abecc98cbd6d81ea4fa7e94fb9449648c93cc89aa40c81c24d7de03"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
@@ -820,6 +820,12 @@ dependencies = [
  "equivalent",
  "foldhash",
 ]
+
+[[package]]
+name = "hashbrown"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
 
 [[package]]
 name = "hashlink"
@@ -2765,14 +2771,15 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "pin-project-lite",
+ "slab",
  "tokio",
 ]
 
 [[package]]
 name = "tokio-websockets"
-version = "0.11.3"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fbc46f9dc832c663a5db08513162001a29ac820913275d58943f942c2bc1c435"
+checksum = "19d469594aed8da8afbb9dfd33a5548f057f74d6c8e3a50b142b04398f91029a"
 dependencies = [
  "base64",
  "bytes",
@@ -2781,14 +2788,10 @@ dependencies = [
  "futures-sink",
  "http",
  "httparse",
- "ring",
- "rustls-pki-types",
  "sha1_smol",
  "simdutf8",
  "tokio",
- "tokio-rustls",
  "tokio-util",
- "webpki-roots 0.26.7",
 ]
 
 [[package]]
@@ -3020,8 +3023,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-cache-inmemory"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "bitflags",
  "dashmap",
@@ -3031,8 +3034,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "bitflags",
  "fastrand",
@@ -3049,8 +3052,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway-queue"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "tokio",
  "tracing",
@@ -3058,18 +3061,16 @@ dependencies = [
 
 [[package]]
 name = "twilight-http"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "brotli-decompressor",
  "fastrand",
  "http",
  "http-body-util",
  "hyper",
- "hyper-rustls",
  "hyper-util",
  "percent-encoding",
- "rustls",
  "serde",
  "serde_json",
  "tokio",
@@ -3081,17 +3082,19 @@ dependencies = [
 
 [[package]]
 name = "twilight-http-ratelimiting"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
+ "hashbrown 0.16.0",
  "tokio",
+ "tokio-util",
  "tracing",
 ]
 
 [[package]]
 name = "twilight-model"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "bitflags",
  "serde",
@@ -3102,8 +3105,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-util"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "twilight-model",
  "twilight-validate",
@@ -3111,8 +3114,8 @@ dependencies = [
 
 [[package]]
 name = "twilight-validate"
-version = "0.16.0"
-source = "git+https://github.com/twilight-rs/twilight.git?rev=7f08d954c7b4f4245047f34de5116abdb53f24d9#7f08d954c7b4f4245047f34de5116abdb53f24d9"
+version = "0.17.0"
+source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
 dependencies = [
  "twilight-model",
 ]
