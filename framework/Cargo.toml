@@ -11,7 +11,7 @@ license.workspace = true
 [dependencies]
 # TODO: Add support for picking TLS implementation and PKI source
 #       is that even needed here if we pass the http client in from other crates?
-twilight-http = { workspace = true, features = ["decompression", "rustls-ring", "rustls-webpki-roots"] }
+twilight-http = { workspace = true, features = ["decompression", "rustls-webpki-roots"] }
 twilight-model = { workspace = true }
 twilight-gateway = { workspace = true }
 twilight-util = { workspace = true, features = ["builder"] }

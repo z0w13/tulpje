@@ -20,7 +20,7 @@ tokio = { version = "1.47.1", features = ["rt-multi-thread", "macros", "sync"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 twilight-gateway = { workspace = true }
-twilight-http = { workspace = true, features = ["decompression", "rustls-ring", "rustls-webpki-roots"] }
+twilight-http = { workspace = true, features = ["decompression", "rustls-webpki-roots"] }
 twilight-model = { workspace = true }
 twilight-util = { workspace = true, features = ["builder"] }
 serde = { version = "1.0.228", features = ["derive"] }
