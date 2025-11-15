@@ -268,7 +268,7 @@ impl UpdateCache for Event {
             Event::ReactionRemove(v) => cache.update(v.deref()).await,
             Event::ReactionRemoveAll(v) => cache.update(v).await,
             Event::ReactionRemoveEmoji(v) => cache.update(v).await,
-            Event::Ready(v) => cache.update(v.deref()).await,
+            Event::Ready(v) => cache.update(v).await,
             Event::RoleCreate(v) => cache.update(v).await,
             Event::RoleDelete(v) => cache.update(v).await,
             Event::RoleUpdate(v) => cache.update(v).await,
