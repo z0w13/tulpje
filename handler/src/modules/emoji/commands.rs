@@ -31,6 +31,8 @@ const EMOJIS_PER_PAGE: u16 = 15;
 
 fn create_emoji_stats_sort_menu() -> SelectMenu {
     SelectMenu {
+        id: None,
+        required: None, // NOTE: only used in modals
         custom_id: "emoji_stats_sort".into(),
         kind: SelectMenuType::Text,
         options: Some(vec![
@@ -53,6 +55,7 @@ fn create_emoji_stats_sort_menu() -> SelectMenu {
 fn create_emoji_stats_pagination_buttons(current_page: u16, total_pages: u16) -> Vec<Component> {
     vec![
         Component::Button(Button {
+            id: None,
             custom_id: Some(String::from("emoji_stats_first_page")),
             disabled: current_page == 1,
             style: ButtonStyle::Primary,
@@ -65,6 +68,7 @@ fn create_emoji_stats_pagination_buttons(current_page: u16, total_pages: u16) ->
             sku_id: None,
         }),
         Component::Button(Button {
+            id: None,
             custom_id: Some(String::from("emoji_stats_prev_page")),
             disabled: current_page == 1,
             style: ButtonStyle::Primary,
@@ -77,6 +81,7 @@ fn create_emoji_stats_pagination_buttons(current_page: u16, total_pages: u16) ->
             sku_id: None,
         }),
         Component::Button(Button {
+            id: None,
             custom_id: Some(String::from("emoji_stats_next_page")),
             disabled: current_page == total_pages,
             style: ButtonStyle::Primary,
@@ -89,6 +94,7 @@ fn create_emoji_stats_pagination_buttons(current_page: u16, total_pages: u16) ->
             sku_id: None,
         }),
         Component::Button(Button {
+            id: None,
             custom_id: Some(String::from("emoji_stats_last_page")),
             disabled: current_page == total_pages,
             style: ButtonStyle::Primary,
@@ -362,10 +368,12 @@ fn get_components(current_page: u16, total_pages: u16) -> Vec<Component> {
 
     vec![
         ActionRow {
+            id: None,
             components: vec![create_emoji_stats_sort_menu().into()],
         }
         .into(),
         ActionRow {
+            id: None,
             components: create_emoji_stats_pagination_buttons(current_page, total_pages),
         }
         .into(),
