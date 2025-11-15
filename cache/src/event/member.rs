@@ -64,6 +64,7 @@ impl UpdateCache for MemberUpdate {
         if let Some(mut member) = cache.members.get(&key).await? {
             member.update_with_member_update(self);
             cache.members.insert(&key, &member).await?;
+            cache.cache_user(&self.user, Some(self.guild_id)).await?;
         }
 
         Ok(())
