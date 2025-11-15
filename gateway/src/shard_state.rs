@@ -31,7 +31,7 @@ impl ShardManager {
     ) -> Result<(), Box<dyn std::error::Error>> {
         match event {
             Event::GatewayHello(hello) => self.helloed(hello).await,
-            Event::Ready(info) => self.readied(*info).await,
+            Event::Ready(info) => self.readied(info).await,
             Event::GuildCreate(created) => self.guild_created(*created).await,
             Event::GuildDelete(deleted) => self.guild_deleted(deleted).await,
             Event::Resumed => self.resumed().await,
