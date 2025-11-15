@@ -433,8 +433,10 @@ def gather_release(
     prefix = "" if not independent_crate else crates[0].name.removeprefix("tulpje-")
 
     if independent_crate:
+        log.info("gathering release for {} ...".format(crates[0].name))
         file_whitelist = RELEASE_FILENAME_MATCHLIST
     else:
+        log.info("gathering release for main crate ...")
         file_whitelist = RELEASE_FILENAME_MATCHLIST.union(
             RELEASE_FILENAME_MATCHLIST_WORKSPACE
         ).union({f"!{crate.path}/**/*" for crate in independent_crates})
@@ -449,6 +451,8 @@ def gather_release(
     if latest_tag is None:
         raise Exception("ERR: couldn't find the previous tag")
 
+    log.debug(f"latest tag: {latest_tag}, has_independent_tag: {has_independent_tag}")
+
     if independent_crate:
         commits = filter_commits_by_path(get_commits_since_ref(latest_tag), [prefix])
     else:
@@ -457,6 +461,8 @@ def gather_release(
             [crate.path for crate in independent_crates],
             True,
         )
+
+    log.debug(f"gathered {len(commits)} commits")
 
     has_feature_commit = any(commit.subject.startswith("feat") for commit in commits)
     has_breaking_change_commit = any(commit.breaking for commit in commits)
