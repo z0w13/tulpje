@@ -7,14 +7,14 @@ let
   src = fetchFromGitHub {
     owner = "twilight-rs";
     repo = "gateway-queue";
-    rev = "5f5e0c10757953de09a5f6b4b89951d59e94f2bf";
-    hash = "sha256-yshIrPUZPtuKXOvNh2gjXRa2rsSUZboO5ZytZUjvymc=";
+    rev = "aa727cd6765f55975f6188ad8fac14e1c53280f2";
+    hash = "sha256-uOtpCdc9l2/tiaVtKmSv4895JK2K2QJOznsMwxDJ5QY=";
   };
   commonArgs = {
     inherit src;
 
     pname = "twilight-gateway-queue";
-    version = "unstable-2025-04-04";
+    version = "unstable-2025-10-08";
     strictDeps = true;
   };
   cargoArtifacts = craneLib.buildDepsOnly commonArgs;
