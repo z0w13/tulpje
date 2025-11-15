@@ -16,6 +16,7 @@ let
     pname = "twilight-http-proxy";
     version = "0.17.0";
     strictDeps = true;
+    cargoExtraArgs = "--features metrics";
   };
   cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 in
