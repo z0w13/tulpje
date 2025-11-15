@@ -72,7 +72,6 @@ class RustishFormatter(logging.Formatter):
 
 def argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
-    parser.add_argument("crate", default=None, nargs="?")
     parser.add_argument("--execute", action="store_true")
 
     return parser
