@@ -73,6 +73,7 @@ class RustishFormatter(logging.Formatter):
 def argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--prerelease")
 
     return parser
 
@@ -88,19 +89,26 @@ def find_file_upwards(path: str, name: str) -> Optional[str]:
             return find_file_upwards(os.path.dirname(path), name)
 
 
-def version_bump_type(sem_ver: Version, feature: bool, breaking: bool) -> str:
+def version_bump(
+    sem_ver: Version, feature: bool, breaking: bool, prerelease: Optional[str]
+) -> Version:
     if sem_ver.major == 0:
         if breaking:
-            return "minor"
+            sem_ver = sem_ver.bump_minor()
         else:
-            return "patch"
+            sem_ver = sem_ver.bump_patch()
     else:
         if breaking:
-            return "major"
+            sem_ver = sem_ver.bump_major()
         elif feature:
-            return "minor"
+            sem_ver = sem_ver.bump_minor()
         else:
-            return "patch"
+            sem_ver = sem_ver.bump_patch()
+
+    if prerelease is None:
+        return sem_ver
+    else:
+        return sem_ver.bump_prerelease(prerelease)
 
 
 class CrateInfo(NamedTuple):
@@ -308,6 +316,7 @@ RELEASE_FILENAME_MATCHLIST = {
 RELEASE_FILENAME_MATCHLIST_WORKSPACE = {
     ".sqlx/*",
     "*.sql",
+    "nix/*",
     "Cargo.lock",
     "compose.*.yml",
     "Dockerfile*",
@@ -435,7 +444,9 @@ def create_changelog_update(
 
 
 def gather_release(
-    crates: list[CrateInfo], independent_crates: list[CrateInfo]
+    crates: list[CrateInfo],
+    independent_crates: list[CrateInfo],
+    prerelease: Optional[str],
 ) -> ReleaseInfo:
     independent_crate = len(crates) == 1
     prefix = "" if not independent_crate else crates[0].name.removeprefix("tulpje-")
@@ -486,13 +497,15 @@ def gather_release(
     if independent_crate and not has_independent_tag:
         new_version = old_version
     else:
-        new_version = old_version.next_version(
-            part=version_bump_type(
+        if prerelease is not None and old_version.prerelease is not None:
+            new_version = old_version.bump_prerelease(prerelease)
+        else:
+            new_version = version_bump(
                 old_version,
                 has_feature_commit,
                 has_breaking_change_commit or has_breaking_change_semver_checks,
+                prerelease,
             )
-        )
 
     new_changelog = create_changelog_update(
         prefix, old_version, new_version, independent_crate, independent_crates
@@ -795,8 +808,9 @@ def main(args: argparse.Namespace) -> int:
     grouped_crates = [crate for crate in crates if not crate.independent]
 
     releases = [
-        gather_release([crate], independent_crates) for crate in independent_crates
-    ] + [gather_release(grouped_crates, independent_crates)]
+        gather_release([crate], independent_crates, args.prerelease)
+        for crate in independent_crates
+    ] + [gather_release(grouped_crates, independent_crates, args.prerelease)]
     releases_by_deps = sort_releases_by_deps(releases)
     releasable = process_dependencies(releases_by_deps)
     do_releases(releasable, args.execute)
