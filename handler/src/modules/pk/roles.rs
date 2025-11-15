@@ -73,7 +73,7 @@ fn get_current_roles(guild: Guild) -> HashMap<String, MemberRole> {
         .map(|v| MemberRole {
             id: Some(v.id),
             name: v.name.clone(),
-            color: v.color,
+            color: v.colors.primary_color,
         })
         .map(|v| (v.name.clone(), v))
         .collect()
