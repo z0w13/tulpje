@@ -460,7 +460,7 @@ def gather_release(
             RELEASE_FILENAME_MATCHLIST_WORKSPACE
         ).union({f"!{crate.path}/**/*" for crate in independent_crates})
 
-    latest_tag = get_latest_tag(f"{prefix}-" if len(prefix) > 0 else "")
+    latest_tag = get_latest_tag(f"{prefix}-" if len(prefix) > 0 else "", True)
     has_independent_tag = independent_crate and latest_tag is not None
 
     # fall back to main tag if there's none for the prefix yet
