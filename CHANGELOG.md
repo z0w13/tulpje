@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0-rc.2] - 2025-11-15
+
+### Added
+
+ - Support prereleases in `release.py`
+
+### Fixed
+
+ - Don't exclude alpha/beta/rc tags in changelog
+ - Always include prereleases
+ - Re-add `metrics` feature flag, was renamed not removed
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(build/release): don't exclude alpha/beta/rc tags in changelog ([`40bcf5a`](https://github.com/z0w13/tulpje/commit/40bcf5a0cb590434deb22b7f3716bbd1495a386b))
+ * fix(build/release): always include prereleases ([`c61cad4`](https://github.com/z0w13/tulpje/commit/c61cad40b11bca413f2d27df8c09608011795d6f))
+ * feat(build): support prereleases in `release.py` ([`dd852d3`](https://github.com/z0w13/tulpje/commit/dd852d34a1e1ea66bb8e811cb1e12a4d61001468))
+ * fix(http-proxy): re-add `metrics` feature flag, was renamed not removed ([`6d827d5`](https://github.com/z0w13/tulpje/commit/6d827d5d6755f2016f7134b9f9cce1c2224eed10))
+</details>
+
 ## [0.19.0-rc.1] - 2025-11-15
 
 ### Breaking Changes
