@@ -433,8 +433,6 @@ def create_changelog_update(
         + [
             "--strip",
             "all",
-            "--ignore-tags",
-            "alpha|beta|rc",
             "--tag",
             str(new_version),
             f"{prefixed_version(prefix, old_version)}..HEAD",
