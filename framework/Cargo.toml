@@ -19,7 +19,7 @@ twilight-util = { workspace = true, features = ["builder"] }
 tracing = "0.1.41"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = { version = "0.4.42", features = ["alloc", "clock", "std"], default-features = false }
-tokio = "1.47.1"
+tokio = { workspace = true }
 uuid = { version = "1.18.1", features = ["v7", "serde"] }
 tokio-util = { version = "0.7.16", features = ["rt"] }
 serde = { version = "1.0.228", features = ["derive"] }

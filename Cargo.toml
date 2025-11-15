@@ -22,6 +22,7 @@ crane.name = "tulpje"
 metrics-exporter-prometheus = { version = "0.17.1", default-features = false }
 redis = { version = "0.32.6", default-features = false, features = ["tokio-comp", "connection-manager"] }
 rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
+tokio = { version = "1.47.1" }
 twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", tag = "twilight-0.17.0" }
 twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", tag = "twilight-0.17.0", default-features = false }
 twilight-http = { git = "https://github.com/twilight-rs/twilight.git",  tag = "twilight-0.17.0", default-features = false }
