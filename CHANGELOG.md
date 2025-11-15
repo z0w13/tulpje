@@ -5,6 +5,149 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0-rc.1] - 2025-11-15
+
+### Breaking Changes
+
+ - Update twilight dependencies to 0.17.0
+ - Remove unused parse_task_slot
+
+### Added
+
+ - Add missing fields to component structs
+ - Add `cargo edit` and `cargo machete`
+ - Add cargo-outdated to devenv packages
+ - Additional comments and cleanup
+ - Additional logging in `release.py
+
+### Changed
+
+ - Use gateway-queue fork using twilight 0.17
+ - Update to rust 1.91.0
+ - Bump `tokio-util` from 0.7.16 to 0.7.17
+ - Make `tokio-util` a workspace dependency
+ - Bump `reqwest` from 0.12.23 to 0.12.24
+ - Make `reqwest` a workspace dependency
+ - Bump `amqprs` from 2.1.2 to 2.1.3
+ - Bump `regex` from 1.11.3 to 1.12.2
+ - Bump `metrics-process` from 2.4.1 to 2.4.2
+ - Bump `tokio` from 1.47.1 to 1.48.0
+ - Make `tokio` a workspace dependency
+ - Configure tls correctly for 0.17
+ - Update to 0.17.0
+ - Update to latest version
+ - Update flake inputs to latest
+ - Bump `async-trait` from 0.1.86 to 0.1.89
+ - Bump `sqlx` from 0.8.5 to 0.8.6
+ - Bump `regex` from 1.11.3 to 1.11.5
+ - Bump `serde_json` from 1.0.140 to 1.0.145
+ - Bump `serde` from 1.0.219 to 1.0.228
+ - Bump `reqwest` from 0.12.15 to 0.12.23
+ - Bump tokio from 1.44.2 to 1.47.1
+ - Bump tokio-util from 0.7.14 to 0.7.16
+ - Bump chrono from 0.4.40 to 0.4.42
+ - Bump `uuid` from 0.16.0 to 0.18.1
+ - Bump `metrics-process from 2.4.0 to 2.4.1
+ - Bump `metrics-exporter-prometheus` from 0.16.2 to 0.17.1
+ - Move `metrics-exporter-prometheus` crate to workspace deps
+ - Bump redis from 0.29.1 to 0.32.6
+ - Move redis crate to workspace deps
+ - Update to rust 1.90.0, fix lint warnings, `cargo fmt`
+ - `clippy::collapsible_if`
+ - `cargo fmt`
+ - Rust edition 2024
+ - Pass env vars to child process instead of directly setting
+ - Specify edition on workspace level
+ - Bump cargo feature resolver from 2 to 3
+ - Move twilight-* crates to workspace deps
+ - Update amqprs from 2.1.0 to 2.1.2
+ - Update flake inputs to latest
+ - Update to rust 1.89.0
+ - Rust-like output for `release.py`
+
+### Fixed
+
+ - Use primary_color for member roles
+ - ReadyInfo no longer needs to be dereferenced
+ - Also use non-annotated git tags to determine version
+ - Log invalid semver tags and skip them instead of crashing in release script
+ - Bump tracing subscriber from 0.3.19 to 0.3.20
+ - Hanging connections
+
+### Removed
+
+ - Remove unused `crate` argument from `release.py`
+ - Remove clippy warning that no longer exists
+ - Remove feature flag removed by upstream
+ - Remove tls feature flags that got removed in twilight 0.17
+ - Remove unused deps
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(build): remove unused `crate` argument from `release.py` ([`ba1177b`](https://github.com/z0w13/tulpje/commit/ba1177b852e771dfde7ef56e750c5f9f9ccf82dd))
+ * chore: use gateway-queue fork using twilight 0.17 ([`dd9ebf3`](https://github.com/z0w13/tulpje/commit/dd9ebf3402fa5bbfafb2020e153809a56fb13bf4))
+ * fix(handler): remove clippy warning that no longer exists ([`3ce7b94`](https://github.com/z0w13/tulpje/commit/3ce7b9465ba7f10e1f51becaf55479096719e57d))
+ * chore: update to rust 1.91.0 ([`e5a8e92`](https://github.com/z0w13/tulpje/commit/e5a8e929741bdb06f897d4c154056b218a47877f))
+ * chore(deps): bump `tokio-util` from 0.7.16 to 0.7.17 ([`5f1931b`](https://github.com/z0w13/tulpje/commit/5f1931be04a043a8b4af0784dd33b1dd7bfda2d1))
+ * chore(deps): make `tokio-util` a workspace dependency ([`ebd429b`](https://github.com/z0w13/tulpje/commit/ebd429be53f9df0477154aaad445bbcdab9f28c9))
+ * chore(deps): bump `reqwest` from 0.12.23 to 0.12.24 ([`4b64090`](https://github.com/z0w13/tulpje/commit/4b640905b47fc5cb65dde7982e6cb0f77208dd5c))
+ * chore(deps): make `reqwest` a workspace dependency ([`f71129b`](https://github.com/z0w13/tulpje/commit/f71129b4a40b9ca802c7e064f25fbe13355a2fb0))
+ * chore(deps): bump `amqprs` from 2.1.2 to 2.1.3 ([`1dd263a`](https://github.com/z0w13/tulpje/commit/1dd263add320bd115813717509400fbc37669c72))
+ * chore(deps): bump `regex` from 1.11.3 to 1.12.2 ([`7e5e016`](https://github.com/z0w13/tulpje/commit/7e5e016bf1ae5b7b2fa298badb04964d9277cc9e))
+ * chore(deps): bump `metrics-process` from 2.4.1 to 2.4.2 ([`20432f3`](https://github.com/z0w13/tulpje/commit/20432f3b9e7c9d23e4de28146c8e4569003b653e))
+ * chore(deps): bump `tokio` from 1.47.1 to 1.48.0 ([`2d56289`](https://github.com/z0w13/tulpje/commit/2d562894b83375484d4593f1d986c52ad7a2eb5d))
+ * chore(deps): make `tokio` a workspace dependency ([`1a2f46a`](https://github.com/z0w13/tulpje/commit/1a2f46aecb624069c466738891ba905e446a1637))
+ * fix(handler/emoji): add missing fields to component structs ([`bdff86f`](https://github.com/z0w13/tulpje/commit/bdff86f88ecae71f5b2acf9c226705685998ccb2))
+ * chore: configure tls correctly for 0.17 ([`76d856f`](https://github.com/z0w13/tulpje/commit/76d856f79ba957985b8f7151c7109d643a00cf65))
+ * fix(http-proxy): remove feature flag removed by upstream ([`ee6fb5f`](https://github.com/z0w13/tulpje/commit/ee6fb5f159731828e6753c2524cceec20eb3c080))
+ * chore(http-proxy): update to 0.17.0 ([`41db799`](https://github.com/z0w13/tulpje/commit/41db7990639ab5b6b17ce17459efeb3a4b260265))
+ * chore(gateway-queue): update to latest version ([`85d077d`](https://github.com/z0w13/tulpje/commit/85d077d9f16b50d2529cae4e4746a1b3ffca85e6))
+ * fix(handler/pk): use primary_color for member roles ([`7b4dd11`](https://github.com/z0w13/tulpje/commit/7b4dd11cf79d9fae2c531c407f244070090eefa9))
+ * fix: remove tls feature flags that got removed in twilight 0.17 ([`1c1bf24`](https://github.com/z0w13/tulpje/commit/1c1bf24dc2048e2089e0a4ef87493a7a55872460))
+ * fix(gateway): ReadyInfo no longer needs to be dereferenced ([`387dba7`](https://github.com/z0w13/tulpje/commit/387dba70fed68eb0ac715f59f0bffdad192ab1ed))
+ * chore!: update twilight dependencies to 0.17.0 ([`2f57061`](https://github.com/z0w13/tulpje/commit/2f570610a5c012d91a99ea3ed30c5ffb1d168fd0))
+ * chore(deps): update flake inputs to latest ([`25d1cf2`](https://github.com/z0w13/tulpje/commit/25d1cf205fe9e996e6095a8a760a9b8775454ad4))
+ * chore(deps): bump `async-trait` from 0.1.86 to 0.1.89 ([`0a60b47`](https://github.com/z0w13/tulpje/commit/0a60b47fca218c9e150987b146afecb0c0064f9e))
+ * chore(deps): bump `sqlx` from 0.8.5 to 0.8.6 ([`1cd6d49`](https://github.com/z0w13/tulpje/commit/1cd6d497a81047232b7af1bf879ed407386db883))
+ * chore(deps): bump `regex` from 1.11.3 to 1.11.5 ([`e1b01bc`](https://github.com/z0w13/tulpje/commit/e1b01bc03267a277782b07ea286157ffeef25c77))
+ * chore(deps): bump `serde_json` from 1.0.140 to 1.0.145 ([`0dd1cd8`](https://github.com/z0w13/tulpje/commit/0dd1cd8340faf6afc223ad6e1e5b1c5e3162285a))
+ * chore(deps): bump `serde` from 1.0.219 to 1.0.228 ([`5b1f399`](https://github.com/z0w13/tulpje/commit/5b1f39919a293e04bb34b12a6e843b044f7ebe2d))
+ * chore(deps): bump `reqwest` from 0.12.15 to 0.12.23 ([`4ba8a1c`](https://github.com/z0w13/tulpje/commit/4ba8a1ce1fa9d1ff64a33ef850571e3be330816c))
+ * build(deps): bump tokio from 1.44.2 to 1.47.1 ([`44d256f`](https://github.com/z0w13/tulpje/commit/44d256fe7de24db17b823dd5f67176e278e7f154))
+ * build(deps): bump tokio-util from 0.7.14 to 0.7.16 ([`b084877`](https://github.com/z0w13/tulpje/commit/b084877909230c68857b633a8581ce425a45f67a))
+ * build(deps): bump chrono from 0.4.40 to 0.4.42 ([`df640ec`](https://github.com/z0w13/tulpje/commit/df640ec19e6b7ffcb735170d5e605d0143ac53a0))
+ * chore(deps): bump `uuid` from 0.16.0 to 0.18.1 ([`bb59882`](https://github.com/z0w13/tulpje/commit/bb5988295d34695f9356211a9f86439e44388877))
+ * chore(deps): bump `metrics-process from 2.4.0 to 2.4.1 ([`c48771d`](https://github.com/z0w13/tulpje/commit/c48771d77618900132af16d98332bee6b534da08))
+ * chore(deps): bump `metrics-exporter-prometheus` from 0.16.2 to 0.17.1 ([`ccdcfb7`](https://github.com/z0w13/tulpje/commit/ccdcfb7021b2ac8ff5cb63411786c52e4a96f592))
+ * chore(deps): move `metrics-exporter-prometheus` crate to workspace deps ([`0fa597b`](https://github.com/z0w13/tulpje/commit/0fa597b69a9bfdf82f59af027803718a194585e1))
+ * chore(deps): bump redis from 0.29.1 to 0.32.6 ([`c5cf3fb`](https://github.com/z0w13/tulpje/commit/c5cf3fbdd854a4f81fb18e3a287b351527fac0c7))
+ * chore(deps): move redis crate to workspace deps ([`b597314`](https://github.com/z0w13/tulpje/commit/b59731451f1a88e1839675542d0aec6b998a346e))
+ * feat(build): add `cargo edit` and `cargo machete` ([`a573309`](https://github.com/z0w13/tulpje/commit/a57330947da6ec62d8b89cb1996bceb58d73d417))
+ * chore(deps): remove unused deps ([`98fe91c`](https://github.com/z0w13/tulpje/commit/98fe91c111fd54a34e23afdd117695e52c2f81a3))
+ * chore(build): update to rust 1.90.0, fix lint warnings, `cargo fmt` ([`4a93c3b`](https://github.com/z0w13/tulpje/commit/4a93c3be063b99cbf6f4cd773e4b6fcf60f0b9bc))
+ * fix(build): also use non-annotated git tags to determine version ([`45398fd`](https://github.com/z0w13/tulpje/commit/45398fd68c3d3c1b8b08a59839393ec79f45dd16))
+ * chore(lint): `clippy::collapsible_if` ([`5c9d89e`](https://github.com/z0w13/tulpje/commit/5c9d89e3def56d8672cfa5399ced073f28884e99))
+ * chore: `cargo fmt` ([`e76d893`](https://github.com/z0w13/tulpje/commit/e76d893b5102eca310144ab258e79553cb5b2f41))
+ * chore(build): rust edition 2024 ([`31fc0c6`](https://github.com/z0w13/tulpje/commit/31fc0c6d2ad5102d7d48f0115bcce37e815dd601))
+ * refactor!: remove unused parse_task_slot ([`19d8abd`](https://github.com/z0w13/tulpje/commit/19d8abd3afa41c48a7498e5b5602f64db8478c3b))
+ * refactor(secret-loader): pass env vars to child process instead of directly setting ([`b37c463`](https://github.com/z0w13/tulpje/commit/b37c463cf8e7cadb8613e57d22467bc7f1a47fdd))
+ * refactor(build): specify edition on workspace level ([`f5b7a79`](https://github.com/z0w13/tulpje/commit/f5b7a79c4d5c5051e9dc3cc8b0def19fe22c63a6))
+ * chore(build): bump cargo feature resolver from 2 to 3 ([`832bc9a`](https://github.com/z0w13/tulpje/commit/832bc9a1fb45aadb3288cf3a74265d63b3d317f9))
+ * feat(build): add cargo-outdated to devenv packages ([`edb7020`](https://github.com/z0w13/tulpje/commit/edb70202d6da9088aa1d1b7dc34202840d2ec4a7))
+ * chore(deps): move twilight-* crates to workspace deps ([`f23e379`](https://github.com/z0w13/tulpje/commit/f23e37987e31d52258c6f6a5a4b856b33e2756ef))
+ * chore(reconnecting-amqp/deps): update amqprs from 2.1.0 to 2.1.2 ([`7c76ee2`](https://github.com/z0w13/tulpje/commit/7c76ee2b256b1919b560b19bd4eb073ccb4f81f1))
+ * chore(deps): update flake inputs to latest ([`fc5afe4`](https://github.com/z0w13/tulpje/commit/fc5afe49df00fd5c8da945d3e6c131b31acdcee0))
+ * fix(build): log invalid semver tags and skip them instead of crashing in release script ([`dcc2d9a`](https://github.com/z0w13/tulpje/commit/dcc2d9a281fb89809558f07e125ee4c9f7d78a48))
+ * chore(deps): update to rust 1.89.0 ([`0d6a462`](https://github.com/z0w13/tulpje/commit/0d6a462e00505fcafb7cf479201932e0e728a697))
+ * chore(nix): additional comments and cleanup ([`8952461`](https://github.com/z0w13/tulpje/commit/8952461cd04036552efee97620aba9e089ca8eeb))
+ * fix(deps): bump tracing subscriber from 0.3.19 to 0.3.20 ([`f569250`](https://github.com/z0w13/tulpje/commit/f569250d1425a5920560b10ba213c0791df44728))
+ * fix(gateway): hanging connections ([`dc44437`](https://github.com/z0w13/tulpje/commit/dc44437096a4792f9782ccc219ce2f29d7c221c3))
+ * feat(build): additional logging in `release.py ([`c8ba08f`](https://github.com/z0w13/tulpje/commit/c8ba08ff395932f217543ad7c7351cc344a4bfac))
+ * feat(build): rust-like output for `release.py` ([`926fdd9`](https://github.com/z0w13/tulpje/commit/926fdd9b811be62ca9af2277b02611750e5e3034))
+</details>
+
 ## [0.18.0] - 2025-04-22
 
 ### Breaking Changes

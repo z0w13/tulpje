@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0-rc.1] - 2025-11-15
+
+### Changed
+
+ - Make `tokio-util` a workspace dependency
+ - Make `tokio` a workspace dependency
+ - Configure tls correctly for 0.17
+ - Bump `serde` from 1.0.219 to 1.0.228
+ - Bump tokio from 1.44.2 to 1.47.1
+ - Bump tokio-util from 0.7.14 to 0.7.16
+ - Bump chrono from 0.4.40 to 0.4.42
+ - Bump `uuid` from 0.16.0 to 0.18.1
+ - Update to rust 1.90.0, fix lint warnings, `cargo fmt`
+ - `clippy::collapsible_if`
+ - `cargo fmt`
+ - Specify edition on workspace level
+ - Move twilight-* crates to workspace deps
+
+### Fixed
+
+ - Unbox modal interaction data
+ - Fix large enum variant warning on `SchedulerTaskMessage::Enable`
+ - Box large error variants
+ - Hanging connections
+
+### Removed
+
+ - Remove tls feature flags that got removed in twilight 0.17
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * chore(deps): make `tokio-util` a workspace dependency ([`ebd429b`](https://github.com/z0w13/tulpje/commit/ebd429be53f9df0477154aaad445bbcdab9f28c9))
+ * chore(deps): make `tokio` a workspace dependency ([`1a2f46a`](https://github.com/z0w13/tulpje/commit/1a2f46aecb624069c466738891ba905e446a1637))
+ * chore: configure tls correctly for 0.17 ([`76d856f`](https://github.com/z0w13/tulpje/commit/76d856f79ba957985b8f7151c7109d643a00cf65))
+ * fix: remove tls feature flags that got removed in twilight 0.17 ([`1c1bf24`](https://github.com/z0w13/tulpje/commit/1c1bf24dc2048e2089e0a4ef87493a7a55872460))
+ * fix(framework): unbox modal interaction data ([`765d7a0`](https://github.com/z0w13/tulpje/commit/765d7a09c59d74ab13dcc6ea73f330fcea47b6b0))
+ * chore(deps): bump `serde` from 1.0.219 to 1.0.228 ([`5b1f399`](https://github.com/z0w13/tulpje/commit/5b1f39919a293e04bb34b12a6e843b044f7ebe2d))
+ * build(deps): bump tokio from 1.44.2 to 1.47.1 ([`44d256f`](https://github.com/z0w13/tulpje/commit/44d256fe7de24db17b823dd5f67176e278e7f154))
+ * build(deps): bump tokio-util from 0.7.14 to 0.7.16 ([`b084877`](https://github.com/z0w13/tulpje/commit/b084877909230c68857b633a8581ce425a45f67a))
+ * build(deps): bump chrono from 0.4.40 to 0.4.42 ([`df640ec`](https://github.com/z0w13/tulpje/commit/df640ec19e6b7ffcb735170d5e605d0143ac53a0))
+ * chore(deps): bump `uuid` from 0.16.0 to 0.18.1 ([`bb59882`](https://github.com/z0w13/tulpje/commit/bb5988295d34695f9356211a9f86439e44388877))
+ * chore(build): update to rust 1.90.0, fix lint warnings, `cargo fmt` ([`4a93c3b`](https://github.com/z0w13/tulpje/commit/4a93c3be063b99cbf6f4cd773e4b6fcf60f0b9bc))
+ * fix(lint): fix large enum variant warning on `SchedulerTaskMessage::Enable` ([`fca6406`](https://github.com/z0w13/tulpje/commit/fca64067c96f9aefaf4a503b5c8db18af1695bd0))
+ * fix(lint): box large error variants ([`b1f3e1d`](https://github.com/z0w13/tulpje/commit/b1f3e1dd089768f04bf4b0c052ccf38f1ed33556))
+ * chore(lint): `clippy::collapsible_if` ([`5c9d89e`](https://github.com/z0w13/tulpje/commit/5c9d89e3def56d8672cfa5399ced073f28884e99))
+ * chore: `cargo fmt` ([`e76d893`](https://github.com/z0w13/tulpje/commit/e76d893b5102eca310144ab258e79553cb5b2f41))
+ * refactor(build): specify edition on workspace level ([`f5b7a79`](https://github.com/z0w13/tulpje/commit/f5b7a79c4d5c5051e9dc3cc8b0def19fe22c63a6))
+ * chore(deps): move twilight-* crates to workspace deps ([`f23e379`](https://github.com/z0w13/tulpje/commit/f23e37987e31d52258c6f6a5a4b856b33e2756ef))
+ * fix(gateway): hanging connections ([`dc44437`](https://github.com/z0w13/tulpje/commit/dc44437096a4792f9782ccc219ce2f29d7c221c3))
+</details>
+
 ## [0.14.2] - 2025-04-02
 
 ### Changed

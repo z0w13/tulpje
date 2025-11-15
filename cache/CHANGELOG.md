@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0-rc.1] - 2025-11-15
+
+### Added
+
+ - Add `avatar_decoration_data` and `banner` fields to user
+
+### Changed
+
+ - Bump `serde_json` from 1.0.140 to 1.0.145
+ - Bump `serde` from 1.0.219 to 1.0.228
+ - Move redis crate to workspace deps
+ - Update to rust 1.90.0, fix lint warnings, `cargo fmt`
+ - `clippy::collapsible_if`
+ - `cargo fmt`
+ - Specify edition on workspace level
+ - Move twilight-* crates to workspace deps
+
+### Fixed
+
+ - Update User on MemberUpdate
+ - Hanging connections
+
+### Removed
+
+ - Remove deref
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(cache): add `avatar_decoration_data` and `banner` fields to user ([`4366dec`](https://github.com/z0w13/tulpje/commit/4366dec57ab1bb7643e1a8c79bc9f03e3d22ee73))
+ * fix(cache): remove deref ([`6121d0b`](https://github.com/z0w13/tulpje/commit/6121d0b3c82e11286bf9082ada2deec20b4d945e))
+ * fix(cache): update User on MemberUpdate ([`d5a8737`](https://github.com/z0w13/tulpje/commit/d5a87377821d7c5e733d779d97fd39c55467e58b))
+ * chore(deps): bump `serde_json` from 1.0.140 to 1.0.145 ([`0dd1cd8`](https://github.com/z0w13/tulpje/commit/0dd1cd8340faf6afc223ad6e1e5b1c5e3162285a))
+ * chore(deps): bump `serde` from 1.0.219 to 1.0.228 ([`5b1f399`](https://github.com/z0w13/tulpje/commit/5b1f39919a293e04bb34b12a6e843b044f7ebe2d))
+ * chore(deps): move redis crate to workspace deps ([`b597314`](https://github.com/z0w13/tulpje/commit/b59731451f1a88e1839675542d0aec6b998a346e))
+ * chore(build): update to rust 1.90.0, fix lint warnings, `cargo fmt` ([`4a93c3b`](https://github.com/z0w13/tulpje/commit/4a93c3be063b99cbf6f4cd773e4b6fcf60f0b9bc))
+ * chore(lint): `clippy::collapsible_if` ([`5c9d89e`](https://github.com/z0w13/tulpje/commit/5c9d89e3def56d8672cfa5399ced073f28884e99))
+ * chore: `cargo fmt` ([`e76d893`](https://github.com/z0w13/tulpje/commit/e76d893b5102eca310144ab258e79553cb5b2f41))
+ * refactor(build): specify edition on workspace level ([`f5b7a79`](https://github.com/z0w13/tulpje/commit/f5b7a79c4d5c5051e9dc3cc8b0def19fe22c63a6))
+ * chore(deps): move twilight-* crates to workspace deps ([`f23e379`](https://github.com/z0w13/tulpje/commit/f23e37987e31d52258c6f6a5a4b856b33e2756ef))
+ * fix(gateway): hanging connections ([`dc44437`](https://github.com/z0w13/tulpje/commit/dc44437096a4792f9782ccc219ce2f29d7c221c3))
+</details>
+
 ## [0.3.0] - 2025-04-02
 
 ### Changed
