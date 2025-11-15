@@ -6,7 +6,7 @@ members = [
 resolver = "3"
 
 [workspace.package]
-version = "0.19.0-rc.2"
+version = "0.19.0"
 description = "Multi-purpose discord bot & framework"
 homepage = "https://github.com/z0w13/tulpje"
 repository = "https://github.com/z0w13/tulpje"
@@ -25,11 +25,11 @@ reqwest = { version = "0.12.24", default-features = false }
 rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
 tokio = { version = "1.48.0" }
 tokio-util = { version = "0.7.17" }
-twilight-cache-inmemory = { git = "https://github.com/twilight-rs/twilight.git", tag = "twilight-0.17.0" }
-twilight-gateway = { git = "https://github.com/twilight-rs/twilight.git", tag = "twilight-0.17.0", default-features = false }
-twilight-http = { git = "https://github.com/twilight-rs/twilight.git",  tag = "twilight-0.17.0", default-features = false }
-twilight-model = { git = "https://github.com/twilight-rs/twilight.git", tag = "twilight-0.17.0" }
-twilight-util = { git = "https://github.com/twilight-rs/twilight.git",  tag = "twilight-0.17.0" }
+twilight-cache-inmemory = { version = "0.17.0" }
+twilight-gateway = { version = "0.17.0", default-features = false }
+twilight-http = { version = "0.17.0", default-features = false }
+twilight-model = { version = "0.17.0" }
+twilight-util = { version = "0.17.0" }
 
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks

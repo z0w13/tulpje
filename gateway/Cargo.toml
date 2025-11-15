@@ -11,8 +11,8 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-shared = { version = "0.19.0-rc.2", path = "../shared" }
-reconnecting-amqp = { version = "0.2.0-rc.1", path = "../reconnecting-amqp" }
+tulpje-shared = { version = "0.19.0", path = "../shared" }
+reconnecting-amqp = { version = "0.2.0", path = "../reconnecting-amqp" }
 rustls = { workspace = true }
 serde_json = "1.0.145"
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

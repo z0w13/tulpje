@@ -1833,7 +1833,7 @@ dependencies = [
 
 [[package]]
 name = "reconnecting-amqp"
-version = "0.2.0-rc.1"
+version = "0.2.0"
 dependencies = [
  "amqprs",
  "async-trait",
@@ -2844,7 +2844,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tulpje-cache"
-version = "0.4.0-rc.1"
+version = "0.4.0"
 dependencies = [
  "redis",
  "serde",
@@ -2855,7 +2855,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-framework"
-version = "0.15.0-rc.1"
+version = "0.15.0"
 dependencies = [
  "async-cron-scheduler",
  "chrono",
@@ -2873,7 +2873,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.19.0-rc.2"
+version = "0.19.0"
 dependencies = [
  "figment",
  "figment_file_provider_adapter",
@@ -2896,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.19.0-rc.2"
+version = "0.19.0"
 dependencies = [
  "base64",
  "chrono",
@@ -2930,7 +2930,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.19.0-rc.2"
+version = "0.19.0"
 dependencies = [
  "rustls",
  "tokio",
@@ -2939,7 +2939,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.19.0-rc.2"
+version = "0.19.0"
 dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
@@ -2955,7 +2955,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.19.0-rc.2"
+version = "0.19.0"
 dependencies = [
  "reqwest",
 ]
@@ -2963,7 +2963,8 @@ dependencies = [
 [[package]]
 name = "twilight-cache-inmemory"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e30c60181c900c1121000fbd769c547ec437bb3fe61c8f8cdb0f4356b6afbd48"
 dependencies = [
  "bitflags",
  "dashmap",
@@ -2974,7 +2975,8 @@ dependencies = [
 [[package]]
 name = "twilight-gateway"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ade57432c8ba31126ce40af996622864ccde1b95c95d538414d4c23191f4171"
 dependencies = [
  "bitflags",
  "fastrand",
@@ -2992,7 +2994,8 @@ dependencies = [
 [[package]]
 name = "twilight-gateway-queue"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "366a73fe47f61a3d522c3aaf70475e60634b0ae59e7b94272ed7496fffa7ceb7"
 dependencies = [
  "tokio",
  "tracing",
@@ -3001,7 +3004,8 @@ dependencies = [
 [[package]]
 name = "twilight-http"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb36574ad2d30e1dbb39876265c66d37ee60969ffdcc1f0ebb9ace2ca42d74ff"
 dependencies = [
  "brotli-decompressor",
  "fastrand",
@@ -3024,7 +3028,8 @@ dependencies = [
 [[package]]
 name = "twilight-http-ratelimiting"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3c0fa6e3578e0f6dc4636eed55e3c0dd51b5898de2b7200f7fec025656c1148"
 dependencies = [
  "hashbrown 0.16.0",
  "tokio",
@@ -3035,7 +3040,8 @@ dependencies = [
 [[package]]
 name = "twilight-model"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "416247a86048c1909954c95c64ca4c7fbbcb44c36e9cbed8c008e7e40988f610"
 dependencies = [
  "bitflags",
  "serde",
@@ -3047,7 +3053,8 @@ dependencies = [
 [[package]]
 name = "twilight-util"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e71de79d48ce27aba1f591b10c84677f1317489c2ea154d9b8ed01efa8bceb53"
 dependencies = [
  "twilight-model",
  "twilight-validate",
@@ -3056,7 +3063,8 @@ dependencies = [
 [[package]]
 name = "twilight-validate"
 version = "0.17.0"
-source = "git+https://github.com/twilight-rs/twilight.git?tag=twilight-0.17.0#007889d01731d75a0dadcee106795de21235acb4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6a27472e023e3841d1c4e4e20253ed796e8440aada8b5205b8544f1172e661d"
 dependencies = [
  "twilight-model",
 ]
