@@ -11,6 +11,7 @@ license.workspace = true
 
 [dependencies]
 tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+rustls = { workspace = true }
 twilight-http = { workspace = true, features = ["decompression", "rustls-webpki-roots"] }
 
 [lints]
