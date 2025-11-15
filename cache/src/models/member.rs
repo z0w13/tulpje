@@ -9,6 +9,7 @@ use twilight_model::{
         Id,
         marker::{GuildMarker, RoleMarker, UserMarker},
     },
+    user::AvatarDecorationData,
     util::{ImageHash, Timestamp},
 };
 
@@ -36,6 +37,8 @@ impl Deref for ComputedInteractionMember {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct CachedMember {
     pub avatar: Option<ImageHash>,
+    pub avatar_decoration_data: Option<AvatarDecorationData>,
+    pub banner: Option<ImageHash>,
     pub communication_disabled_until: Option<Timestamp>,
     pub deaf: Option<bool>,
     pub flags: MemberFlags,
@@ -65,6 +68,8 @@ impl From<Member> for CachedMember {
     fn from(member: Member) -> Self {
         let Member {
             avatar,
+            avatar_decoration_data,
+            banner,
             communication_disabled_until,
             deaf,
             flags,
@@ -79,6 +84,8 @@ impl From<Member> for CachedMember {
 
         Self {
             avatar,
+            avatar_decoration_data,
+            banner,
             communication_disabled_until,
             deaf: Some(deaf),
             flags,
@@ -101,6 +108,8 @@ impl From<(Id<UserMarker>, PartialMember)> for CachedMember {
         )]
         let PartialMember {
             avatar,
+            avatar_decoration_data,
+            banner,
             communication_disabled_until,
             deaf,
             flags,
@@ -115,6 +124,8 @@ impl From<(Id<UserMarker>, PartialMember)> for CachedMember {
 
         Self {
             avatar,
+            avatar_decoration_data,
+            banner,
             communication_disabled_until,
             deaf: Some(deaf),
             flags,
@@ -145,6 +156,8 @@ impl From<ComputedInteractionMember> for CachedMember {
         )]
         let InteractionMember {
             avatar: _,
+            avatar_decoration_data,
+            banner,
             communication_disabled_until,
             flags,
             joined_at,
@@ -157,6 +170,8 @@ impl From<ComputedInteractionMember> for CachedMember {
 
         Self {
             avatar,
+            avatar_decoration_data,
+            banner,
             communication_disabled_until,
             deaf,
             flags,
