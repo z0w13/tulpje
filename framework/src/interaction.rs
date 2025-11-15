@@ -38,7 +38,7 @@ pub fn parse<T: Clone + Send + Sync>(
             ))
         }
         Some(InteractionData::ModalSubmit(data)) => Ok(context::InteractionContext::<T>::Modal(
-            context::ModalContext::from_context(ctx, meta, event.clone(), data.clone()),
+            context::ModalContext::from_context(ctx, meta, event.clone(), *data.clone()),
         )),
         Some(_) => Err(format!("unknown interaction type: {:?}", event.kind).into()),
         None => Err("no interaction data".into()),
