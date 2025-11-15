@@ -1,9 +1,9 @@
 [package]
 name = "reconnecting-amqp"
 version = "0.2.0"
+description = "Auto-reconnecting amqprs wrapper"
 
 edition.workspace = true
-description.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
