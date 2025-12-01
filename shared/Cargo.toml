@@ -9,7 +9,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-metrics = "0.24.2"
+metrics = "0.24.3"
 metrics-exporter-prometheus = { workspace = true, features = ["http-listener"] }
 metrics-process = "2.4.2"
 serde = { version = "1.0.228", features = ["derive"] }
