@@ -34,7 +34,7 @@ reqwest = { workspace = true, features = ["rustls-tls", "charset", "http2"] }
 base64 = "0.22.1"
 pkrs-fork = { version = "0.4.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
 serde_either = "0.2.1"
-metrics = "0.24.2"
+metrics = "0.24.3"
 metrics-exporter-prometheus = { workspace = true }
 redis = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
