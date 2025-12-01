@@ -24,7 +24,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { workspace = true, features = ["rustls-tls", "charset", "http2"] }
 redis = { workspace = true }
 futures-util = "0.3.31"
-metrics = "0.24.2"
+metrics = "0.24.3"
 metrics-exporter-prometheus = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
 figment_file_provider_adapter = "0.1.1"
