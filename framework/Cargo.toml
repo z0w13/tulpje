@@ -16,7 +16,7 @@ twilight-http = { workspace = true, features = ["decompression", "rustls-webpki-
 twilight-model = { workspace = true }
 twilight-gateway = { workspace = true }
 twilight-util = { workspace = true, features = ["builder"] }
-tracing = "0.1.41"
+tracing = "0.1.43"
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = { version = "0.4.42", features = ["alloc", "clock", "std"], default-features = false }
 tokio = { workspace = true }
