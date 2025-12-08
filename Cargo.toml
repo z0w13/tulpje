@@ -19,7 +19,7 @@ edition = "2024"
 crane.name = "tulpje"
 
 [workspace.dependencies]
-metrics-exporter-prometheus = { version = "0.18.0", default-features = false }
+metrics-exporter-prometheus = { version = "0.18.1", default-features = false }
 redis = { version = "0.32.7", default-features = false, features = ["tokio-comp", "connection-manager"] }
 reqwest = { version = "0.12.24", default-features = false }
 rustls = { version = "0.23.35", default-features = false, features = ["ring"] }
