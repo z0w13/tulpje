@@ -2974,9 +2974,9 @@ dependencies = [
 
 [[package]]
 name = "twilight-gateway"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ade57432c8ba31126ce40af996622864ccde1b95c95d538414d4c23191f4171"
+checksum = "59267541c31f888c1587da5e7cbab182ae6efd98faedd9ea2e35a4eef43ff204"
 dependencies = [
  "bitflags",
  "fastrand",
