@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use redis::{self, FromRedisValue, ToRedisArgs};
+use redis::{self, FromRedisValue, ToRedisArgs, ToSingleRedisArg};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -47,6 +47,7 @@ impl ShardState {
     }
 }
 
+impl ToSingleRedisArg for ShardState {}
 impl ToRedisArgs for ShardState {
     fn write_redis_args<W>(&self, out: &mut W)
     where
@@ -57,21 +58,13 @@ impl ToRedisArgs for ShardState {
 }
 
 impl FromRedisValue for ShardState {
-    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
-        match *v {
+    fn from_redis_value(v: redis::Value) -> Result<Self, redis::ParsingError> {
+        match v {
             redis::Value::BulkString(ref bytes) => match serde_json::from_slice(bytes) {
                 Ok(rv) => Ok(rv),
-                Err(err) => Err(redis::RedisError::from((
-                    redis::ErrorKind::TypeError,
-                    "error deserializing json",
-                    format!("{err}"),
-                ))),
+                Err(err) => Err(format!("error deserializing json: {err}").into()),
             },
-            _ => Err(redis::RedisError::from((
-                redis::ErrorKind::TypeError,
-                "invalid response type for json",
-                format!("{:?}", v),
-            ))),
+            _ => Err(format!("invalid response type for json: {:?}", v).into()),
         }
     }
 }
