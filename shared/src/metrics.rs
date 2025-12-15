@@ -9,7 +9,7 @@ use std::{
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_process::Collector as ProcessCollector;
 use redis::{
-    self, AsyncCommands as _, FromRedisValue, ToRedisArgs,
+    self, AsyncCommands as _, FromRedisValue, ToRedisArgs, ToSingleRedisArg,
     aio::ConnectionManager as RedisConnectionManager,
 };
 use serde::{Deserialize, Serialize};
@@ -91,6 +91,7 @@ impl Metrics {
     }
 }
 
+impl ToSingleRedisArg for Metrics {}
 impl ToRedisArgs for Metrics {
     fn write_redis_args<W>(&self, out: &mut W)
     where
@@ -101,21 +102,13 @@ impl ToRedisArgs for Metrics {
 }
 
 impl FromRedisValue for Metrics {
-    fn from_redis_value(v: &redis::Value) -> redis::RedisResult<Self> {
-        match *v {
+    fn from_redis_value(v: redis::Value) -> Result<Self, redis::ParsingError> {
+        match v {
             redis::Value::BulkString(ref bytes) => match serde_json::from_slice(bytes) {
                 Ok(rv) => Ok(rv),
-                Err(err) => Err(redis::RedisError::from((
-                    redis::ErrorKind::TypeError,
-                    "error deserializing json",
-                    format!("{err}"),
-                ))),
+                Err(err) => Err(format!("error deserializing json: {err}").into()),
             },
-            _ => Err(redis::RedisError::from((
-                redis::ErrorKind::TypeError,
-                "invalid response type for json",
-                format!("{:?}", v),
-            ))),
+            _ => Err(format!("invalid response type for json: {:?}", v).into()),
         }
     }
 }

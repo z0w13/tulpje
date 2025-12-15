@@ -55,8 +55,8 @@ async fn main() {
     let redis = redis_client
         .get_connection_manager_with_config(
             ConnectionManagerConfig::new()
-                .set_connection_timeout(Duration::from_secs(5))
-                .set_response_timeout(Duration::from_secs(5)),
+                .set_connection_timeout(Some(Duration::from_secs(5)))
+                .set_response_timeout(Some(Duration::from_secs(5))),
         )
         .await
         .expect("error creating connection manager");
