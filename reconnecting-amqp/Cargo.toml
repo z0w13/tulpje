@@ -13,7 +13,7 @@ amqprs = { version = "2.1.3", features = ["compliance_assert", "traces", "urispe
 async-trait = "0.1.89"
 tokio = { workspace = true }
 tokio-util = { workspace = true }
-tracing = "0.1.43"
+tracing = { workspace = true }
 
 [lints]
 workspace = true
