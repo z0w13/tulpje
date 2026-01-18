@@ -18,7 +18,7 @@ twilight-gateway = { workspace = true }
 twilight-util = { workspace = true, features = ["builder"] }
 tracing = { workspace = true }
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
-chrono = { version = "0.4.42", features = ["alloc", "clock", "std"], default-features = false }
+chrono = { workspace = true }
 tokio = { workspace = true }
 uuid = { version = "1.19.0", features = ["v7", "serde"] }
 tokio-util = { workspace = true, features = ["rt"] }
