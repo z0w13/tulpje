@@ -18,4 +18,4 @@ name = "check-http"
 path = "src/check_http.rs"
 
 [dependencies]
-reqwest = { workspace = true, features = ["blocking", "charset", "h2", "http2", "rustls-tls"] }
+reqwest = { workspace = true, features = ["blocking", "charset", "http2", "rustls"] }
