@@ -22,7 +22,7 @@ chrono = { version = "0.4.42", features = ["alloc", "clock", "std"], default-fea
 tokio = { workspace = true }
 uuid = { version = "1.19.0", features = ["v7", "serde"] }
 tokio-util = { workspace = true, features = ["rt"] }
-serde = { version = "1.0.228", features = ["derive"] }
+serde = { workspace = true }
 
 [lints]
 workspace = true

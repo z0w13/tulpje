@@ -20,7 +20,7 @@ tracing = "0.1.43"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
 twilight-gateway = { workspace = true, features = ["rustls-webpki-roots"] }
 twilight-model = { workspace = true }
-serde = { version = "1.0.228", features = ["derive"] }
+serde = { workspace = true }
 reqwest = { workspace = true, features = ["rustls-tls", "charset", "http2"] }
 redis = { workspace = true }
 futures-util = "0.3.31"

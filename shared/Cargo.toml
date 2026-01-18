@@ -12,8 +12,8 @@ license.workspace = true
 metrics = "0.24.3"
 metrics-exporter-prometheus = { workspace = true, features = ["http-listener"] }
 metrics-process = "2.4.2"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde = { workspace = true }
+serde_json = { workspace = true }
 tokio = { workspace = true }
 twilight-model = { workspace = true }
 tracing = "0.1.43"
