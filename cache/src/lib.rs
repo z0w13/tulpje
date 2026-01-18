@@ -290,6 +290,9 @@ impl UpdateCache for Event {
             | Event::BanAdd(_)
             | Event::BanRemove(_)
             | Event::CommandPermissionsUpdate(_)
+            | Event::EntitlementCreate(_)
+            | Event::EntitlementDelete(_)
+            | Event::EntitlementUpdate(_)
             | Event::GatewayClose(_)
             | Event::GatewayHeartbeat
             | Event::GatewayHeartbeatAck
@@ -300,13 +303,14 @@ impl UpdateCache for Event {
             | Event::GuildIntegrationsUpdate(_)
             | Event::InviteCreate(_)
             | Event::InviteDelete(_)
+            | Event::MessagePollVoteAdd(_)
+            | Event::MessagePollVoteRemove(_)
             | Event::Resumed
             | Event::ThreadMembersUpdate(_)
             | Event::ThreadMemberUpdate(_)
             | Event::TypingStart(_)
             | Event::VoiceServerUpdate(_)
             | Event::WebhooksUpdate(_) => Ok(()),
-            _ => Ok(()), // TODO: Remove this once we've implemented all events
         }
     }
 }
