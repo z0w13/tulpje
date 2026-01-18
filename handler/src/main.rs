@@ -29,6 +29,11 @@ async fn main() {
     tracing_subscriber::fmt::init();
     tracing::info!("starting tulpje-handler {} ...", version!());
 
+    // configure tls
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("error setting tls provider");
+
     // create config from environment vars
     let config = Config::load().expect("error loading config");
 

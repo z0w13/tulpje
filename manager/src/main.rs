@@ -12,6 +12,11 @@ async fn main() {
         }
     };
 
+    // configure tls
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("error setting tls provider");
+
     let client = twilight_http::Client::builder().token(token).build();
     let connection_info = client
         .gateway()
