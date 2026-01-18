@@ -28,6 +28,11 @@ IMAGE_PATHS=(
   $(nix build --no-link --print-out-paths "${PACKAGE_NAMES[@]}")
 )
 
+if [[ "${CACHIX_ENABLED:-}" = "yes" ]]; then
+  echo " [-] pushing to cachix"
+  nix-store -qR --include-outputs $(nix-store -qd "${IMAGE_PATHS[@]}") | cachix push tulpje
+fi
+
 # import the images into docker
 for imagePath in ${IMAGE_PATHS[@]}; do
   # parse image name from the archive
