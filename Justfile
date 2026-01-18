@@ -4,11 +4,8 @@ build:
 check:
   contrib/check.sh
 
-gateway: (cargo-build "tulpje-gateway") (run-local "target/debug/tulpje-gateway")
-handler: (cargo-build "tulpje-handler") (run-local "target/debug/tulpje-handler")
-
-cargo-build package:
-  cargo build -p {{ package }}
+gateway: (run-local "nix run .#tulpje-gateway")
+handler: (run-local "nix run .#tulpje-handler")
 
 run-local +command:
   contrib/run-local.sh {{ command }}
