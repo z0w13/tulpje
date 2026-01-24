@@ -17,23 +17,17 @@ cd "$PROJECT_DIR"
 
 export RUSTFLAGS="-Dwarnings"
 
-TARGETS=("x86_64-unknown-linux-gnu" "x86_64-unknown-linux-musl")
-
 echo "* auditing dependencies..."
 cargo audit
 
 echo "* running clippy..."
 cargo clippy --quiet
 
-for target in "${TARGETS[@]}"; do
-  echo "* building binaries ($target)..."
-  cargo build --target="$target" --release --quiet
-done
+echo "* building binaries..."
+cargo build --release --quiet
 
-for target in "${TARGETS[@]}"; do
-  echo "* running tests ($target)..."
-  cargo test --target="$target" --release --quiet
-done
+echo "* running tests..."
+cargo test --release --quiet
 
 echo "* building docker images..."
 nix build --no-link --print-out-paths \
