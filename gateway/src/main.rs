@@ -169,6 +169,7 @@ async fn main() {
     });
 
     main_handle.await.expect("error joining main_handle");
+    amqp.shutdown();
     amqp.join().await.expect("error joining amqp");
 }
 
