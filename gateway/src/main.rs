@@ -2,7 +2,8 @@ use std::{env, error::Error, time::Duration};
 
 use futures_util::StreamExt;
 use redis::aio::ConnectionManagerConfig;
-use twilight_gateway::EventTypeFlags;
+use serde::de::DeserializeSeed;
+use twilight_gateway::{EventTypeFlags, Message};
 use twilight_model::gateway::{
     OpCode,
     event::{Event, GatewayEventDeserializer},
@@ -18,6 +19,8 @@ mod metrics;
 mod shard_state;
 
 use config::Config;
+
+use crate::shard_state::SHARD_MANAGER_EVENTS;
 
 #[tokio::main]
 async fn main() {
@@ -41,7 +44,7 @@ async fn main() {
     )
     .expect("couldn't create amqp client");
     amqp.wait_start().await.expect("couldn't connect to amqp");
-    let amqp_chan = amqp.sender();
+    let amqp_tx = amqp.sender();
 
     // create the redis connection
     let redis_client = redis::Client::open(config.redis_url).expect("error initialising redis");
@@ -77,7 +80,8 @@ async fn main() {
     let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
 
     // create shard state manager
-    let mut shard_state_manager = shard_state::ShardManager::new(redis.clone(), shard_id.number());
+    let mut shard_mgr_handle =
+        shard_state::ShardManagerHandle::new(redis.clone(), shard_id.number());
 
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
@@ -88,54 +92,34 @@ async fn main() {
     // start main loop
     tracing::info!("starting main loop...");
 
+    let shard_mgr_tx = shard_mgr_handle.sender();
     let main_handle = tokio::spawn(async move {
         loop {
             match shard.next().await {
-                Some(Ok(twilight_gateway::Message::Close(frame))) => {
-                    tracing::warn!(?frame, "gateway connection closed");
-
-                    // have to handle this hear separate as twilight_gateway::parse doesn't
-                    // parse into Event::GatewayClose as that's a separate event type
-                    if let Err(err) = shard_state_manager
-                        .handle_event(Event::GatewayClose(frame), shard.latency())
-                        .await
-                    {
-                        tracing::error!("error updating shard state: {}", err);
-                    }
-                }
-                Some(Ok(twilight_gateway::Message::Text(text))) => {
-                    let opcode = match parse_opcode(&text) {
+                Some(Ok(message)) => {
+                    let event = match ParsedEvent::try_from(message) {
+                        Ok(evt) => evt,
                         Err(err) => {
-                            tracing::error!(?err, "couldn't parse opcode");
-                            continue;
-                        }
-                        Ok(Some(opcode)) => opcode,
-                        Ok(None) => {
-                            tracing::error!("received empty opcode");
+                            tracing::warn!("error parsing gateway message: {err}");
                             continue;
                         }
                     };
 
-                    tracing::trace!(?opcode, "opcode received");
+                    // track event metrics
+                    metrics::track_gateway_event(
+                        shard_id.number(),
+                        event.name.as_deref().unwrap_or("default"),
+                    );
 
-                    if let Ok(Some(event)) =
-                        twilight_gateway::parse(text.clone(), EventTypeFlags::all())
+                    if let Some(event) = event.event
+                        && let Err(err) = shard_mgr_tx.try_send(event, shard.latency().clone())
                     {
-                        let event = twilight_model::gateway::event::Event::from(event);
-
-                        // track event metrics
-                        metrics::track_gateway_event(shard_id.number(), &event);
-
-                        if let Err(err) = shard_state_manager
-                            .handle_event(event.clone(), shard.latency())
-                            .await
-                        {
-                            tracing::error!("error updating shard state: {}", err);
-                        }
+                        tracing::error!("error sending message to ShardManager: {err}");
                     }
 
-                    // only publish non-gateway events, aka everything DISPATCH
-                    if opcode == OpCode::Dispatch {
+                    if let Some(text) = event.text
+                        && event.forward
+                    {
                         let event = DiscordEvent::new(shard_id.number(), text);
                         let serialized_event = match serde_json::to_vec(&event) {
                             Ok(val) => val,
@@ -145,7 +129,7 @@ async fn main() {
                             }
                         };
 
-                        if let Err(err) = amqp_chan.send(serialized_event) {
+                        if let Err(err) = amqp_tx.send(serialized_event) {
                             tracing::error!("error sending event to amqp: {}", err);
                             continue;
                         }
@@ -169,6 +153,11 @@ async fn main() {
     });
 
     main_handle.await.expect("error joining main_handle");
+    shard_mgr_handle.shutdown();
+    shard_mgr_handle
+        .join()
+        .await
+        .expect("error joining ShardManager");
     amqp.shutdown();
     amqp.join().await.expect("error joining amqp");
 }
@@ -188,10 +177,79 @@ fn create_presence() -> UpdatePresencePayload {
         .expect("couldn't create UpdatePresence struct")
 }
 
-fn parse_opcode(event: &str) -> Result<Option<OpCode>, Box<dyn Error>> {
-    let Some(gateway_deserializer) = GatewayEventDeserializer::from_json(event) else {
-        return Err("couldn't deserialise event".into());
-    };
+const WANTED_EVENTS: EventTypeFlags = EventTypeFlags::from_bits_truncate(
+    SHARD_MANAGER_EVENTS.bits()
+        // misc opcode events, so need to decode to log actual name
+        | EventTypeFlags::GATEWAY_HEARTBEAT.bits()
+        | EventTypeFlags::GATEWAY_RECONNECT.bits()
+        | EventTypeFlags::GATEWAY_INVALIDATE_SESSION.bits(),
+);
 
-    Ok(OpCode::from(gateway_deserializer.op()))
+struct ParsedEvent {
+    forward: bool,
+    name: Option<String>,
+    event: Option<Event>,
+    text: Option<String>,
+}
+
+impl ParsedEvent {
+    fn from_event(forward: bool, event: Event, text: Option<String>) -> Self {
+        Self {
+            forward,
+            name: event.kind().name().map(String::from),
+            event: Some(event),
+            text,
+        }
+    }
+
+    fn from_text(forward: bool, name: Option<String>, text: String) -> Self {
+        Self {
+            forward,
+            name,
+            event: None,
+            text: Some(text),
+        }
+    }
+}
+
+impl TryFrom<Message> for ParsedEvent {
+    type Error = Box<dyn Error>;
+    fn try_from(value: Message) -> Result<Self, Self::Error> {
+        match value {
+            Message::Close(frame) => Ok(Self::from_event(false, Event::GatewayClose(frame), None)),
+            Message::Text(text) => {
+                let Some(deserialize) = GatewayEventDeserializer::from_json(&text) else {
+                    return Err(format!("couldn't deserialize event: {text}").into());
+                };
+
+                let numeric_opcode = deserialize.op();
+                let Some(opcode) = OpCode::from(numeric_opcode) else {
+                    return Err(format!("unknown opcode ({numeric_opcode}) in: {text}").into());
+                };
+
+                let event_type = deserialize.event_type();
+                let Ok(event_type_flags) = EventTypeFlags::try_from((opcode, event_type)) else {
+                    return Err(format!("unknown event ({opcode:?}): {event_type:?}").into());
+                };
+
+                if WANTED_EVENTS.contains(event_type_flags) {
+                    let mut json_deserializer = serde_json::Deserializer::from_str(&text);
+                    Ok(Self::from_event(
+                        opcode == OpCode::Dispatch,
+                        deserialize
+                            .deserialize(&mut json_deserializer)
+                            .map_err(|err| format!("error deserialising event: {err},{text}"))?
+                            .into(),
+                        Some(text),
+                    ))
+                } else {
+                    Ok(Self::from_text(
+                        opcode == OpCode::Dispatch,
+                        event_type.map(String::from),
+                        text,
+                    ))
+                }
+            }
+        }
+    }
 }
