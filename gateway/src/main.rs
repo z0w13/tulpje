@@ -96,7 +96,7 @@ async fn main() {
         loop {
             match shard.next().await {
                 Some(Ok(message)) => {
-                    let event = match ParsedEvent::try_from(message) {
+                    let event = match ParsedEvent::from_message(message) {
                         Ok(evt) => evt,
                         Err(err) => {
                             tracing::warn!("error parsing gateway message: {err}");
@@ -215,11 +215,8 @@ impl ParsedEvent {
             text: Some(text),
         }
     }
-}
 
-impl TryFrom<Message> for ParsedEvent {
-    type Error = Box<dyn Error>;
-    fn try_from(value: Message) -> Result<Self, Self::Error> {
+    fn from_message(value: Message) -> Result<Self, Box<dyn Error>> {
         match value {
             Message::Close(frame) => Ok(Self::from_event(false, Event::GatewayClose(frame), None)),
             Message::Text(text) => {
