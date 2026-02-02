@@ -16,11 +16,10 @@ use tulpje_shared::{DiscordEvent, version};
 
 mod config;
 mod metrics;
-mod shard_state;
+mod shard_reporter;
 
 use config::Config;
-
-use crate::shard_state::SHARD_MANAGER_EVENTS;
+use shard_reporter::{SHARD_REPORTER_EVENTS, ShardReporterHandle};
 
 #[tokio::main]
 async fn main() {
@@ -79,9 +78,9 @@ async fn main() {
         .expect("error constructing shard ID");
     let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
 
-    // create shard state manager
-    let (shard_mgr_join, mut shard_mgr_handle) =
-        shard_state::ShardManagerHandle::new(redis.clone(), shard_id.number());
+    // create shard reporter
+    let (shard_reporter_join, mut shard_reporter) =
+        ShardReporterHandle::new(redis.clone(), shard_id.number());
 
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
@@ -92,7 +91,7 @@ async fn main() {
     // start main loop
     tracing::info!("starting main loop...");
 
-    let shard_mgr_handle_loop = shard_mgr_handle.clone();
+    let shard_reporter_inner = shard_reporter.clone();
     let main_handle = tokio::spawn(async move {
         loop {
             match shard.next().await {
@@ -113,7 +112,7 @@ async fn main() {
 
                     if let Some(event) = event.event
                         && let Err(err) =
-                            shard_mgr_handle_loop.try_send(event, shard.latency().clone())
+                            shard_reporter_inner.try_send(event, shard.latency().clone())
                     {
                         tracing::error!("error sending message to ShardManager: {err}");
                     }
@@ -156,9 +155,10 @@ async fn main() {
     if let Err(err) = main_handle.await {
         tracing::error!("error joining main_handle: {err}");
     }
-    shard_mgr_handle.shutdown();
-    if let Err(err) = shard_mgr_join.await {
-        tracing::error!("error joining shard manager: {err}");
+
+    shard_reporter.shutdown();
+    if let Err(err) = shard_reporter_join.await {
+        tracing::error!("error joining shard reporter: {err}");
     }
 
     amqp.shutdown();
@@ -183,7 +183,7 @@ fn create_presence() -> UpdatePresencePayload {
 }
 
 const WANTED_EVENTS: EventTypeFlags = EventTypeFlags::from_bits_truncate(
-    SHARD_MANAGER_EVENTS.bits()
+    SHARD_REPORTER_EVENTS.bits()
         // misc opcode events, so need to decode to log actual name
         | EventTypeFlags::GATEWAY_HEARTBEAT.bits()
         | EventTypeFlags::GATEWAY_RECONNECT.bits()

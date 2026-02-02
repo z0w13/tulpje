@@ -11,7 +11,7 @@ use twilight_gateway::{Event, EventTypeFlags, Latency};
 use tulpje_shared::shard_state::ShardState;
 use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Hello, Ready};
 
-pub(crate) const SHARD_MANAGER_EVENTS: EventTypeFlags = EventTypeFlags::from_bits_truncate(
+pub(crate) const SHARD_REPORTER_EVENTS: EventTypeFlags = EventTypeFlags::from_bits_truncate(
     EventTypeFlags::GATEWAY_HEARTBEAT_ACK.bits()
         | EventTypeFlags::GATEWAY_HELLO.bits()
         | EventTypeFlags::GUILD_CREATE.bits()
@@ -21,18 +21,18 @@ pub(crate) const SHARD_MANAGER_EVENTS: EventTypeFlags = EventTypeFlags::from_bit
 );
 
 #[derive(Clone)]
-pub(crate) struct ShardManagerHandle {
+pub(crate) struct ShardReporterHandle {
     sender: mpsc::Sender<(Event, Latency)>,
     shutdown: CancellationToken,
 }
-impl ShardManagerHandle {
+impl ShardReporterHandle {
     pub(crate) fn new(redis: RedisConnectionManager, shard_id: u32) -> (JoinHandle<()>, Self) {
         // TODO: Configure channel size?
         let (sender, receiver) = mpsc::channel(10);
         let shutdown = CancellationToken::new();
 
-        let mut shard_mgr = ShardManager::new(redis, shard_id, receiver, shutdown.clone());
-        let handle = tokio::spawn(async move { shard_mgr.run().await });
+        let mut reporter = ShardReporter::new(redis, shard_id, receiver, shutdown.clone());
+        let handle = tokio::spawn(async move { reporter.run().await });
 
         (handle, Self { sender, shutdown })
     }
@@ -42,7 +42,7 @@ impl ShardManagerHandle {
         event: Event,
         latency: Latency,
     ) -> Result<(), Box<mpsc::error::TrySendError<(Event, Latency)>>> {
-        if SHARD_MANAGER_EVENTS.contains(event.kind().into()) {
+        if SHARD_REPORTER_EVENTS.contains(event.kind().into()) {
             Ok(self.sender.try_send((event, latency))?)
         } else {
             Ok(())
@@ -54,7 +54,7 @@ impl ShardManagerHandle {
     }
 }
 
-pub struct ShardManager {
+pub struct ShardReporter {
     pub redis: RedisConnectionManager,
     pub guild_ids: HashSet<u64>,
     pub shard: ShardState,
@@ -62,7 +62,7 @@ pub struct ShardManager {
     shutdown: CancellationToken,
 }
 
-impl ShardManager {
+impl ShardReporter {
     pub fn new(
         redis: RedisConnectionManager,
         shard_id: u32,
@@ -79,7 +79,7 @@ impl ShardManager {
     }
 
     async fn run(&mut self) {
-        tracing::info!("ShardManager started...");
+        tracing::info!("ShardReporter started...");
         loop {
             tokio::select! {
                 msg = self.receiver.recv() => {
@@ -94,7 +94,7 @@ impl ShardManager {
                 () = self.shutdown.cancelled() => self.receiver.close(),
             }
         }
-        tracing::info!("ShardManager stopped...");
+        tracing::info!("ShardReporter stopped...");
     }
 
     async fn handle_event(
