@@ -100,18 +100,24 @@ impl ShardReporter {
     }
 
     async fn run(&mut self) {
+        let mut shutting_down = false;
         tracing::info!("ShardReporter started...");
+
         loop {
             tokio::select! {
                 Some(evt) = self.receiver.recv() => {
                     if let Err(err) = self.handle_event(&evt).await {
-                        tracing::warn!(?evt, ?err, "error handling event")
-                    };
+                        tracing::warn!(?evt, ?err, "error handling event");
+                    }
                 },
-                () = self.shutdown.cancelled() => self.receiver.close(),
+                () = self.shutdown.cancelled(), if !shutting_down => {
+                    shutting_down = true;
+                    self.receiver.close();
+                },
                 else => break
             }
         }
+
         tracing::info!("ShardReporter stopped...");
     }
 
