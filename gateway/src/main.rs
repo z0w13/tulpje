@@ -1,26 +1,25 @@
 use std::{env, time::Duration};
 
-use futures_util::StreamExt;
 use redis::aio::ConnectionManagerConfig;
 use tokio::signal::unix::SignalKind;
-use tokio_util::sync::CancellationToken;
-use twilight_gateway::CloseFrame;
 use twilight_model::gateway::{
     payload::outgoing::{identify::IdentifyProperties, update_presence::UpdatePresencePayload},
     presence::{Activity, MinimalActivity, Status},
 };
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
-use tulpje_shared::{DiscordEvent, version};
+use tulpje_shared::version;
 
 mod config;
 mod metrics;
 mod parsed_event;
+mod shard_manager;
 mod shard_reporter;
 
 use config::Config;
-use parsed_event::ParsedEvent;
-use shard_reporter::{ReporterEvent, ShardReporterHandle};
+use shard_reporter::ShardReporterHandle;
+
+use crate::shard_manager::ShardManagerHandle;
 
 #[tokio::main]
 async fn main() {
@@ -50,7 +49,6 @@ async fn main() {
     )
     .expect("couldn't create amqp client");
     amqp.wait_start().await.expect("couldn't connect to amqp");
-    let amqp_tx = amqp.sender();
 
     // create the redis connection
     let redis_client = redis::Client::open(config.redis_url).expect("error initialising redis");
@@ -83,11 +81,15 @@ async fn main() {
     .build();
     let shard_id = twilight_gateway::ShardId::new_checked(config.shard_id, config.shard_count)
         .expect("error constructing shard ID");
-    let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
+    let shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
 
     // create shard reporter
     let (shard_reporter_join, mut shard_reporter) =
         ShardReporterHandle::new(redis.clone(), shard_id.number());
+
+    // create shard manager
+    let (shard_manager_join, mut shard_manager) =
+        ShardManagerHandle::new(shard, amqp.sender(), shard_reporter.clone());
 
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
@@ -95,90 +97,11 @@ async fn main() {
         .await
         .expect("error waiting for gateway queue");
 
-    // start main loop
-    tracing::info!("starting main loop...");
+    if let Err(err) = shard_manager.start() {
+        tracing::error!(?err, "error starting shard, shutting down ...");
+        shard_manager.shutdown();
+    }
 
-    let shutdown_token = CancellationToken::new();
-
-    let shard_reporter_inner = shard_reporter.clone();
-    let shutdown_token_inner = shutdown_token.clone();
-    let main_handle = tokio::spawn(async move {
-        let mut shutting_down = false;
-        loop {
-            tokio::select! {
-                msg = shard.next() => {
-                    match msg {
-                        Some(Ok(message)) => {
-                            let event = match ParsedEvent::from_message(message) {
-                                Ok(evt) => evt,
-                                Err(err) => {
-                                    tracing::warn!("error parsing gateway message: {err}");
-                                    continue;
-                                }
-                            };
-
-                            // if this is a close frame and we're shutting, we break at the
-                            // end of the loop, checking it here to avoid having to clone `event`
-                            let should_stop = event.is_close() && shutting_down;
-
-                            // track event metrics
-                            metrics::track_gateway_event(
-                                shard_id.number(),
-                                event.name.as_deref().unwrap_or("default"),
-                            );
-
-                            if let Some(event) = event.event
-                                && let Err(err) = shard_reporter_inner
-                                    .try_send(ReporterEvent::from_event(event, shard.latency()))
-                            {
-                                tracing::error!("error sending message to ShardManager: {err}");
-                            }
-
-                            if let Some(text) = event.text
-                                && event.forward
-                            {
-                                let event = DiscordEvent::new(shard_id.number(), text);
-                                let serialized_event = match serde_json::to_vec(&event) {
-                                    Ok(val) => val,
-                                    Err(err) => {
-                                        tracing::error!("error serializing event: {}", err);
-                                        continue;
-                                    }
-                                };
-
-                                if let Err(err) = amqp_tx.send(serialized_event) {
-                                    tracing::error!("error sending event to amqp: {}", err);
-                                    continue;
-                                }
-
-                                tracing::debug!(
-                                    uuid = ?event.meta.uuid,
-                                    shard = event.meta.shard,
-                                    "event sent"
-                                );
-                            }
-
-                            if should_stop {
-                                break
-                            }
-                        }
-                        Some(Err(err)) => {
-                            tracing::error!(?err, "error receiving discord message");
-                        }
-                        None => {
-                            tracing::error!("empty message, connection irrecoverably closed, exiting...");
-                            break;
-                        }
-                    }
-                },
-                () = shutdown_token_inner.cancelled(), if !shutting_down => {
-                    tracing::info!("disconnecting from Discord...");
-                    shard.close(CloseFrame::RESUME);
-                    shutting_down = true;
-                },
-            }
-        }
-    });
 
     tokio::spawn(async move {
         tokio::select! {
@@ -187,11 +110,10 @@ async fn main() {
         }
 
         tracing::info!("shutting down...");
-        shutdown_token.cancel();
+        shard_manager.shutdown();
     });
 
-    tracing::trace!("running main loop ...");
-    if let Err(err) = main_handle.await {
+    if let Err(err) = shard_manager_join.await {
         tracing::error!("error joining main_handle: {err}");
     }
 
