@@ -103,16 +103,13 @@ impl ShardReporter {
         tracing::info!("ShardReporter started...");
         loop {
             tokio::select! {
-                msg = self.receiver.recv() => {
-                    let Some(evt) = &msg else {
-                        break;
-                    };
-
-                    if let Err(err) = self.handle_event(evt).await {
+                Some(evt) = self.receiver.recv() => {
+                    if let Err(err) = self.handle_event(&evt).await {
                         tracing::warn!(?evt, ?err, "error handling event")
                     };
                 },
                 () = self.shutdown.cancelled() => self.receiver.close(),
+                else => break
             }
         }
         tracing::info!("ShardReporter stopped...");
