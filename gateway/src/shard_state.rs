@@ -20,28 +20,23 @@ pub(crate) const SHARD_MANAGER_EVENTS: EventTypeFlags = EventTypeFlags::from_bit
         | EventTypeFlags::RESUMED.bits(),
 );
 
+#[derive(Clone)]
 pub(crate) struct ShardManagerHandle {
     sender: mpsc::Sender<(Event, Latency)>,
     shutdown: CancellationToken,
-    handle: Option<JoinHandle<()>>,
 }
 impl ShardManagerHandle {
-    pub(crate) fn new(redis: RedisConnectionManager, shard_id: u32) -> Self {
+    pub(crate) fn new(redis: RedisConnectionManager, shard_id: u32) -> (JoinHandle<()>, Self) {
         // TODO: Configure channel size?
         let (sender, receiver) = mpsc::channel(10);
         let shutdown = CancellationToken::new();
 
         let mut shard_mgr = ShardManager::new(redis, shard_id, receiver, shutdown.clone());
-        let handle = Some(tokio::spawn(async move { shard_mgr.run().await }));
+        let handle = tokio::spawn(async move { shard_mgr.run().await });
 
-        Self {
-            sender,
-            shutdown,
-            handle,
-        }
+        (handle, Self { sender, shutdown })
     }
 
-    #[expect(dead_code, reason = "useful function, just not used yet")]
     pub(crate) fn try_send(
         &self,
         event: Event,
@@ -51,43 +46,11 @@ impl ShardManagerHandle {
             Ok(self.sender.try_send((event, latency))?)
         } else {
             Ok(())
-        }
-    }
-
-    pub(crate) fn sender(&self) -> ShardManagerSender {
-        ShardManagerSender {
-            sender: self.sender.clone(),
         }
     }
 
     pub(crate) fn shutdown(&mut self) {
         self.shutdown.cancel();
-    }
-
-    pub(crate) async fn join(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        Ok(self
-            .handle
-            .take()
-            .ok_or("ShardManager already shutdown")?
-            .await?)
-    }
-}
-
-pub(crate) struct ShardManagerSender {
-    sender: mpsc::Sender<(Event, Latency)>,
-}
-
-impl ShardManagerSender {
-    pub(crate) fn try_send(
-        &self,
-        event: Event,
-        latency: Latency,
-    ) -> Result<(), Box<mpsc::error::TrySendError<(Event, Latency)>>> {
-        if SHARD_MANAGER_EVENTS.contains(event.kind().into()) {
-            Ok(self.sender.try_send((event, latency))?)
-        } else {
-            Ok(())
-        }
     }
 }
 

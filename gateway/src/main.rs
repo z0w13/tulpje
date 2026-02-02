@@ -80,7 +80,7 @@ async fn main() {
     let mut shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
 
     // create shard state manager
-    let mut shard_mgr_handle =
+    let (shard_mgr_join, mut shard_mgr_handle) =
         shard_state::ShardManagerHandle::new(redis.clone(), shard_id.number());
 
     // initialisation done, ratelimit on session_limit
@@ -92,7 +92,7 @@ async fn main() {
     // start main loop
     tracing::info!("starting main loop...");
 
-    let shard_mgr_tx = shard_mgr_handle.sender();
+    let shard_mgr_handle_loop = shard_mgr_handle.clone();
     let main_handle = tokio::spawn(async move {
         loop {
             match shard.next().await {
@@ -112,7 +112,8 @@ async fn main() {
                     );
 
                     if let Some(event) = event.event
-                        && let Err(err) = shard_mgr_tx.try_send(event, shard.latency().clone())
+                        && let Err(err) =
+                            shard_mgr_handle_loop.try_send(event, shard.latency().clone())
                     {
                         tracing::error!("error sending message to ShardManager: {err}");
                     }
@@ -154,10 +155,7 @@ async fn main() {
 
     main_handle.await.expect("error joining main_handle");
     shard_mgr_handle.shutdown();
-    shard_mgr_handle
-        .join()
-        .await
-        .expect("error joining ShardManager");
+    shard_mgr_join.await.expect("error joining ShardManager");
     amqp.shutdown();
     amqp.join().await.expect("error joining amqp");
 }
