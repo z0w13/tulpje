@@ -55,9 +55,9 @@ impl ShardReporterHandle {
 }
 
 pub struct ShardReporter {
-    pub redis: RedisConnectionManager,
-    pub guild_ids: HashSet<u64>,
-    pub shard: ShardState,
+    redis: RedisConnectionManager,
+    guild_ids: HashSet<u64>,
+    shard: ShardState,
     receiver: mpsc::Receiver<(Event, Latency)>,
     shutdown: CancellationToken,
 }
