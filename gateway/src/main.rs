@@ -17,7 +17,7 @@ mod shard_reporter;
 
 use config::Config;
 use parsed_event::ParsedEvent;
-use shard_reporter::ShardReporterHandle;
+use shard_reporter::{ReporterEvent, ShardReporterHandle};
 
 #[tokio::main]
 async fn main() {
@@ -109,8 +109,8 @@ async fn main() {
                     );
 
                     if let Some(event) = event.event
-                        && let Err(err) =
-                            shard_reporter_inner.try_send(event, shard.latency().clone())
+                        && let Err(err) = shard_reporter_inner
+                            .try_send(ReporterEvent::from_event(event, shard.latency()))
                     {
                         tracing::error!("error sending message to ShardManager: {err}");
                     }
