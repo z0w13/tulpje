@@ -77,4 +77,8 @@ impl ParsedEvent {
             }
         }
     }
+
+    pub(crate) fn is_close(&self) -> bool {
+        matches!(self.event, Some(Event::GatewayClose(_)))
+    }
 }
