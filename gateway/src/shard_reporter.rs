@@ -6,7 +6,7 @@ use std::{
 use redis::{AsyncCommands as _, aio::ConnectionManager as RedisConnectionManager};
 use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
-use twilight_gateway::{Event, EventTypeFlags, Latency};
+use twilight_gateway::{Event, EventType, EventTypeFlags, Latency};
 
 use tulpje_shared::shard_state::ShardState;
 use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Hello, Ready};
@@ -20,9 +20,31 @@ pub(crate) const SHARD_REPORTER_EVENTS: EventTypeFlags = EventTypeFlags::from_bi
         | EventTypeFlags::RESUMED.bits(),
 );
 
+#[derive(Debug)]
+pub(crate) enum ReporterEvent {
+    Event(Event),
+    GatewayHeartbeatAck(Event, Latency),
+}
+
+impl ReporterEvent {
+    pub(crate) fn from_event(event: Event, latency: &Latency) -> Self {
+        match event {
+            Event::GatewayHeartbeatAck => {
+                ReporterEvent::GatewayHeartbeatAck(event, latency.clone())
+            }
+            evt => ReporterEvent::Event(evt),
+        }
+    }
+    fn kind(&self) -> EventType {
+        match self {
+            Self::Event(evt) | Self::GatewayHeartbeatAck(evt, _) => evt.kind(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub(crate) struct ShardReporterHandle {
-    sender: mpsc::Sender<(Event, Latency)>,
+    sender: mpsc::Sender<ReporterEvent>,
     shutdown: CancellationToken,
 }
 impl ShardReporterHandle {
@@ -39,11 +61,10 @@ impl ShardReporterHandle {
 
     pub(crate) fn try_send(
         &self,
-        event: Event,
-        latency: Latency,
-    ) -> Result<(), Box<mpsc::error::TrySendError<(Event, Latency)>>> {
-        if SHARD_REPORTER_EVENTS.contains(event.kind().into()) {
-            Ok(self.sender.try_send((event, latency))?)
+        msg: ReporterEvent,
+    ) -> Result<(), Box<mpsc::error::TrySendError<ReporterEvent>>> {
+        if SHARD_REPORTER_EVENTS.contains(msg.kind().into()) {
+            Ok(self.sender.try_send(msg)?)
         } else {
             Ok(())
         }
@@ -58,7 +79,7 @@ pub struct ShardReporter {
     redis: RedisConnectionManager,
     guild_ids: HashSet<u64>,
     shard: ShardState,
-    receiver: mpsc::Receiver<(Event, Latency)>,
+    receiver: mpsc::Receiver<ReporterEvent>,
     shutdown: CancellationToken,
 }
 
@@ -66,7 +87,7 @@ impl ShardReporter {
     pub fn new(
         redis: RedisConnectionManager,
         shard_id: u32,
-        receiver: mpsc::Receiver<(Event, Latency)>,
+        receiver: mpsc::Receiver<ReporterEvent>,
         shutdown: CancellationToken,
     ) -> Self {
         Self {
@@ -83,11 +104,11 @@ impl ShardReporter {
         loop {
             tokio::select! {
                 msg = self.receiver.recv() => {
-                    let Some((evt, latency)) = &msg else {
+                    let Some(evt) = &msg else {
                         break;
                     };
 
-                    if let Err(err) = self.handle_event(evt, latency).await {
+                    if let Err(err) = self.handle_event(evt).await {
                         tracing::warn!(?evt, ?err, "error handling event")
                     };
                 },
@@ -99,18 +120,19 @@ impl ShardReporter {
 
     async fn handle_event(
         &mut self,
-        event: &Event,
-        latency: &Latency,
+        evt: &ReporterEvent,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        match event {
-            Event::GatewayHello(hello) => self.helloed(hello).await,
-            Event::Ready(info) => self.readied(info).await,
-            Event::GuildCreate(created) => self.guild_created(created).await,
-            Event::GuildDelete(deleted) => self.guild_deleted(deleted).await,
-            Event::Resumed => self.resumed().await,
-            Event::GatewayClose(_) => self.socket_closed().await,
-            Event::GatewayHeartbeatAck => self.heartbeated(latency).await,
-            _ => Ok(()),
+        match evt {
+            ReporterEvent::Event(evt) => match evt {
+                Event::GatewayHello(hello) => self.helloed(hello).await,
+                Event::Ready(info) => self.readied(info).await,
+                Event::GuildCreate(created) => self.guild_created(created).await,
+                Event::GuildDelete(deleted) => self.guild_deleted(deleted).await,
+                Event::Resumed => self.resumed().await,
+                Event::GatewayClose(_) => self.socket_closed().await,
+                _ => Ok(()),
+            },
+            ReporterEvent::GatewayHeartbeatAck(_evt, latency) => self.heartbeated(latency).await,
         }
     }
 
