@@ -153,11 +153,18 @@ async fn main() {
         }
     });
 
-    main_handle.await.expect("error joining main_handle");
+    if let Err(err) = main_handle.await {
+        tracing::error!("error joining main_handle: {err}");
+    }
     shard_mgr_handle.shutdown();
-    shard_mgr_join.await.expect("error joining ShardManager");
+    if let Err(err) = shard_mgr_join.await {
+        tracing::error!("error joining shard manager: {err}");
+    }
+
     amqp.shutdown();
-    amqp.join().await.expect("error joining amqp");
+    if let Err(err) = amqp.join().await {
+        tracing::error!("error joining amqp handle: {err}");
+    }
 }
 
 fn create_presence() -> UpdatePresencePayload {
