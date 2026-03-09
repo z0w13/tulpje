@@ -16,7 +16,22 @@ pub struct CommandHandler<T: Clone + Send + Sync> {
 
 impl<T: Clone + Send + Sync> CommandHandler<T> {
     pub async fn run(&self, ctx: CommandContext<T>) -> Result<(), Error> {
-        // can add more handling/parsing/etc here in the future
-        (self.func)(ctx).await
+        // TODO: More elegant way of handling command errors
+        if let Err(err) = (self.func)(ctx.clone()).await {
+            tracing::info!(
+                "error during command {}, sending to client ephemerally",
+                self.name
+            );
+            // TODO: Keep internal state of whether we deferred, etc. so we can
+            //       avoid doing this and ignoring the error
+            if let Err(err) = ctx.defer_ephemeral().await {
+                tracing::warn!("error on defer_ephemeral, can probably be ignored: {err}");
+            }
+            ctx.update(format!("{err}")).await?;
+
+            return Err(err);
+        }
+
+        Ok(())
     }
 }
