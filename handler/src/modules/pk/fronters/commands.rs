@@ -8,7 +8,7 @@ use twilight_model::channel::permission_overwrite::{PermissionOverwrite, Permiss
 use twilight_model::channel::{Channel, ChannelType};
 use twilight_model::guild::{Guild, Permissions};
 use twilight_model::id::Id;
-use twilight_model::id::marker::{ChannelMarker, GuildMarker};
+use twilight_model::id::marker::{ChannelMarker, GenericMarker, GuildMarker};
 
 use tulpje_framework::Error;
 
@@ -87,6 +87,9 @@ pub(crate) async fn update_fronter_channels(
     gs: &ModPkGuildRow,
     cat: Channel,
 ) -> Result<(), Error> {
+    // get the bot's user id
+    let user_id = client.current_user().await?.model().await?.id;
+
     let fronter_channels = get_fronter_channels(client, guild.id, cat.id).await?;
     let desired_fronters = get_desired_fronters(
         &PkId(gs.system_id.clone()),
@@ -149,12 +152,20 @@ pub(crate) async fn update_fronter_channels(
             .get(fronter)
             .expect("couldn't get position for fronter, this should never happen!");
 
-        let permissions = vec![PermissionOverwrite {
-            deny: Permissions::CONNECT,
-            allow: Permissions::empty(),
-            id: guild.id.cast(),
-            kind: PermissionOverwriteType::Role,
-        }];
+        let permissions = vec![
+            PermissionOverwrite {
+                deny: Permissions::CONNECT,
+                allow: Permissions::empty(),
+                id: guild.id.cast(),
+                kind: PermissionOverwriteType::Role,
+            },
+            PermissionOverwrite {
+                allow: Permissions::CONNECT,
+                deny: Permissions::empty(),
+                id: user_id.cast::<GenericMarker>(),
+                kind: PermissionOverwriteType::Member,
+            },
+        ];
 
         let channel = match client
             .create_guild_channel(guild.id, fronter)
@@ -261,12 +272,24 @@ async fn create_or_get_fronter_channel(
         return Ok(fronters_category);
     }
 
-    let permissions = vec![PermissionOverwrite {
-        deny: Permissions::VIEW_CHANNEL,
-        allow: Permissions::empty(),
-        id: guild.id.cast(),
-        kind: PermissionOverwriteType::Role,
-    }];
+    // get the bot's user id
+    let user_id = client.current_user().await?.model().await?.id;
+
+    // define permissions
+    let permissions = vec![
+        PermissionOverwrite {
+            deny: Permissions::VIEW_CHANNEL,
+            allow: Permissions::empty(),
+            id: guild.id.cast(),
+            kind: PermissionOverwriteType::Role,
+        },
+        PermissionOverwrite {
+            allow: Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL,
+            deny: Permissions::empty(),
+            id: user_id.cast::<GenericMarker>(),
+            kind: PermissionOverwriteType::Member,
+        },
+    ];
 
     Ok(client
         .create_guild_channel(guild.id, &cat_name)
