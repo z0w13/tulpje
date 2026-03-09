@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use pkrs_fork::{client::PkClient, model::PkId};
 use serde_either::StringOrStruct;
-use tracing::error;
+use tracing::{Level, error};
 use twilight_http::Client;
 use twilight_model::channel::permission_overwrite::{PermissionOverwrite, PermissionOverwriteType};
 use twilight_model::channel::{Channel, ChannelType};
@@ -79,6 +79,42 @@ async fn get_fronter_category(
         }))
 }
 
+/// output additional debugging information to debug issues with fronter order
+fn debug_fronter_order(
+    guild: &Guild,
+    fronter_channels: &[Channel],
+    desired_fronters: &[String],
+    fronter_pos_map: &HashMap<String, u16>,
+) {
+    tracing::trace!("fronters for '{}' ({})", guild.name, guild.id);
+    tracing::trace!("  fronter_channels");
+    let mut sorted_fronter_channels: Vec<_> = fronter_channels.to_vec();
+    sorted_fronter_channels.sort_by_key(|c| c.position);
+
+    for channel in sorted_fronter_channels {
+        tracing::trace!(
+            "    - channel {} ({}) position {:?}",
+            channel.name.clone().unwrap_or_default(),
+            channel.id,
+            channel.position,
+        );
+    }
+
+    tracing::trace!("  desired_fronters");
+    for (position, fronter) in desired_fronters.iter().enumerate() {
+        tracing::trace!("    - fronter {fronter} position {position}");
+    }
+
+    tracing::trace!("  fronter_pos_map");
+    let mut sorted_fronter_pos_map: Vec<(String, u16)> =
+        fronter_pos_map.clone().into_iter().collect();
+    sorted_fronter_pos_map.sort_by_key(|f| f.1);
+
+    for (fronter, pos) in &sorted_fronter_pos_map {
+        tracing::trace!("    - fronter {fronter} position {pos}");
+    }
+}
+
 // TODO: Instrument why this bitch slow, are we even using discord's cache?
 //       should definitely do that
 pub(crate) async fn update_fronter_channels(
@@ -96,6 +132,7 @@ pub(crate) async fn update_fronter_channels(
         gs.token.clone().unwrap_or_default(),
     )
     .await?;
+
     let current_fronters: HashSet<String> = fronter_channels
         .iter()
         .map(|c| c.name.clone().expect("guild channels have names"))
@@ -117,6 +154,15 @@ pub(crate) async fn update_fronter_channels(
         // WARN: could this result in a panic/error? usize into u16
         .map(|(k, v)| (v.to_owned(), k.try_into().unwrap()))
         .collect();
+
+    if tracing::event_enabled!(Level::TRACE) {
+        debug_fronter_order(
+            &guild,
+            &fronter_channels,
+            &desired_fronters,
+            &fronter_pos_map,
+        );
+    }
 
     let desired_fronters_set = HashSet::from_iter(desired_fronters);
     let delete_fronters = current_fronters.difference(&desired_fronters_set);
