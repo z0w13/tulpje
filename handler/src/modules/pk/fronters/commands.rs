@@ -17,7 +17,7 @@ use super::db;
 use crate::context::CommandContext;
 use crate::modules::pk::db::{ModPkGuildRow, get_guild_settings_for_id};
 
-async fn get_desired_fronters(system: &PkId, token: String) -> Result<HashSet<String>, Error> {
+async fn get_desired_fronters(system: &PkId, token: String) -> Result<Vec<String>, Error> {
     let pk = PkClient {
         token,
         ..Default::default()
@@ -118,8 +118,9 @@ pub(crate) async fn update_fronter_channels(
         .map(|(k, v)| (v.to_owned(), k.try_into().unwrap()))
         .collect();
 
-    let delete_fronters = current_fronters.difference(&desired_fronters);
-    let create_fronters = desired_fronters.difference(&current_fronters);
+    let desired_fronters_set = HashSet::from_iter(desired_fronters);
+    let delete_fronters = current_fronters.difference(&desired_fronters_set);
+    let create_fronters = desired_fronters_set.difference(&current_fronters);
 
     // TODO: Use something like thiserror to narrow down error types.
     //       that way we can give users better errors and also not just, string join
