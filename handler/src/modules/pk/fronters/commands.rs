@@ -118,6 +118,10 @@ pub(crate) async fn update_fronter_channels(
     let delete_fronters = current_fronters.difference(&desired_fronters);
     let create_fronters = desired_fronters.difference(&current_fronters);
 
+    // TODO: Use something like thiserror to narrow down error types.
+    //       that way we can give users better errors and also not just, string join
+    let mut fronter_errors = Vec::new();
+
     for fronter in delete_fronters {
         #[expect(
             clippy::indexing_slicing,
@@ -125,7 +129,15 @@ pub(crate) async fn update_fronter_channels(
         )]
         let channel = &fronter_channel_map[fronter];
         if let Err(e) = client.delete_channel(channel.id).await {
-            error!("error deleting channel '{}': {}", fronter, e);
+            let err = format!(
+                "error deleting channel '{}' ({}): {}",
+                channel.name.clone().unwrap_or_default(),
+                channel.id,
+                e
+            );
+            error!("{err}");
+            fronter_errors.push(err);
+
             continue;
         }
 
@@ -155,12 +167,18 @@ pub(crate) async fn update_fronter_channels(
             Ok(response) => match response.model().await {
                 Ok(chan) => chan,
                 Err(e) => {
-                    error!("error deserialising fronter channel '{}': {}", fronter, e);
+                    let err = format!("error deserialising new channel for '{fronter}': {e}");
+                    error!("{err}");
+                    fronter_errors.push(err);
+
                     continue;
                 }
             },
             Err(e) => {
-                error!("error creating fronter channel '{}': {}", fronter, e);
+                let err = format!("error creating fronter channel '{fronter}': {e}");
+                error!("{err}");
+                fronter_errors.push(err);
+
                 continue;
             }
         };
@@ -182,9 +200,16 @@ pub(crate) async fn update_fronter_channels(
             .position(u64::from(position))
             .await
         {
-            error!("error moving channel '{}': {}", name, e);
+            let err = format!("error moving channel '{name}': {e}");
+            error!("{err}");
+            fronter_errors.push(err);
+
             continue;
         }
+    }
+
+    if !fronter_errors.is_empty() {
+        return Err(fronter_errors.join("\n").into());
     }
 
     Ok(())
