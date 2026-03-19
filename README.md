@@ -2,6 +2,17 @@
 
 Unnecessarily complicated rewrite of a multi-purpose discord bot
 
+## Public Instance
+Tulpje can be invited to your server using the following link: [Add To Discord](https://discord.com/oauth2/authorize?client_id=1220754275530051605)
+
+### PluralKit Fronters Setup
+*in the server you want to enable it in*
+
+1. `/mod enable module:pluralkit`
+2. `/pk setup system_id:<your system id>`
+3. `/pk fronters setup name:<fronter category name>`
+4. Tadaaa
+
 ## Components
 
 ### Gateway
