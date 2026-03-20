@@ -95,20 +95,73 @@ def version_bump(
     if sem_ver.major == 0:
         if breaking:
             sem_ver = sem_ver.bump_minor()
-        else:
-            sem_ver = sem_ver.bump_patch()
+        elif feature or prerelease is None:
+            sem_ver = sem_ver.next_version("patch")
     else:
         if breaking:
             sem_ver = sem_ver.bump_major()
         elif feature:
             sem_ver = sem_ver.bump_minor()
-        else:
-            sem_ver = sem_ver.bump_patch()
+        elif prerelease is None:
+            sem_ver = sem_ver.next_version("patch")
 
     if prerelease is None:
         return sem_ver
     else:
-        return sem_ver.bump_prerelease(prerelease)
+        # if there's a different prerelease token strip the existing one
+        if (
+            sem_ver.prerelease is not None
+            and sem_ver.prerelease.rsplit(".", 1)[0] != prerelease
+        ):
+            sem_ver = sem_ver.replace(prerelease=None)
+        return sem_ver.bump_prerelease(token=prerelease)
+
+
+# TODO: Actual unit testing
+def test_bump_version():
+    matrix = [
+        # breaking bumps minor if 0.x, major if 1.x
+        ("0.1.0", "0.2.0", False, True, None),
+        ("1.0.0", "2.0.0", False, True, None),
+        # feature bumps patch if 0.x, minor if 1.x
+        ("0.1.0", "0.1.1", True, False, None),
+        ("1.0.0", "1.1.0", True, False, None),
+        # regular always bumps patch
+        ("0.1.0", "0.1.1", False, False, None),
+        ("1.0.0", "1.0.1", False, False, None),
+        # normal -> prerelease bumps relevant parts and adds prerelease
+        ("0.1.0", "0.1.0-beta.1", False, False, "beta"),
+        ("0.1.0", "0.1.1-beta.1", True, False, "beta"),
+        ("0.1.0", "0.2.0-beta.1", False, True, "beta"),
+        ("1.0.0", "1.0.0-beta.1", False, False, "beta"),
+        ("1.0.0", "1.1.0-beta.1", True, False, "beta"),
+        ("1.0.0", "2.0.0-beta.1", False, True, "beta"),
+        # prerelease -> prerelease without feature or breaking only bumps prerelease tag
+        ("0.1.0-beta.1", "0.1.0-beta.2", False, False, "beta"),
+        # prerelease -> different prerelease without feature or breaking only changes prerelease tag
+        ("0.1.0-beta.1", "0.1.0-rc.1", False, False, "rc"),
+        # prerelease to normal only removes prerelease tag
+        ("0.1.0-beta.1", "0.1.0", False, False, None),
+    ]
+
+    for in_str, out_str, feature, breaking, prerelease in matrix:
+        in_ver = Version.parse(in_str)
+        expect_ver = Version.parse(out_str)
+        result_ver = version_bump(in_ver, feature, breaking, prerelease)
+        if result_ver != expect_ver:
+            print(
+                "FAIL",
+                dict(
+                    input=in_str,
+                    expected=out_str,
+                    result=str(result_ver),
+                    feature=feature,
+                    breaking=breaking,
+                    prerelease=prerelease,
+                ),
+            )
+        else:
+            print("PASS")
 
 
 class CrateInfo(NamedTuple):
