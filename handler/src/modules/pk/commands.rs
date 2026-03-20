@@ -17,7 +17,6 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
 
     let user_id = ctx.event.author_id().ok_or("no author?")?;
     let system_id = ctx.get_arg_string("system_id")?;
-    let token = ctx.get_arg_string_optional("token")?;
 
     debug!(
         guild_id = guild.id.get(),
@@ -34,17 +33,9 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     }
 
-    db::save_guild_settings(
-        &ctx.services.db,
-        guild.id,
-        user_id,
-        &system_id,
-        token.clone(),
-    )
-    .await?;
+    db::save_guild_settings(&ctx.services.db, guild.id, user_id, &system_id).await?;
 
     let pk = PkClient {
-        token: token.unwrap_or_default(),
         ..Default::default()
     };
 

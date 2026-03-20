@@ -17,11 +17,8 @@ use super::db;
 use crate::context::CommandContext;
 use crate::modules::pk::db::{ModPkGuildRow, get_guild_settings_for_id};
 
-async fn get_desired_fronters(system: &PkId, token: String) -> Result<Vec<String>, Error> {
-    let pk = PkClient {
-        token,
-        ..Default::default()
-    };
+async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
+    let pk = PkClient::default();
 
     let fronters = pk
         .get_system_fronters(system)
@@ -127,11 +124,7 @@ pub(crate) async fn update_fronter_channels(
     let user_id = client.current_user().await?.model().await?.id;
 
     let fronter_channels = get_fronter_channels(client, guild.id, cat.id).await?;
-    let desired_fronters = get_desired_fronters(
-        &PkId(gs.system_id.clone()),
-        gs.token.clone().unwrap_or_default(),
-    )
-    .await?;
+    let desired_fronters = get_desired_fronters(&PkId(gs.system_id.clone())).await?;
 
     let current_fronters: HashSet<String> = fronter_channels
         .iter()
