@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pk_system_fronters (system_uuid, fronters, updated_at) VALUES ($1, $2, $3) ON CONFLICT (system_uuid) DO UPDATE SET fronters = $2, updated_at = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb",
+        "Timestamp"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2e2b9165fd34284c7705fe55772d3c09392550856d54efb449137b1578e4d720"
+}

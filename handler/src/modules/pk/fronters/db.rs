@@ -1,17 +1,23 @@
+use std::collections::HashSet;
+
+use sqlx::prelude::FromRow;
 use twilight_model::id::{
     Id,
     marker::{ChannelMarker, GuildMarker},
 };
 
 use tulpje_framework::Error;
+use uuid::Uuid;
 
 use crate::db::DbId;
 
+#[expect(dead_code, reason = "reflects db structure, keep intact")]
 pub(crate) struct ModPkFrontersRow {
     pub(crate) guild_id: DbId<GuildMarker>,
     pub(crate) category_id: DbId<ChannelMarker>,
 }
 
+#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn get_fronter_categories(
     db: &sqlx::PgPool,
 ) -> Result<Vec<ModPkFrontersRow>, Error> {
@@ -33,7 +39,7 @@ pub(crate) async fn get_fronter_categories(
 pub(crate) async fn get_fronter_category(
     db: &sqlx::PgPool,
     guild_id: Id<GuildMarker>,
-) -> Result<Option<u64>, Error> {
+) -> Result<Option<DbId<ChannelMarker>>, Error> {
     let result = sqlx::query_scalar!(
         "SELECT category_id FROM pk_fronters WHERE guild_id = $1",
         i64::from(DbId(guild_id)),
@@ -41,10 +47,7 @@ pub(crate) async fn get_fronter_category(
     .fetch_optional(db)
     .await?;
 
-    match result {
-        Some(cat_id) => Ok(Some(cat_id.try_into()?)),
-        None => Ok(None),
-    }
+    Ok(result.map(Into::into))
 }
 
 pub(crate) async fn save_fronter_category(
@@ -73,4 +76,57 @@ pub(crate) async fn get_system_count(db: &sqlx::PgPool) -> Result<usize, Error> 
         .await?;
 
     Ok(system_count.unwrap_or(0) as usize)
+}
+
+#[derive(Debug, FromRow)]
+#[expect(dead_code, reason = "reflects db structure, keep intact")]
+pub(crate) struct ModPkSystemFronters {
+    pub(crate) system_uuid: Uuid,
+    pub(crate) fronters: sqlx::types::Json<Vec<Uuid>>,
+    pub(crate) updated_at: chrono::NaiveDateTime,
+}
+
+pub(crate) async fn did_fronters_change(
+    db: &sqlx::PgPool,
+    system_uuid: Uuid,
+    new_fronters: &[Uuid],
+) -> Result<bool, Error> {
+    let Some(saved_front) = get_fronters(db, system_uuid).await? else {
+        return Ok(true);
+    };
+
+    let saved_fronters: HashSet<&Uuid> = saved_front.fronters.iter().collect();
+    let new_fronters: HashSet<&Uuid> = new_fronters.iter().collect();
+
+    Ok(saved_fronters != new_fronters)
+}
+
+pub(crate) async fn get_fronters(
+    db: &sqlx::PgPool,
+    system_uuid: Uuid,
+) -> Result<Option<ModPkSystemFronters>, Error> {
+    Ok(sqlx::query_as!(
+        ModPkSystemFronters,
+        r#"SELECT system_uuid, fronters as "fronters: sqlx::types::Json<Vec<Uuid>>", updated_at FROM pk_system_fronters WHERE system_uuid = $1"#,
+        system_uuid
+    )
+    .fetch_optional(db)
+    .await?)
+}
+
+pub(crate) async fn update_fronters(
+    db: &sqlx::PgPool,
+    system_uuid: Uuid,
+    fronters: &[Uuid],
+) -> Result<(), Error> {
+    sqlx::query!(
+        "INSERT INTO pk_system_fronters (system_uuid, fronters, updated_at) VALUES ($1, $2, $3) ON CONFLICT (system_uuid) DO UPDATE SET fronters = $2, updated_at = $3",
+        system_uuid,
+        sqlx::types::Json(fronters) as _,
+        chrono::Utc::now().naive_utc(),
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
 }

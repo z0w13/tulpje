@@ -326,3 +326,9 @@ pub struct GuildResource<T> {
     guild_id: Id<GuildMarker>,
     value: T,
 }
+
+impl<T> GuildResource<T> {
+    pub fn inner(self) -> T {
+        self.value
+    }
+}

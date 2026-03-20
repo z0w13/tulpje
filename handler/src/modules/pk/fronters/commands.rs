@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
+use pkrs_fork::model::Member;
 use pkrs_fork::{client::PkClient, model::PkId};
 use serde_either::StringOrStruct;
 use tracing::{Level, error};
@@ -119,12 +120,17 @@ pub(crate) async fn update_fronter_channels(
     guild: Guild,
     gs: &ModPkGuildRow,
     cat: Channel,
+    members: Option<&[Member]>,
 ) -> Result<(), Error> {
     // get the bot's user id
     let user_id = client.current_user().await?.model().await?.id;
 
     let fronter_channels = get_fronter_channels(client, guild.id, cat.id).await?;
-    let desired_fronters = get_desired_fronters(&PkId(gs.system_id.clone())).await?;
+    let desired_fronters = if let Some(members) = members {
+        members.iter().map(get_member_name).collect()
+    } else {
+        get_desired_fronters(&PkId(gs.system_id.clone())).await?
+    };
 
     let current_fronters: HashSet<String> = fronter_channels
         .iter()
@@ -285,17 +291,12 @@ pub(crate) async fn update_fronters(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
-    let cat = ctx
-        .client()
-        .channel(Id::<ChannelMarker>::new(cat_id))
-        .await?
-        .model()
-        .await?;
+    let cat = ctx.client().channel(*cat_id).await?.model().await?;
 
     cat.guild_id
         .ok_or_else(|| format!("channel {} isn't a guild channel", cat_id))?;
 
-    update_fronter_channels(&ctx.client(), guild, &gs, cat).await?;
+    update_fronter_channels(&ctx.client(), guild, &gs, cat, None).await?;
 
     ctx.update("fronter list updated!").await?;
     Ok(())

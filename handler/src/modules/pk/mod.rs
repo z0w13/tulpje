@@ -14,6 +14,7 @@ use crate::context::Services;
 pub mod commands;
 pub mod db;
 pub mod fronters;
+pub mod notify;
 pub mod roles;
 pub mod util;
 
@@ -52,7 +53,8 @@ pub fn build() -> Module<Services> {
                             SubCommandBuilder::new("update", "manually update fronter channels")
                                 .handler(handler_func!(fronters::commands::update_fronters)),
                         ),
-                ),
+                )
+                .group(notify::commands()),
         )
         // tasks
         .task(

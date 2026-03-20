@@ -35,6 +35,7 @@ twilight-gateway = { version = "0.17.1", default-features = false }
 twilight-http = { version = "0.17.1", default-features = false }
 twilight-model = { version = "0.17.1" }
 twilight-util = { version = "0.17.0" }
+uuid = { version = "1.19.0", features = ["v7", "serde"] }
 
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks

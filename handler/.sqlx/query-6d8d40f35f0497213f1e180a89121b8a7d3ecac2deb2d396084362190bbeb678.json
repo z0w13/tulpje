@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO pk_systems (id, uuid, name) VALUES ($1, $2, $3) ON CONFLICT (uuid) DO UPDATE SET id = $1, name = $3",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6d8d40f35f0497213f1e180a89121b8a7d3ecac2deb2d396084362190bbeb678"
+}

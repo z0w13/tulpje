@@ -71,6 +71,8 @@
               cargo-machete
               cargo-outdated
               cargo-semver-checks
+
+              sqlx-cli
             ];
           };
 

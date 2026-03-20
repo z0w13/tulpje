@@ -24,12 +24,12 @@ tracing-subscriber = { workspace = true }
 twilight-gateway = { workspace = true }
 twilight-http = { workspace = true, features = ["decompression", "rustls-webpki-roots"] }
 twilight-model = { workspace = true }
-twilight-util = { workspace = true, features = ["builder"] }
+twilight-util = { workspace = true, features = ["builder", "permission-calculator"] }
 serde = { workspace = true }
 chrono = { workspace = true }
 num-format = "0.4.4"
 regex = "1.12.2"
-sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "chrono", "json", "macros", "migrate"] }
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "chrono", "json", "macros", "migrate", "uuid"] }
 reqwest = { workspace = true, features = ["rustls", "charset", "http2"] }
 base64 = "0.22.1"
 pkrs-fork = { version = "0.5.0", default-features = false, features = ["reqwest-client", "rustls-tls"] }
@@ -39,6 +39,7 @@ metrics-exporter-prometheus = { workspace = true }
 redis = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
 figment_file_provider_adapter = "0.1.1"
+uuid = { version = "1.19.0", features = ["v7", "serde"] }
 
 [lints]
 workspace = true

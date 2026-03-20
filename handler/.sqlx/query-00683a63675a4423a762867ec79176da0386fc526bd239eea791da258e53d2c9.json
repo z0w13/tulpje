@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT guild_id FROM emoji_uses",
+  "query": "SELECT guild_id FROM pk_notify_systems WHERE system_uuid = $1",
   "describe": {
     "columns": [
       {
@@ -10,11 +10,13 @@
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "Uuid"
+      ]
     },
     "nullable": [
       false
     ]
   },
-  "hash": "2a3cb02a6fc39eafaa4a7ece5303c66e5e254580c8368f822862ca0c8f4adb78"
+  "hash": "00683a63675a4423a762867ec79176da0386fc526bd239eea791da258e53d2c9"
 }

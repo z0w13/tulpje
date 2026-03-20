@@ -1,44 +1,271 @@
-use tracing::{error, info, warn};
+use std::{collections::HashSet, slice, sync::Arc};
+
+use chrono::{DateTime, NaiveDateTime};
+use pkrs_fork::{
+    client::PkClient,
+    model::{Member, PkId},
+};
+use serde_either::StringOrStruct;
 use twilight_http::Client;
-
-use tulpje_framework::Error;
-
-use self::pk::db::ModPkGuildRow;
-use super::db::ModPkFrontersRow;
-use crate::{
-    context::TaskContext,
-    modules::{core, pk},
+use twilight_model::{
+    channel::message::Embed,
+    id::{
+        Id,
+        marker::{ChannelMarker, GuildMarker},
+    },
+    util::Timestamp,
 };
 
-pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
-    let fronter_cats = super::db::get_fronter_categories(&ctx.services.db).await?;
-    let guild_settings = pk::db::get_guild_settings(&ctx.services.db).await?;
-    let pk_guilds = core::db::guilds_with_module(&ctx.services.db, "pluralkit").await?;
+use tulpje_framework::Error;
+use twilight_util::builder::embed::EmbedBuilder;
 
-    for cat in fronter_cats {
-        if !pk_guilds.contains(&cat.guild_id) {
+use self::pk::db::ModPkGuildRow;
+use crate::{
+    context::TaskContext,
+    modules::{
+        core,
+        pk::{
+            self,
+            db::ModPkSystem,
+            fronters::db,
+            notify::db::{self as notify_db, get_notify_channel},
+            util::get_member_name,
+        },
+    },
+};
+
+enum FrontChange {
+    Unchanged,
+    Changed(Switch),
+}
+
+struct Switch {
+    pub(crate) fronters: Vec<Member>,
+    pub(crate) timestamp: NaiveDateTime,
+}
+
+async fn update_system_fronters(
+    db: &sqlx::PgPool,
+    system: &ModPkSystem,
+    client: &PkClient,
+) -> Result<FrontChange, Error> {
+    let current_front = client
+        .get_system_fronters(&PkId(system.uuid.to_string()))
+        .await?;
+    let mut fronters = Vec::<Member>::new();
+    for member in current_front.members {
+        match member {
+            StringOrStruct::String(_) => Err(format!(
+                "system {} returned uuids instead of member structs",
+                system.uuid
+            ))?,
+            StringOrStruct::Struct(member) => fronters.push(member),
+        };
+    }
+
+    let fronter_uuids: Vec<_> = fronters.iter().map(|m| m.uuid).collect();
+
+    if db::did_fronters_change(db, system.uuid, &fronter_uuids).await? {
+        db::update_fronters(db, system.uuid, &fronter_uuids).await?;
+        return Ok(FrontChange::Changed(Switch {
+            fronters,
+            timestamp: DateTime::from_timestamp(
+                current_front.timestamp.to_utc().unix_timestamp(),
+                0,
+            )
+            .ok_or_else(|| {
+                format!(
+                    "timestamp out of range: {}",
+                    current_front.timestamp.to_utc().unix_timestamp()
+                )
+            })?
+            .naive_utc(),
+        }));
+    }
+
+    Ok(FrontChange::Unchanged)
+}
+
+async fn update_fronter_category(
+    db: &sqlx::PgPool,
+    discord_client: &Arc<Client>,
+    enabled_guilds: &HashSet<Id<GuildMarker>>,
+    system: &ModPkSystem,
+    switch: &Switch,
+) -> Result<(), Error> {
+    let Some(guild_settings) = pk::db::get_guild_settings_for_system(db, &system.id).await? else {
+        tracing::debug!(
+            method = "update_fronter_category",
+            "no guild with system {}, skipping",
+            system.id
+        );
+        return Ok(());
+    };
+
+    if !enabled_guilds.contains(&guild_settings.guild_id) {
+        tracing::debug!(
+            method = "update_fronter_category",
+            "Guild {} has pk module disabled, skipping",
+            guild_settings.guild_id
+        );
+        return Ok(());
+    }
+
+    let Some(category_id) = db::get_fronter_category(db, *guild_settings.guild_id).await? else {
+        tracing::debug!(
+            method = "update_fronter_category",
+            "no fronter category configured for guild {}, skipping",
+            guild_settings.guild_id
+        );
+        return Ok(());
+    };
+
+    if let Err(err) = update_fronters_for_guild(
+        discord_client,
+        &guild_settings,
+        *category_id,
+        &switch.fronters,
+    )
+    .await
+    {
+        tracing::error!(
+            method = "update_fronter_category",
+            guild_id = ?guild_settings.guild_id,
+            category_id = ?category_id,
+            err
+        );
+    }
+    Ok(())
+}
+
+const MAX_FRONTERS_IN_MESSAGE: usize = 20;
+// TODO: Components V2
+fn create_front_change_embed(system: &ModPkSystem, switch: &Switch) -> Result<Embed, Error> {
+    let builder = EmbedBuilder::new().title(format!(
+        "Switch: {}",
+        system.name.as_ref().unwrap_or(&system.id)
+    ));
+
+    let mut embed_parts = Vec::new();
+    for member in switch.fronters.iter().take(MAX_FRONTERS_IN_MESSAGE) {
+        embed_parts.push(format!("* {}", get_member_name(member)));
+    }
+
+    if switch.fronters.len() > MAX_FRONTERS_IN_MESSAGE {
+        embed_parts.push(format!(
+            "-# and {} more",
+            switch.fronters.len() - MAX_FRONTERS_IN_MESSAGE
+        ));
+    }
+
+    Ok(builder
+        .description(embed_parts.join("\n"))
+        .timestamp(Timestamp::from_secs(
+            switch.timestamp.and_utc().timestamp(),
+        )?)
+        .validate()?
+        .build())
+}
+
+async fn notify_front_change(
+    db: &sqlx::PgPool,
+    discord_client: &Arc<Client>,
+    enabled_guilds: &HashSet<Id<GuildMarker>>,
+    system: &ModPkSystem,
+    switch: &Switch,
+) -> Result<(), Error> {
+    let embed = create_front_change_embed(system, switch)?;
+
+    let guilds = notify_db::get_notify_guilds_for_system(db, system.uuid).await?;
+    tracing::debug!(
+        method = "notify_front_change",
+        "notifying {} guilds of front change in {}",
+        guilds.len(),
+        system.id
+    );
+    for guild_id in guilds {
+        tracing::debug!(
+            method = "notify_front_change",
+            "notifying guild {} of front change in {}",
+            guild_id,
+            system.id
+        );
+        if !enabled_guilds.contains(&guild_id) {
             tracing::debug!(
-                "skipping guild {}, it doesn't have the pluralkit module enabled",
-                cat.guild_id
+                method = "notify_front_change",
+                "not notifying guild {} of front change in {} pk module is disabled",
+                guild_id,
+                system.uuid
             );
             continue;
         }
 
-        let cur_guild_settings = guild_settings.iter().find(|gs| gs.guild_id == cat.guild_id);
-
-        if let Some(gs) = cur_guild_settings {
-            if let Err(err) = update_fronters_for_guild(&ctx.client, gs, &cat).await {
-                error!(
-                    guild_id = ?cat.guild_id,
-                    category_id = ?cat.category_id,
-                    err
-                );
-            }
-        } else {
-            warn!(
-                guild_id = ?cat.guild_id,
-                "couldn't find guild settings for guild"
+        let Some(channel_id) = get_notify_channel(db, *guild_id).await? else {
+            tracing::warn!(
+                method = "notify_front_change",
+                "no notify channel configured for guild {} despite it having tracked systems",
+                guild_id,
             );
+            continue;
+        };
+
+        if let Err(err) = discord_client
+            .create_message(*channel_id)
+            .embeds(slice::from_ref(&embed))
+            .await
+        {
+            tracing::warn!(
+                method = "notify_front_change",
+                "error sending front change notification to guild {} channel {}: {}",
+                guild_id,
+                channel_id,
+                err
+            );
+        }
+    }
+    Ok(())
+}
+
+async fn process_system(
+    db: &sqlx::PgPool,
+    pk_client: &PkClient,
+    discord_client: &Arc<Client>,
+    enabled_guilds: &HashSet<Id<GuildMarker>>,
+    system: &ModPkSystem,
+) -> Result<(), Error> {
+    let changed = update_system_fronters(db, system, pk_client).await?;
+    match changed {
+        FrontChange::Changed(switch) => {
+            update_fronter_category(db, discord_client, enabled_guilds, system, &switch).await?;
+            notify_front_change(db, discord_client, enabled_guilds, system, &switch).await?;
+        }
+        FrontChange::Unchanged => {}
+    }
+    Ok(())
+}
+
+pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
+    // TODO: Filter on last updated
+    // TODO: Staggered updates
+    let tracked_systems = pk::db::get_all_systems(&ctx.services.db).await?;
+    let pk_client = PkClient::default();
+    let pk_guilds: HashSet<Id<GuildMarker>> =
+        core::db::guilds_with_module(&ctx.services.db, "pluralkit")
+            .await?
+            .into_iter()
+            .collect();
+
+    for system in &tracked_systems {
+        if let Err(err) = process_system(
+            &ctx.services.db,
+            &pk_client,
+            &ctx.client,
+            &pk_guilds,
+            system,
+        )
+        .await
+        {
+            tracing::warn!("error updating system with uuid {}, {}", system.uuid, err);
         }
     }
 
@@ -47,13 +274,18 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
 
 async fn update_fronters_for_guild(
     client: &Client,
-    gs: &ModPkGuildRow,
-    cat: &ModPkFrontersRow,
+    guild_settings: &ModPkGuildRow,
+    category_id: Id<ChannelMarker>,
+    members: &[Member],
 ) -> Result<(), Error> {
-    let guild = client.guild(cat.guild_id.0).await?.model().await?;
+    let guild = client
+        .guild(*guild_settings.guild_id)
+        .await?
+        .model()
+        .await?;
 
-    let cat = client
-        .channel(cat.category_id.0)
+    let category = client
+        .channel(category_id)
         .await
         .map_err(|err| {
             format!(
@@ -64,23 +296,29 @@ async fn update_fronters_for_guild(
         .model()
         .await?;
 
-    cat.guild_id.ok_or_else(|| {
+    category.guild_id.ok_or_else(|| {
         format!(
             "channel {} for guild '{}' ({}) isn't a guild channel",
-            cat.id, guild.name, guild.id
+            category.id, guild.name, guild.id
         )
     })?;
 
-    super::commands::update_fronter_channels(client, guild.clone(), gs, cat)
-        .await
-        .map_err(|err| {
-            format!(
-                "error updating fronters for {} ({}): {}",
-                guild.name, guild.id, err
-            )
-        })?;
+    super::commands::update_fronter_channels(
+        client,
+        guild.clone(),
+        guild_settings,
+        category,
+        Some(members),
+    )
+    .await
+    .map_err(|err| {
+        format!(
+            "error updating fronters for {} ({}): {}",
+            guild.name, guild.id, err
+        )
+    })?;
 
-    info!(
+    tracing::info!(
         guild.id = guild.id.get(),
         guild.name = guild.name,
         "fronters updated"

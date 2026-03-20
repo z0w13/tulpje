@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT system_uuid, fronters as \"fronters: sqlx::types::Json<Vec<Uuid>>\", updated_at FROM pk_system_fronters WHERE system_uuid = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "system_uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "fronters: sqlx::types::Json<Vec<Uuid>>",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 2,
+        "name": "updated_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ab394fe4b4b2f78b9af33148b9fb86a26678f381f89a8d02ebc772d8616b3e40"
+}

@@ -20,7 +20,7 @@ tracing = { workspace = true }
 async-cron-scheduler = { version = "2.0.1", features = ["logging"] }
 chrono = { workspace = true }
 tokio = { workspace = true }
-uuid = { version = "1.19.0", features = ["v7", "serde"] }
+uuid = { workspace = true }
 tokio-util = { workspace = true, features = ["rt"] }
 serde = { workspace = true }
 
