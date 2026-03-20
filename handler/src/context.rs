@@ -16,7 +16,7 @@ pub struct Services {
     pub db: sqlx::PgPool,
     // NOTE: Cloning Registry would be very expensive and clones all the internal
     //       HashMaps, etc. so we should wrap it in an Arc
-    pub registry: Arc<Registry<Services>>,
+    pub registry: Arc<Registry<Self>>,
 }
 
 pub type ComponentInteractionContext = context::ComponentInteractionContext<Services>;
