@@ -46,7 +46,7 @@
           # create the toolchain from `rust-toolchain.toml`
           toolchain = inputs.fenix.packages.${system}.fromToolchainFile {
             file = ./rust-toolchain.toml;
-            sha256 = "sha256-2eWc3xVTKqg5wKSHGwt1XoM/kUBC6y3MWfKg74Zn+fY=";
+            sha256 = "sha256-qqF33vNuAdU5vua96VKVIwuc43j4EFeEXbjQ6+l4mO4=";
           };
           # initialise crane with custom toolchain
           craneLib = ((inputs.crane.mkLib pkgs).overrideToolchain (_: toolchain));
