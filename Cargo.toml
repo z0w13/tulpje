@@ -39,8 +39,8 @@ twilight-util = { version = "0.17.0" }
 [workspace.lints.clippy]
 # give a reason why it's allowed, thanks
 allow_attributes = "deny"
-# it's recommended to no longer use mod.rs files
-mod_module_files = "deny"
+# using `mod.rs` files gives more clean source layouts so we prefer that
+self_named_module_files = "deny"
 # we like consistency :)
 renamed_function_params = "warn"
 # rust can't always optimise them out so remove them
