@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1] - 2026-03-20
+
+### Added
+
+ - Add brief setup instructions to the README
+
+### Fixed
+
+ - Fix version bumping logic
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(build): fix version bumping logic ([`8288c71`](https://github.com/z0w13/tulpje/commit/8288c71c22b406cebd8e301e24b06fe30c8a41c9))
+ * chore: add brief setup instructions to the README ([`9710e5f`](https://github.com/z0w13/tulpje/commit/9710e5f146cab6a79c28bf08793ad1392b4247b7))
+</details>
+
 ## [0.19.0] - 2025-11-15
 
 ### Added

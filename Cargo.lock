@@ -1927,7 +1927,7 @@ dependencies = [
 
 [[package]]
 name = "reconnecting-amqp"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "amqprs",
  "async-trait",
@@ -3090,7 +3090,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "tulpje-cache"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "redis",
  "serde",
@@ -3101,7 +3101,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-framework"
-version = "0.15.0"
+version = "0.15.1"
 dependencies = [
  "async-cron-scheduler",
  "chrono",
@@ -3119,7 +3119,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.19.1-beta.2"
+version = "0.19.1"
 dependencies = [
  "figment",
  "figment_file_provider_adapter",
@@ -3143,7 +3143,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.19.1-beta.2"
+version = "0.19.1"
 dependencies = [
  "base64",
  "chrono",
@@ -3177,7 +3177,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.19.1-beta.2"
+version = "0.19.1"
 dependencies = [
  "rustls",
  "tokio",
@@ -3186,7 +3186,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.19.1-beta.2"
+version = "0.19.1"
 dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
@@ -3202,7 +3202,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.19.1-beta.2"
+version = "0.19.1"
 dependencies = [
  "reqwest 0.13.1",
 ]

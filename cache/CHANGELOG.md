@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-03-20
+
+### Changed
+
+ - Update `twilight-cache-inmemory`, `twilight-gateway`, `twilight-http` and `twilight-model` from 0.17.0 to 0.17.1
+ - Make `serde` and `serde_json` workspace dependencies
+
+### Removed
+
+ - Remove catch-all for events, add missing ignored events
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * chore(deps): update `twilight-cache-inmemory`, `twilight-gateway`, `twilight-http` and `twilight-model` from 0.17.0 to 0.17.1 ([`a79d238`](https://github.com/z0w13/tulpje/commit/a79d238af1c8672ec596be73b72f3b2974de3311))
+ * fix(cache): remove catch-all for events, add missing ignored events ([`14a70f5`](https://github.com/z0w13/tulpje/commit/14a70f5b0000754be8d626438369d5bb72572d4f))
+ * chore(deps): make `serde` and `serde_json` workspace dependencies ([`46e7099`](https://github.com/z0w13/tulpje/commit/46e7099adb6eb81d51d7011d42fde7e0fd2f5be6))
+</details>
+
 ## [0.4.0] - 2025-11-15
 
 ### Added

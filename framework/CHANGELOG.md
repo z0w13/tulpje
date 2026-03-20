@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.1] - 2026-03-20
+
+### Changed
+
+ - Send command errors to discord
+ - Make `chrono` a workspace dependency
+ - Make `tracing` and `tracing-subscriber` workspace dependencies
+ - Make `serde` and `serde_json` workspace dependencies
+ - Bump uuid from 1.18.1 to 1.19.0
+ - Bump tracing from 0.1.41 to 0.1.43
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * feat(framework): send command errors to discord ([`8cb2da7`](https://github.com/z0w13/tulpje/commit/8cb2da7285e49e6a95e3b34f45c8d773fea740bd))
+ * chore(deps): make `chrono` a workspace dependency ([`6655349`](https://github.com/z0w13/tulpje/commit/6655349c6920104e65e1aea5d1489bd8a1388867))
+ * chore(deps): make `tracing` and `tracing-subscriber` workspace dependencies ([`62a6950`](https://github.com/z0w13/tulpje/commit/62a6950943e202c33b8ba46e1f8e6122c335801a))
+ * chore(deps): make `serde` and `serde_json` workspace dependencies ([`46e7099`](https://github.com/z0w13/tulpje/commit/46e7099adb6eb81d51d7011d42fde7e0fd2f5be6))
+ * chore(deps): bump uuid from 1.18.1 to 1.19.0 ([`433398e`](https://github.com/z0w13/tulpje/commit/433398e0488af1aab163556512004573f4829c9e))
+ * chore(deps): bump tracing from 0.1.41 to 0.1.43 ([`da00e55`](https://github.com/z0w13/tulpje/commit/da00e5546f4541271d8827c9f7bae8d5d4d449bf))
+</details>
+
 ## [0.15.0-rc.1] - 2025-11-15
 
 ### Changed
