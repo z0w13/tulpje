@@ -141,7 +141,8 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                 ctx.client
                     .update_role(guild.id, *id)
                     .color(Some(*color))
-                    .await?;
+                    .await
+                    .map_err(|err| format!("error updating role {name} ({id}): {err}"))?;
 
                 debug!(
                     guild_id = guild.id.get(),
@@ -155,7 +156,8 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                     .create_role(guild.id)
                     .name(name)
                     .color(*color)
-                    .await?;
+                    .await
+                    .map_err(|err| format!("error creating role {name}: {err}"))?;
 
                 debug!(
                     guild_id = guild.id.get(),
@@ -165,7 +167,10 @@ pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error
                 );
             }
             ChangeOperation::Delete { id, name } => {
-                ctx.client.delete_role(guild.id, *id).await?;
+                ctx.client
+                    .delete_role(guild.id, *id)
+                    .await
+                    .map_err(|err| format!("error deleting role {name} ({id}): {err}"))?;
 
                 debug!(
                     guild_id = guild.id.get(),
