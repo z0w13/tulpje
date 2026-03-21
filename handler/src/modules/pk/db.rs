@@ -115,7 +115,7 @@ pub(crate) async fn get_systems(
 
 pub(crate) async fn get_system(
     db: &sqlx::PgPool,
-    system_ref: SystemRef,
+    system_ref: &SystemRef,
 ) -> Result<Option<ModPkSystem>, Error> {
     match system_ref {
         SystemRef::Id(id) => Ok(sqlx::query_as!(

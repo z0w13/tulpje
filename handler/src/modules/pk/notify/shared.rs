@@ -10,7 +10,7 @@ use crate::modules::pk::{
 
 // TODO: Fetch from DB first, and only fetch from PK if outdated
 pub(super) async fn resolve_system_from_reference(
-    system_ref: SystemRef,
+    system_ref: &SystemRef,
     pk_client: &PkClient,
     db: &sqlx::PgPool,
 ) -> Result<Option<ModPkSystem>, Error> {

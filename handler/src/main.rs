@@ -3,6 +3,7 @@ mod context;
 mod db;
 mod metrics;
 mod modules;
+mod util;
 
 use std::{sync::Arc, time::Duration};
 
