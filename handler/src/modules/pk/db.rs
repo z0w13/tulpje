@@ -8,7 +8,7 @@ use twilight_model::id::{
 use tulpje_framework::Error;
 use uuid::Uuid;
 
-use crate::db::DbId;
+use crate::{db::DbId, modules::pk::fronters::db as fronters_db};
 
 #[derive(Debug)]
 // TODO: tests to confirm this still matches the database structure
@@ -171,6 +171,7 @@ pub(crate) async fn cleanup_system(db: &sqlx::PgPool, system_uuid: Uuid) -> Resu
     .await?;
 
     if system_is_followed.is_none() {
+        fronters_db::delete_fronters(db, system_uuid).await?;
         delete_system(db, SystemRef::Uuid(system_uuid)).await?;
     }
 

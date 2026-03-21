@@ -123,6 +123,17 @@ pub(crate) async fn update_fronters(
     Ok(())
 }
 
+pub(crate) async fn delete_fronters(db: &sqlx::PgPool, system_uuid: Uuid) -> Result<(), Error> {
+    sqlx::query!(
+        "DELETE FROM pk_system_fronters WHERE system_uuid = $1",
+        system_uuid
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
 pub(crate) async fn get_systems_to_update(db: &sqlx::PgPool) -> Result<Vec<ModPkSystem>, Error> {
     // fetch 10 systems that
     //   * haven't had fronters updated for over 10 minutes,
