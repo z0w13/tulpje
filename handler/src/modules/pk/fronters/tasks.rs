@@ -6,6 +6,7 @@ use pkrs_fork::{
     model::{Member, PkId},
 };
 use serde_either::StringOrStruct;
+use tulpje_cache::Cache;
 use twilight_http::Client;
 use twilight_model::{
     channel::message::Embed,
@@ -89,6 +90,7 @@ async fn update_system_fronters(
 async fn update_fronter_category(
     db: &sqlx::PgPool,
     discord_client: &Arc<Client>,
+    cache: &Cache,
     enabled_guilds: &HashSet<Id<GuildMarker>>,
     system: &ModPkSystem,
     switch: &Switch,
@@ -122,6 +124,7 @@ async fn update_fronter_category(
 
     if let Err(err) = update_fronters_for_guild(
         discord_client,
+        cache,
         &guild_settings,
         *category_id,
         &switch.fronters,
@@ -230,13 +233,15 @@ async fn process_system(
     db: &sqlx::PgPool,
     pk_client: &PkClient,
     discord_client: &Arc<Client>,
+    cache: &Cache,
     enabled_guilds: &HashSet<Id<GuildMarker>>,
     system: &ModPkSystem,
 ) -> Result<(), Error> {
     let changed = update_system_fronters(db, system, pk_client).await?;
     match changed {
         FrontChange::Changed(switch) => {
-            update_fronter_category(db, discord_client, enabled_guilds, system, &switch).await?;
+            update_fronter_category(db, discord_client, cache, enabled_guilds, system, &switch)
+                .await?;
             notify_front_change(db, discord_client, enabled_guilds, system, &switch).await?;
         }
         FrontChange::Unchanged => {}
@@ -260,6 +265,7 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
             &ctx.services.db,
             &pk_client,
             &ctx.client,
+            &ctx.services.cache,
             &pk_guilds,
             system,
         )
@@ -274,6 +280,7 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
 
 async fn update_fronters_for_guild(
     client: &Client,
+    cache: &Cache,
     guild_settings: &ModPkGuildRow,
     category_id: Id<ChannelMarker>,
     members: &[Member],
@@ -305,6 +312,7 @@ async fn update_fronters_for_guild(
 
     super::commands::update_fronter_channels(
         client,
+        cache,
         guild.clone(),
         guild_settings,
         category,

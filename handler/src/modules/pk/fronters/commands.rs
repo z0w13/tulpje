@@ -4,6 +4,7 @@ use pkrs_fork::model::Member;
 use pkrs_fork::{client::PkClient, model::PkId};
 use serde_either::StringOrStruct;
 use tracing::{Level, error};
+use tulpje_cache::Cache;
 use twilight_http::Client;
 use twilight_model::channel::permission_overwrite::{PermissionOverwrite, PermissionOverwriteType};
 use twilight_model::channel::{Channel, ChannelType};
@@ -37,19 +38,54 @@ async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
 
 async fn get_fronter_channels(
     client: &Client,
+    cache: &Cache,
     guild: Id<GuildMarker>,
     cat_id: Id<ChannelMarker>,
 ) -> Result<Vec<Channel>, Error> {
-    let channels = client
-        .guild_channels(guild)
-        .await?
-        .models()
-        .await?
-        .into_iter()
-        .filter(|c| c.parent_id.is_some() && c.parent_id.unwrap() == cat_id)
-        .collect();
+    // try fetching channels from cache first
+    let channel_ids = cache.guild_channels.members(&guild).await?;
+    if !channel_ids.is_empty() {
+        let mut channels = Vec::new();
+        for channel_id in channel_ids {
+            // if the channel isn't in the cache log a warning and try to fetch it from discord
+            let channel = if let Some(channel) = cache.channels.get(&channel_id).await? {
+                channel
+            } else {
+                tracing::warn!(
+                    ?channel_id,
+                    "channel in `guild_channels` cache but missing in `channels`, this shouldn't happen"
+                );
+                match client.channel(channel_id).await?.model().await {
+                    Ok(channel) => channel,
+                    Err(err) => {
+                        tracing::warn!(
+                            ?channel_id,
+                            ?err,
+                            "channel in `guild_channels` cache but an error occured when fetching from discord"
+                        );
+                        continue;
+                    }
+                }
+            };
+            if channel
+                .parent_id
+                .is_some_and(|parent_id| parent_id == cat_id)
+            {
+                channels.push(channel);
+            }
+        }
 
-    Ok(channels)
+        Ok(channels)
+    } else {
+        Ok(client
+            .guild_channels(guild)
+            .await?
+            .models()
+            .await?
+            .into_iter()
+            .filter(|c| c.parent_id.is_some_and(|parent_id| parent_id == cat_id))
+            .collect())
+    }
 }
 
 async fn get_fronter_category(
@@ -113,10 +149,9 @@ fn debug_fronter_order(
     }
 }
 
-// TODO: Instrument why this bitch slow, are we even using discord's cache?
-//       should definitely do that
 pub(crate) async fn update_fronter_channels(
     client: &Client,
+    cache: &Cache,
     guild: Guild,
     gs: &ModPkGuildRow,
     cat: Channel,
@@ -125,7 +160,7 @@ pub(crate) async fn update_fronter_channels(
     // get the bot's user id
     let user_id = client.current_user().await?.model().await?.id;
 
-    let fronter_channels = get_fronter_channels(client, guild.id, cat.id).await?;
+    let fronter_channels = get_fronter_channels(client, cache, guild.id, cat.id).await?;
     let desired_fronters = if let Some(members) = members {
         members.iter().map(get_member_name).collect()
     } else {
@@ -296,7 +331,7 @@ pub(crate) async fn update_fronters(ctx: CommandContext) -> Result<(), Error> {
     cat.guild_id
         .ok_or_else(|| format!("channel {} isn't a guild channel", cat_id))?;
 
-    update_fronter_channels(&ctx.client(), guild, &gs, cat, None).await?;
+    update_fronter_channels(&ctx.client(), &ctx.services.cache, guild, &gs, cat, None).await?;
 
     ctx.update("fronter list updated!").await?;
     Ok(())
