@@ -10,6 +10,12 @@ handler: (run-local "nix run .#tulpje-handler")
 run-local +command:
   contrib/run-local.sh {{ command }}
 
+sqlx-migrate: services-up
+  contrib/run-local.sh sqlx migrate run --source handler/migrations"
+
+sqlx-prepare: services-up
+  cd handler && ../contrib/run-local.sh cargo sqlx prepare
+
 up: build-docker
   docker compose --profile=full up
 
