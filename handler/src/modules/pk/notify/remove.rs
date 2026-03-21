@@ -1,10 +1,12 @@
+use pkrs_fork::client::PkClient;
 use tulpje_framework::Error;
 
 use crate::{
     context::CommandContext,
     modules::pk::{
-        db as pk_db,
+        db::{self as pk_db},
         notify::{db, shared::resolve_system_from_reference},
+        util::SystemRef,
     },
 };
 
@@ -14,15 +16,21 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
     ctx.defer().await?;
 
-    let system_id_uuid_or_discord_id = ctx.get_arg_string("id")?;
-    let system = resolve_system_from_reference(system_id_uuid_or_discord_id).await?;
+    let system_ref: SystemRef = ctx.get_arg_string("id")?.parse()?;
+    let Some(system) =
+        resolve_system_from_reference(system_ref, &PkClient::default(), &ctx.services.db).await?
+    else {
+        ctx.update("Couldn't find system '{system_ref}', are you sure you're following them and that you spelled it correctly?").await?;
+        return Ok(());
+    };
+
     pk_db::update_system(&ctx.services.db, &system).await?;
     db::remove_notify_system(&ctx.services.db, guild.id, system.uuid).await?;
     pk_db::cleanup_system(&ctx.services.db, system.uuid).await?;
 
     ctx.update(format!(
         "SUCCESS: will no longer notify you of `{}` front changes",
-        system.name.unwrap_or(system.id.0)
+        system.name.unwrap_or(system.id)
     ))
     .await?;
 

@@ -8,7 +8,10 @@ use twilight_model::id::{
 use tulpje_framework::Error;
 use uuid::Uuid;
 
-use crate::{db::DbId, modules::pk::fronters::db as fronters_db};
+use crate::{
+    db::DbId,
+    modules::pk::{fronters::db as fronters_db, util::SystemRef},
+};
 
 #[derive(Debug)]
 // TODO: tests to confirm this still matches the database structure
@@ -79,11 +82,14 @@ pub(crate) struct ModPkSystem {
     pub(crate) name: Option<String>,
 }
 
-#[expect(dead_code, reason = "we still want to handle these")]
-pub(crate) enum SystemRef {
-    DiscordId(String),
-    Uuid(Uuid),
-    Id(String),
+impl From<System> for ModPkSystem {
+    fn from(value: System) -> Self {
+        Self {
+            id: value.id.0,
+            uuid: value.uuid,
+            name: value.name,
+        }
+    }
 }
 
 #[expect(dead_code, reason = "useful utility function")]
@@ -107,7 +113,6 @@ pub(crate) async fn get_systems(
     .await?)
 }
 
-#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn get_system(
     db: &sqlx::PgPool,
     system_ref: SystemRef,
@@ -131,10 +136,10 @@ pub(crate) async fn get_system(
     }
 }
 
-pub(crate) async fn update_system(db: &sqlx::PgPool, system: &System) -> Result<(), Error> {
+pub(crate) async fn update_system(db: &sqlx::PgPool, system: &ModPkSystem) -> Result<(), Error> {
     sqlx::query!(
         "INSERT INTO pk_systems (id, uuid, name) VALUES ($1, $2, $3) ON CONFLICT (uuid) DO UPDATE SET id = $1, name = $3",
-        system.id.0,
+        system.id,
         system.uuid,
         system.name,
     )
