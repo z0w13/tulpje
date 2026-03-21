@@ -250,9 +250,15 @@ async fn process_system(
 }
 
 pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
-    // TODO: Filter on last updated
-    // TODO: Staggered updates
-    let tracked_systems = pk::db::get_all_systems(&ctx.services.db).await?;
+    let system_count = db::get_system_count(&ctx.services.db).await?;
+    if system_count > 100 {
+        tracing::warn!(
+            ?system_count,
+            "system update mechanism overloads after 100 systems"
+        );
+    }
+
+    let systems_to_update = db::get_systems_to_update(&ctx.services.db).await?;
     let pk_client = PkClient::default();
     let pk_guilds: HashSet<Id<GuildMarker>> =
         core::db::guilds_with_module(&ctx.services.db, "pluralkit")
@@ -260,7 +266,7 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
             .into_iter()
             .collect();
 
-    for system in &tracked_systems {
+    for system in &systems_to_update {
         if let Err(err) = process_system(
             &ctx.services.db,
             &pk_client,

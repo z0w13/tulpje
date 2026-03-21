@@ -9,7 +9,7 @@ use twilight_model::id::{
 use tulpje_framework::Error;
 use uuid::Uuid;
 
-use crate::db::DbId;
+use crate::{db::DbId, modules::pk::db::ModPkSystem};
 
 #[expect(dead_code, reason = "reflects db structure, keep intact")]
 pub(crate) struct ModPkFrontersRow {
@@ -59,16 +59,15 @@ pub(crate) async fn save_fronter_category(
     Ok(())
 }
 
-#[expect(
-    dead_code,
-    reason = "this isn't used anywhere yet but is a useful utility function nonetheless"
-)]
 pub(crate) async fn get_system_count(db: &sqlx::PgPool) -> Result<usize, Error> {
-    let system_count = sqlx::query_scalar!("SELECT COUNT(DISTINCT system_id) FROM pk_fronters INNER JOIN pk_guilds ON pk_fronters.guild_id = pk_guilds.guild_id")
-        .fetch_one(db)
-        .await?;
-
-    Ok(system_count.unwrap_or(0) as usize)
+    Ok(sqlx::query_scalar!(
+        r#"
+        SELECT COUNT(uuid) FROM pk_systems;
+    "#
+    )
+    .fetch_one(db)
+    .await?
+    .unwrap_or_default() as usize)
 }
 
 #[derive(Debug, FromRow)]
@@ -122,4 +121,39 @@ pub(crate) async fn update_fronters(
     .await?;
 
     Ok(())
+}
+
+pub(crate) async fn get_systems_to_update(db: &sqlx::PgPool) -> Result<Vec<ModPkSystem>, Error> {
+    // fetch 10 systems that
+    //   * haven't had fronters updated for over 10 minutes,
+    //   * or that are missing in pk_system_fronters
+    // running this once a minute should get us a limit of 100 systems, which should be sufficient
+    // for now
+    //
+    // NOTE: We don't need to filter on whether a system is in pk_notify_systems or pk_fronters
+    //       because the pk_systems table should get cleaned up by the calls to cleanup_system
+    //       automatically
+    // TODO: Write a query that shows us any "orphan" systems
+    Ok(sqlx::query_as!(
+        ModPkSystem,
+        r#"
+            SELECT
+                uuid, id, name
+            FROM
+                pk_systems
+            LEFT JOIN
+                pk_system_fronters
+            ON pk_systems.uuid = pk_system_fronters.system_uuid
+            WHERE
+                updated_at IS NULL
+            OR
+                updated_at <= NOW() - interval '10 minutes'
+            ORDER BY
+                updated_at
+            ASC NULLS FIRST
+            LIMIT 10
+        "#
+    )
+    .fetch_all(db)
+    .await?)
 }

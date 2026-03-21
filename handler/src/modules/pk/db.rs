@@ -86,6 +86,7 @@ pub(crate) enum SystemRef {
     Id(String),
 }
 
+#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn get_all_systems(db: &sqlx::PgPool) -> Result<Vec<ModPkSystem>, Error> {
     Ok(
         sqlx::query_as!(ModPkSystem, "SELECT id, uuid, name FROM pk_systems",)
