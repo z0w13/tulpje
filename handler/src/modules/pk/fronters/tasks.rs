@@ -3,8 +3,9 @@ use std::{collections::HashSet, slice, sync::Arc};
 use chrono::{DateTime, NaiveDateTime};
 use pkrs_fork::{
     client::PkClient,
-    model::{Member, PkId},
+    model::{Member, PkId, Switch as PkSwitch},
 };
+use reqwest::StatusCode;
 use serde_either::StringOrStruct;
 use tulpje_cache::Cache;
 use twilight_http::Client;
@@ -50,9 +51,21 @@ async fn update_system_fronters(
     system: &ModPkSystem,
     client: &PkClient,
 ) -> Result<FrontChange, Error> {
-    let current_front = client
+    let current_front = match client
         .get_system_fronters(&PkId(system.uuid.to_string()))
-        .await?;
+        .await
+    {
+        Ok(front) => Ok::<PkSwitch, Error>(front),
+        Err(err)
+            if err
+                .status()
+                .is_some_and(|status| status == StatusCode::FORBIDDEN) =>
+        {
+            db::update_fronters_timestamp(db, system.uuid).await?;
+            Err(err.into())
+        }
+        Err(err) => Err(err.into()),
+    }?;
     let mut fronters = Vec::<Member>::new();
     for member in current_front.members {
         match member {

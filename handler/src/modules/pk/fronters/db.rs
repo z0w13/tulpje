@@ -106,6 +106,20 @@ pub(crate) async fn get_fronters(
     .await?)
 }
 
+pub(crate) async fn update_fronters_timestamp(
+    db: &sqlx::PgPool,
+    system_uuid: Uuid,
+) -> Result<(), Error> {
+    sqlx::query!(
+        "INSERT INTO pk_system_fronters (system_uuid, fronters, updated_at) VALUES ($1, '[]', NOW()) ON CONFLICT (system_uuid) DO UPDATE SET updated_at = NOW()",
+        system_uuid,
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
 pub(crate) async fn update_fronters(
     db: &sqlx::PgPool,
     system_uuid: Uuid,
