@@ -21,19 +21,12 @@ pub(crate) struct ModPkFrontersRow {
 pub(crate) async fn get_fronter_categories(
     db: &sqlx::PgPool,
 ) -> Result<Vec<ModPkFrontersRow>, Error> {
-    let result = sqlx::query!("SELECT guild_id, category_id FROM pk_fronters")
-        .fetch_all(db)
-        .await?;
-
-    // TODO: Better handling of try_into()?
-    //       I mean, we should actually test what happens when surpassing i64::MAX and such
-    Ok(result
-        .into_iter()
-        .map(|row| ModPkFrontersRow {
-            guild_id: DbId::from(row.guild_id),
-            category_id: DbId::from(row.category_id),
-        })
-        .collect())
+    Ok(sqlx::query_as!(
+        ModPkFrontersRow,
+        "SELECT guild_id, category_id FROM pk_fronters"
+    )
+    .fetch_all(db)
+    .await?)
 }
 
 pub(crate) async fn get_fronter_category(
