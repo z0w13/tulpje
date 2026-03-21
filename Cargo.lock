@@ -1297,7 +1297,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
 dependencies = [
  "cfg-if",
- "windows-targets 0.48.5",
+ "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -1703,9 +1703,9 @@ checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
 name = "pkrs-fork"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11ce377455a3a243c58fa3aa432b549c1be155d949859a8a6ced6342001cdfeb"
+checksum = "a213f181fb6b88b4416c666fefdbd3f30dc2fdf5448780905506385f451395a7"
 dependencies = [
  "reqwest 0.12.25",
  "serde",
