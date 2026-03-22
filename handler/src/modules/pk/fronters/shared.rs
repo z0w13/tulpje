@@ -14,12 +14,9 @@ use twilight_model::id::marker::{ChannelMarker, GenericMarker, GuildMarker};
 
 use tulpje_framework::Error;
 
-use super::super::util::get_member_name;
-use super::db;
-use crate::context::CommandContext;
-use crate::modules::pk::db::{ModPkGuildRow, get_guild_settings_for_id};
+use crate::modules::pk::{db::ModPkGuildRow, util::get_member_name};
 
-async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
+pub(super) async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
     let pk = PkClient::default();
 
     let fronters = pk
@@ -36,7 +33,7 @@ async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
     Ok(fronters)
 }
 
-async fn get_fronter_channels(
+pub(super) async fn get_fronter_channels(
     client: &Client,
     cache: &Cache,
     guild: Id<GuildMarker>,
@@ -88,7 +85,7 @@ async fn get_fronter_channels(
     }
 }
 
-async fn get_fronter_category(
+pub(super) async fn get_fronter_category(
     client: &Client,
     guild: &Guild,
     opt_cat_name: Option<String>,
@@ -149,7 +146,7 @@ fn debug_fronter_order(
     }
 }
 
-pub(crate) async fn update_fronter_channels(
+pub(super) async fn update_fronter_channels(
     client: &Client,
     cache: &Cache,
     guild: Guild,
@@ -307,37 +304,7 @@ pub(crate) async fn update_fronter_channels(
     Ok(())
 }
 
-pub(crate) async fn update_fronters(ctx: CommandContext) -> Result<(), Error> {
-    let Some(guild) = ctx.guild().await? else {
-        unreachable!("command is guild_only");
-    };
-
-    ctx.defer_ephemeral().await?;
-
-    let Some(cat_id) = db::get_fronter_category(&ctx.services.db, guild.id).await? else {
-        ctx.update("fronter category not set-up, please run /pk fronters setup")
-            .await?;
-        return Ok(());
-    };
-
-    let Some(gs) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
-        ctx.update("PluralKit module not set-up, please run /pk setup")
-            .await?;
-        return Ok(());
-    };
-
-    let cat = ctx.client().channel(*cat_id).await?.model().await?;
-
-    cat.guild_id
-        .ok_or_else(|| format!("channel {} isn't a guild channel", cat_id))?;
-
-    update_fronter_channels(&ctx.client(), &ctx.services.cache, guild, &gs, cat, None).await?;
-
-    ctx.update("fronter list updated!").await?;
-    Ok(())
-}
-
-async fn create_or_get_fronter_channel(
+pub(super) async fn create_or_get_fronter_channel(
     client: &Client,
     guild: &Guild,
     cat_name: String,
@@ -374,22 +341,4 @@ async fn create_or_get_fronter_channel(
         .await?
         .model()
         .await?)
-}
-
-pub(crate) async fn setup_fronters(ctx: CommandContext) -> Result<(), Error> {
-    let Some(guild) = ctx.guild().await? else {
-        unreachable!("command is guild_only");
-    };
-
-    ctx.defer_ephemeral().await?;
-
-    let name = ctx.get_arg_string("name")?;
-    let fronters_category = create_or_get_fronter_channel(&ctx.client, &guild, name).await?;
-
-    // Save category into db
-    db::save_fronter_category(&ctx.services.db, guild.id, fronters_category.id).await?;
-
-    // Inform user of success
-    ctx.update("fronter list setup!").await?;
-    Ok(())
 }

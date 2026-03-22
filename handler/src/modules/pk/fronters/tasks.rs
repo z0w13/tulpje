@@ -310,7 +310,7 @@ async fn update_fronters_for_guild(
         )
     })?;
 
-    super::commands::update_fronter_channels(
+    super::shared::update_fronter_channels(
         client,
         cache,
         guild.clone(),
