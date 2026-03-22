@@ -7,16 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.20.0-rc.4] - 2026-03-22
 
-### Fixed
-
- - Predefine metrics
-
-### Commit Details
-
-<details><summary>view details</summary>
-
- * fix(handler/pk): predefine metrics ([`efef4be`](https://github.com/z0w13/tulpje/commit/efef4beb8bcca8d7b6dd902102c651feb9602ad5))
-</details>
+*reverted*
 
 ## [0.20.0-rc.3] - 2026-03-22
 
