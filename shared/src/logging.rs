@@ -5,7 +5,7 @@ pub fn init() {
         .unwrap_or_else(|_| String::from("full"))
         .as_str()
     {
-        "json" => fmt().json().init(),
+        "json" => fmt().json().flatten_event(true).init(),
         "pretty" => fmt().pretty().init(),
         "compact" => fmt().compact().init(),
         "full" => fmt().init(),
