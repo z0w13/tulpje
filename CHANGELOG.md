@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0-rc.1] - 2026-03-22
+
+### Added
+
+ - Add extra metrics
+ - Add tracing::span to event handling
+ - Add `sqlx-migrate` and `sqlx-prepare` tasks
+
+### Changed
+
+ - Enable globally instead of per guild
+ - Configurable log format using `RUST_LOG_FORMAT` env var
+ - Prettier responses when adding/removing notify systems
+ - Better logging for update-member-roles
+ - Update vulnerable deps
+ - Staggered fronter updates
+ - Use cache when updating fronters
+ - Use `sqlx::query_as!` instead of manual conversion
+ - Front change notifications
+ - Update pkrs from 0.4.0 to 0.5.0
+ - Don't save token, only optionally use it to update member roles
+ - Update vulnerable deps
+ - Switch to using `mod.rs` files
+ - Update to rust 1.94.0
+
+### Fixed
+
+ - Still set `last_updated` when front is forbidden
+ - Also handle systems we can't fetch from PluralKit in add/remove
+ - Fix clippy warnings
+
+### Removed
+
+ - Delete fronters before deleting system
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * chore(module/pk): enable globally instead of per guild ([`0feaf60`](https://github.com/z0w13/tulpje/commit/0feaf601f8a284792e55c0fb23540e8b691ef221))
+ * feat(handler/pk): add extra metrics ([`88e757d`](https://github.com/z0w13/tulpje/commit/88e757d503ba2092c4aba43d953a29ca330e62b8))
+ * feat: configurable log format using `RUST_LOG_FORMAT` env var ([`1fe4841`](https://github.com/z0w13/tulpje/commit/1fe4841a758a9e666d70ab11a04245836a4c36a7))
+ * feat(framework): add tracing::span to event handling ([`af95661`](https://github.com/z0w13/tulpje/commit/af9566109fb612ca637b1b8a2cda2d3520f2e974))
+ * feat(pk): prettier responses when adding/removing notify systems ([`c91c789`](https://github.com/z0w13/tulpje/commit/c91c789f48a9d3060f9ec429fdf5aeb70f8da474))
+ * feat(pk): better logging for update-member-roles ([`3b663c6`](https://github.com/z0w13/tulpje/commit/3b663c673f173d65790c76d621d506201436c71c))
+ * fix(pk): still set `last_updated` when front is forbidden ([`22fe176`](https://github.com/z0w13/tulpje/commit/22fe1764b0d60feae2d0e035437541bdfde8a0f0))
+ * chore(deps): update vulnerable deps ([`59030fd`](https://github.com/z0w13/tulpje/commit/59030fda04a68f7d6e9bb5cb6baf4f213a6db5b7))
+ * fix(pk): also handle systems we can't fetch from PluralKit in add/remove ([`ddd036d`](https://github.com/z0w13/tulpje/commit/ddd036dcdae55c05303a5dda727218bf731fc77f))
+ * fix(pk): delete fronters before deleting system ([`3ff27b3`](https://github.com/z0w13/tulpje/commit/3ff27b34bb99053b9c26b13113b034afa8887a5a))
+ * feat(pk): staggered fronter updates ([`626dc08`](https://github.com/z0w13/tulpje/commit/626dc08d9619c2b48c2b720f25e092600a1abd0b))
+ * refactor(handler/pk): use cache when updating fronters ([`c28d14a`](https://github.com/z0w13/tulpje/commit/c28d14aafc6384f4e1077c17a358021101f855d3))
+ * refactor(handler/pk): use `sqlx::query_as!` instead of manual conversion ([`41366bf`](https://github.com/z0w13/tulpje/commit/41366bfc0a75bec6711e73d2ab18510358b8b0d2))
+ * feat(justfile): add `sqlx-migrate` and `sqlx-prepare` tasks ([`4e09ecf`](https://github.com/z0w13/tulpje/commit/4e09ecfded5aabba42bdcc42d9a9ab42002a6863))
+ * feat(pluralkit): front change notifications ([`09e7223`](https://github.com/z0w13/tulpje/commit/09e72236515752c1645fcb2aa7877742a8cb8f7d))
+ * chore(deps): update pkrs from 0.4.0 to 0.5.0 ([`e774904`](https://github.com/z0w13/tulpje/commit/e77490452c0939cacdb47f74c006306259125187))
+ * refactor(pk): don't save token, only optionally use it to update member roles ([`3c84bd7`](https://github.com/z0w13/tulpje/commit/3c84bd75f85a8da932f1f20d65a67a66b87f956b))
+ * chore(deps): update vulnerable deps ([`9f4c1f2`](https://github.com/z0w13/tulpje/commit/9f4c1f226b2a7c63294c56a3c912935cc6a6589c))
+ * refactor: switch to using `mod.rs` files ([`26a61a2`](https://github.com/z0w13/tulpje/commit/26a61a23019ee851f397a7721ec2eaafb638e9e5))
+ * chore: fix clippy warnings ([`cce8aa8`](https://github.com/z0w13/tulpje/commit/cce8aa82664ee7b1ddd1d1a68161379dfee6e462))
+ * chore: update to rust 1.94.0 ([`9a43d87`](https://github.com/z0w13/tulpje/commit/9a43d87733aab5cea01366b8539ebd730f04b6c9))
+</details>
+
 ## [0.19.1] - 2026-03-20
 
 ### Added

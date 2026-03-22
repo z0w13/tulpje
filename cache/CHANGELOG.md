@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0-rc.1] - 2026-03-22
+
+### Changed
+
+ - Front change notifications
+ - Switch to using `mod.rs` files
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * feat(pluralkit): front change notifications ([`09e7223`](https://github.com/z0w13/tulpje/commit/09e72236515752c1645fcb2aa7877742a8cb8f7d))
+ * refactor: switch to using `mod.rs` files ([`26a61a2`](https://github.com/z0w13/tulpje/commit/26a61a23019ee851f397a7721ec2eaafb638e9e5))
+</details>
+
 ## [0.4.1] - 2026-03-20
 
 ### Changed
