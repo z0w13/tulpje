@@ -1,5 +1,5 @@
 use tracing_subscriber::{
-    EnvFilter, Layer, fmt::layer, layer::SubscriberExt as _, util::SubscriberInitExt as _,
+    EnvFilter, Layer as _, fmt::layer, layer::SubscriberExt as _, util::SubscriberInitExt as _,
 };
 
 pub fn init() {
