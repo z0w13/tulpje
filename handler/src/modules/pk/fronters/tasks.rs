@@ -241,7 +241,7 @@ async fn process_system(
             notify_front_change(db, discord_client, system, &switch).await?;
         }
         FrontChange::Unchanged => {
-            tracing::debug!(id = ?system.id, name =? system.name, "front unchanged unchanged");
+            tracing::debug!(id = ?system.id, name =? system.name, "front unchanged");
         }
     }
     Ok(())
