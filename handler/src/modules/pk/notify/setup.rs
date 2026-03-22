@@ -1,6 +1,6 @@
 use twilight_http::Client;
 use twilight_model::{
-    channel::ChannelType,
+    channel::{Channel, ChannelType},
     guild::{Permissions, Role},
     id::{
         Id,
@@ -23,65 +23,12 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let channel_name = ctx.get_arg_string("channel")?;
 
     // get the channel if it already exists
-    let maybe_existing_channel = ctx
-        .client
-        .guild_channels(guild.id)
-        .await?
-        .models()
-        .await?
-        .into_iter()
-        .find(|c| {
-            c.name
-                .as_ref()
-                .expect("guild channels have names")
-                .to_lowercase()
-                == channel_name.to_lowercase()
-        });
 
-    let channel = if let Some(existing_channel) = maybe_existing_channel {
-        let current_user = ctx.client.current_user().await?.model().await?;
-        let everyone_role = get_everyone_role(&ctx.client, &ctx.services.cache, guild.id).await?;
-        let member_roles =
-            get_member_roles(&ctx.client, &ctx.services.cache, current_user.id, guild.id).await?;
-        let member_role_permissions: Vec<_> =
-            member_roles.iter().map(|r| (r.id, r.permissions)).collect();
-
-        let calculator = PermissionCalculator::new(
-            guild.id,
-            current_user.id,
-            everyone_role.permissions,
-            &member_role_permissions,
-        );
-
-        let calculated_permissions = calculator.in_channel(
-            ChannelType::GuildText,
-            &existing_channel
-                .permission_overwrites
-                .clone()
-                .unwrap_or_default(),
-        );
-
-        // NOTE: We need to check VIEW_CHANNEL too, because of implicit permissions
-        //       see: https://docs.discord.com/developers/topics/permissions#implicit-permissions
-        if !calculated_permissions.contains(Permissions::VIEW_CHANNEL) {
-            ctx.update(format!(
-                "Error: bot is missing VIEW_CHANNEL permission in <#{}>",
-                existing_channel.id
-            ))
-            .await?;
-            return Ok(());
-        }
-
-        if !calculated_permissions.contains(Permissions::SEND_MESSAGES) {
-            ctx.update(format!(
-                "Error: bot is missing SEND_MESSAGES permission in <#{}>",
-                existing_channel.id
-            ))
-            .await?;
-            return Ok(());
-        }
-
-        existing_channel
+    let channel = if let Some(channel) =
+        find_channel_by_name(&ctx.client, guild.id, &channel_name).await?
+        && handle_channel_permissions(&ctx, guild.id, &channel).await?
+    {
+        channel
     } else {
         ctx.client
             .create_guild_channel(guild.id, &channel_name)
@@ -99,6 +46,74 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     .await?;
 
     Ok(())
+}
+
+async fn find_channel_by_name(
+    client: &Client,
+    guild_id: Id<GuildMarker>,
+    name: &str,
+) -> Result<Option<Channel>, Error> {
+    Ok(client
+        .guild_channels(guild_id)
+        .await?
+        .models()
+        .await?
+        .into_iter()
+        .find(|c| {
+            c.name
+                .as_ref()
+                .expect("guild channels have names")
+                .to_lowercase()
+                == name.to_lowercase()
+        }))
+}
+
+/// check channel permissions and inform user of missing ones
+async fn handle_channel_permissions(
+    ctx: &CommandContext,
+    guild_id: Id<GuildMarker>,
+    channel: &Channel,
+) -> Result<bool, Error> {
+    let current_user = ctx.client.current_user().await?.model().await?;
+    let everyone_role = get_everyone_role(&ctx.client, &ctx.services.cache, guild_id).await?;
+    let member_roles =
+        get_member_roles(&ctx.client, &ctx.services.cache, current_user.id, guild_id).await?;
+    let member_role_permissions: Vec<_> =
+        member_roles.iter().map(|r| (r.id, r.permissions)).collect();
+
+    let calculator = PermissionCalculator::new(
+        guild_id,
+        current_user.id,
+        everyone_role.permissions,
+        &member_role_permissions,
+    );
+
+    let calculated_permissions = calculator.in_channel(
+        ChannelType::GuildText,
+        &channel.permission_overwrites.clone().unwrap_or_default(),
+    );
+
+    // NOTE: We need to check VIEW_CHANNEL too, because of implicit permissions
+    //       see: https://docs.discord.com/developers/topics/permissions#implicit-permissions
+    if !calculated_permissions.contains(Permissions::VIEW_CHANNEL) {
+        ctx.update(format!(
+            "Error: bot is missing VIEW_CHANNEL permission in <#{}>",
+            channel.id
+        ))
+        .await?;
+        return Ok(false);
+    }
+
+    if !calculated_permissions.contains(Permissions::SEND_MESSAGES) {
+        ctx.update(format!(
+            "Error: bot is missing SEND_MESSAGES permission in <#{}>",
+            channel.id
+        ))
+        .await?;
+        return Ok(false);
+    }
+
+    Ok(true)
 }
 
 async fn get_member_roles(
