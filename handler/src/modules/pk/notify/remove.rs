@@ -18,7 +18,20 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
     ctx.defer().await?;
 
-    let system_ref: SystemRef = ctx.get_arg_string("id")?.parse()?;
+    let ref_str = ctx.get_arg_string("id")?;
+    let system_ref: SystemRef = match ref_str.parse() {
+        Ok(system_ref) => system_ref,
+        Err(_) => {
+            ctx.interaction()
+                .update_response(&ctx.event.token)
+                .flags(MessageFlags::IS_COMPONENTS_V2)
+                .components(Some(&[error_message(&format!(
+                    "Invalid system reference `{ref_str}`, are you sure you entered it correctly?",
+                ))]))
+                .await?;
+            return Ok(());
+        }
+    };
     let Some(system) =
         resolve_system_from_reference(&system_ref, &PkClient::default(), &ctx.services.db).await?
     else {
