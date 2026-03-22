@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-03-22
+
+### Changed
+
+ - Mark 0.20.0-rc.4 as reverted in changelog
+
+### Fixed
+
+ - Log message typo
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * chore: mark 0.20.0-rc.4 as reverted in changelog ([`89308d6`](https://github.com/z0w13/tulpje/commit/89308d6228a1b8f0364e88ebf61d435c4bcc337b))
+ * fix(handler/pk): log message typo ([`418ab8e`](https://github.com/z0w13/tulpje/commit/418ab8e3b8e30000ff995a3d0227f044ab49f2e9))
+</details>
+
 ## [0.20.0-rc.4] - 2026-03-22
 
 *reverted*
