@@ -36,8 +36,10 @@ impl<T: Clone + Send + Sync> CommandHandler<T> {
                         // The default red from the discord roles
                         .accent_color(Some(0xE74C3C))
                         .component(
+                            // TODO: Better way to handle extra error info than, whatever this is
                             TextDisplayBuilder::new(format!(
-                                "### Internal Error\n\n**Error Code**\n```{}```",
+                                "### Internal Error\n{}\n**Error Code**\n```{}```",
+                                std::env::var("TULPJE_EXTRA_ERROR_MESSAGE").unwrap_or_default(),
                                 ctx.meta.uuid
                             ))
                             .build(),
