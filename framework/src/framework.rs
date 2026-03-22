@@ -1,6 +1,7 @@
 use std::{future::Future, pin::Pin, sync::Arc};
 
 use tokio::{sync::mpsc, task::JoinHandle};
+use tracing::Span;
 
 use crate::Metadata;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
@@ -13,6 +14,7 @@ use crate::scheduler::{SchedulerHandle, SchedulerTaskMessage};
 use crate::{Context, Error, Registry};
 
 type SetupFunc<T> = fn(ctx: Context<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
+type EventMessage = (Metadata, Event, Option<Span>);
 
 #[derive(Clone)]
 pub struct FrameworkBuilder<T: Clone + Send + Sync> {
@@ -128,8 +130,9 @@ impl<T: Clone + Send + Sync + 'static> Framework<T> {
         &mut self,
         meta: Metadata,
         event: Event,
-    ) -> Result<(), Box<mpsc::error::SendError<(Metadata, Event)>>> {
-        self.dispatcher.send(meta, event)
+        span: Option<Span>,
+    ) -> Result<(), Box<mpsc::error::SendError<EventMessage>>> {
+        self.dispatcher.send(meta, event, span)
     }
 
     pub async fn shutdown(&mut self) {
@@ -146,7 +149,7 @@ impl<T: Clone + Send + Sync + 'static> Framework<T> {
 }
 
 struct DispatchHandle {
-    sender: mpsc::UnboundedSender<(Metadata, Event)>,
+    sender: mpsc::UnboundedSender<EventMessage>,
     shutdown: CancellationToken,
     handle: Option<JoinHandle<()>>,
 }
@@ -169,8 +172,9 @@ impl DispatchHandle {
         &mut self,
         meta: Metadata,
         event: Event,
-    ) -> Result<(), Box<mpsc::error::SendError<(Metadata, Event)>>> {
-        Ok(self.sender.send((meta, event))?)
+        span: Option<Span>,
+    ) -> Result<(), Box<mpsc::error::SendError<EventMessage>>> {
+        Ok(self.sender.send((meta, event, span))?)
     }
 
     fn shutdown(&mut self) {
@@ -190,7 +194,7 @@ struct Dispatch<T: Clone + Send + Sync> {
     registry: Arc<Registry<T>>,
     ctx: Context<T>,
 
-    receiver: mpsc::UnboundedReceiver<(Metadata, Event)>,
+    receiver: mpsc::UnboundedReceiver<EventMessage>,
     shutdown: CancellationToken,
 
     tracker: TaskTracker,
@@ -200,7 +204,7 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
         ctx: Context<T>,
         registry: Arc<Registry<T>>,
 
-        receiver: mpsc::UnboundedReceiver<(Metadata, Event)>,
+        receiver: mpsc::UnboundedReceiver<EventMessage>,
         shutdown: CancellationToken,
     ) -> Self {
         Self {
@@ -217,12 +221,18 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
     async fn run(&mut self) {
         loop {
             tokio::select! {
-                Some((meta, event)) = self.receiver.recv() => {
+                Some((meta, event, span)) = self.receiver.recv() => {
                     let registry = Arc::clone(&self.registry);
                     let ctx = self.ctx.clone();
 
                     self.tracker.spawn(async move {
-                        crate::handle(meta, ctx, &registry, event).await;
+                        if let Some(span) = span {
+                            span.in_scope(async || {
+                                crate::handle(meta, ctx, &registry, event).await;
+                            }).await;
+                        } else {
+                            crate::handle(meta, ctx, &registry, event).await;
+                        }
                     });
                 },
                 () = self.shutdown.cancelled() => break,
@@ -237,7 +247,7 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
 }
 
 pub struct Sender {
-    sender: mpsc::UnboundedSender<(Metadata, Event)>,
+    sender: mpsc::UnboundedSender<EventMessage>,
 }
 
 impl Sender {
@@ -245,8 +255,17 @@ impl Sender {
         &self,
         meta: Metadata,
         event: Event,
-    ) -> Result<(), Box<mpsc::error::SendError<(Metadata, Event)>>> {
-        Ok(self.sender.send((meta, event))?)
+    ) -> Result<(), Box<mpsc::error::SendError<EventMessage>>> {
+        Ok(self.sender.send((meta, event, None))?)
+    }
+
+    pub fn with_span(
+        &self,
+        meta: Metadata,
+        event: Event,
+        span: Span,
+    ) -> Result<(), Box<mpsc::error::SendError<EventMessage>>> {
+        Ok(self.sender.send((meta, event, Some(span)))?)
     }
 
     pub fn closed(&self) -> bool {

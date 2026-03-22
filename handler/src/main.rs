@@ -14,7 +14,7 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
 };
 use tokio::sync::mpsc;
-use tracing::log::LevelFilter;
+use tracing::{Level, log::LevelFilter};
 use twilight_gateway::Event;
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
@@ -199,20 +199,21 @@ async fn main() {
                 }
             };
 
+            let span =
+                tracing::span!(Level::ERROR, "event", uuid = ?meta.uuid, shard = ?meta.shard);
+            let span_guard = span.enter();
+
             if let Err(err) = cache.update(&event).await {
                 tracing::warn!("error updating cache: {}", err);
             }
 
-            tracing::debug!(
-                event = ?event.kind(),
-                uuid = ?meta.uuid,
-                shard = meta.shard,
-                "event received",
-            );
+            tracing::debug!(event = ?event.kind(), "event received");
 
-            if let Err(err) = sender.send(meta, event) {
+            if let Err(err) = sender.with_span(meta, event, span.clone()) {
                 tracing::error!("error queueing event: {}", err);
             };
+
+            drop(span_guard);
         }
     });
 
