@@ -1,5 +1,8 @@
 use std::{future::Future, pin::Pin};
 
+use twilight_model::channel::message::MessageFlags;
+use twilight_util::builder::message::{ContainerBuilder, TextDisplayBuilder};
+
 use super::super::context::CommandContext;
 
 use crate::Error;
@@ -17,17 +20,34 @@ pub struct CommandHandler<T: Clone + Send + Sync> {
 impl<T: Clone + Send + Sync> CommandHandler<T> {
     pub async fn run(&self, ctx: CommandContext<T>) -> Result<(), Error> {
         // TODO: More elegant way of handling command errors
+        // TODO: Test if errors work in DMs
         if let Err(err) = (self.func)(ctx.clone()).await {
             tracing::info!(
-                "error during command {}, sending to client ephemerally",
-                self.name
+                "error during command {}, sending reference to client: {}",
+                self.name,
+                err
             );
-            // TODO: Keep internal state of whether we deferred, etc. so we can
-            //       avoid doing this and ignoring the error
-            if let Err(err) = ctx.defer_ephemeral().await {
-                tracing::warn!("error on defer_ephemeral, can probably be ignored: {err}");
+
+            if let Some(chan) = &ctx.event.channel {
+                ctx.client
+                    .create_message(chan.id)
+                    .flags(MessageFlags::IS_COMPONENTS_V2)
+                    .components(&[ContainerBuilder::new()
+                        // The default red from the discord roles
+                        .accent_color(Some(0xE74C3C))
+                        .component(
+                            TextDisplayBuilder::new(format!(
+                                "### Internal Error\n\n**Error Code**\n```{}```",
+                                ctx.meta.uuid
+                            ))
+                            .build(),
+                        )
+                        .build()
+                        .into()])
+                    .await?;
+            } else {
+                tracing::warn!(event = ?ctx.event, "channel on event was empty, can't send error");
             }
-            ctx.update(format!("{err}")).await?;
 
             return Err(err);
         }
