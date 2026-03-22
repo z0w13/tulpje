@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0-rc.2] - 2026-03-22
+
+### Fixed
+
+ - Mark prereleases correctly
+ - Flatten event fields so VictoriaLogs can parse it
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(build): mark prereleases correctly ([`d6947e8`](https://github.com/z0w13/tulpje/commit/d6947e84d30643c750c87437d73c86af4e5ff3d9))
+ * fix(shared/logging): flatten event fields so VictoriaLogs can parse it ([`0088a0f`](https://github.com/z0w13/tulpje/commit/0088a0f4a2cde8db34af7c7e3ed9378576e830fb))
+</details>
+
 ## [0.20.0-rc.1] - 2026-03-22
 
 ### Added
