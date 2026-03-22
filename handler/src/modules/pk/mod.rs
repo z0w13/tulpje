@@ -19,10 +19,7 @@ pub mod roles;
 pub mod util;
 
 pub fn build() -> Module<Services> {
-    // define metrics
-    metrics::describe_counter!("pk:tracked-systems", "Systems Tracked");
-    metrics::describe_counter!("pk:notifications", "Front Notification Stats");
-    metrics::describe_counter!("pk:front-category", "Front Category Stats");
+    setup_metrics();
 
     ModuleBuilder::<Services>::new("pluralkit")
         // commands
@@ -67,4 +64,20 @@ pub fn build() -> Module<Services> {
             handler_func!(fronters::tasks::update_fronters),
         )
         .build()
+}
+
+fn setup_metrics() {
+    metrics::describe_counter!("pk:tracked-systems", "Systems Tracked");
+
+    metrics::describe_counter!("pk:notifications", "Front Notification Stats");
+    metrics::counter!("pk:notifications", "type" => "total").absolute(0);
+    metrics::counter!("pk:notifications", "type" => "category-missing").absolute(0);
+    metrics::counter!("pk:notifications", "type" => "error").absolute(0);
+    metrics::counter!("pk:notifications", "type" => "success").absolute(0);
+
+    metrics::describe_counter!("pk:front-category", "Front Category Stats");
+    metrics::counter!("pk:front-category", "type" => "total").absolute(0);
+    metrics::counter!("pk:front-category", "type" => "category-missing").absolute(0);
+    metrics::counter!("pk:front-category", "type" => "error").absolute(0);
+    metrics::counter!("pk:front-category", "type" => "success").absolute(0);
 }
