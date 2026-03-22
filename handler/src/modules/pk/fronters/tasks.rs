@@ -117,7 +117,9 @@ async fn update_fronter_category(
         return Ok(());
     };
 
+    metrics::counter!("pk:front-category", "type" => "total").increment(1);
     if !enabled_guilds.contains(&guild_settings.guild_id) {
+        metrics::counter!("pk:front-category", "type" => "module-disabled").increment(1);
         tracing::debug!(
             method = "update_fronter_category",
             "Guild {} has pk module disabled, skipping",
@@ -127,6 +129,7 @@ async fn update_fronter_category(
     }
 
     let Some(category_id) = db::get_fronter_category(db, *guild_settings.guild_id).await? else {
+        metrics::counter!("pk:front-category", "type" => "category-missing").increment(1);
         tracing::debug!(
             method = "update_fronter_category",
             "no fronter category configured for guild {}, skipping",
@@ -144,12 +147,15 @@ async fn update_fronter_category(
     )
     .await
     {
+        metrics::counter!("pk:front-category", "type" => "error").increment(1);
         tracing::error!(
             method = "update_fronter_category",
             guild_id = ?guild_settings.guild_id,
             category_id = ?category_id,
             err
         );
+    } else {
+        metrics::counter!("pk:front-category", "type" => "success").increment(1);
     }
     Ok(())
 }
@@ -200,6 +206,7 @@ async fn notify_front_change(
         system.id
     );
     for guild_id in guilds {
+        metrics::counter!("pk:notifications", "type" => "total").increment(1);
         tracing::debug!(
             method = "notify_front_change",
             "notifying guild {} of front change in {}",
@@ -207,6 +214,7 @@ async fn notify_front_change(
             system.id
         );
         if !enabled_guilds.contains(&guild_id) {
+            metrics::counter!("pk:notifications", "type" => "module-disabled").increment(1);
             tracing::debug!(
                 method = "notify_front_change",
                 "not notifying guild {} of front change in {} pk module is disabled",
@@ -217,6 +225,7 @@ async fn notify_front_change(
         }
 
         let Some(channel_id) = get_notify_channel(db, *guild_id).await? else {
+            metrics::counter!("pk:notifications", "type" => "channel-missing").increment(1);
             tracing::warn!(
                 method = "notify_front_change",
                 "no notify channel configured for guild {} despite it having tracked systems",
@@ -230,6 +239,7 @@ async fn notify_front_change(
             .embeds(slice::from_ref(&embed))
             .await
         {
+            metrics::counter!("pk:notifications", "type" => "error").increment(1);
             tracing::warn!(
                 method = "notify_front_change",
                 "error sending front change notification to guild {} channel {}: {}",
@@ -237,6 +247,8 @@ async fn notify_front_change(
                 channel_id,
                 err
             );
+        } else {
+            metrics::counter!("pk:notifications", "type" => "success").increment(1);
         }
     }
     Ok(())
@@ -264,6 +276,8 @@ async fn process_system(
 
 pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
     let system_count = db::get_system_count(&ctx.services.db).await?;
+    metrics::counter!("pk:tracked-systems").absolute(system_count as u64);
+
     if system_count > 100 {
         tracing::warn!(
             ?system_count,
