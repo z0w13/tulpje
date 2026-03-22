@@ -1,7 +1,11 @@
 use tulpje_framework::Error;
 
 use super::{db, shared::update_fronter_channels};
-use crate::{context::CommandContext, modules::pk::db::get_guild_settings_for_id};
+use crate::{
+    context::CommandContext,
+    modules::pk::db::get_guild_settings_for_id,
+    util::{error_response, success_response},
+};
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
@@ -10,15 +14,17 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     ctx.defer_ephemeral().await?;
 
-    let Some(cat_id) = db::get_fronter_category(&ctx.services.db, guild.id).await? else {
-        ctx.update("fronter category not set-up, please run /pk fronters setup")
-            .await?;
+    let Some(gs) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
+        error_response(&ctx, "PluralKit module not set-up, please run `/pk setup`").await?;
         return Ok(());
     };
 
-    let Some(gs) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
-        ctx.update("PluralKit module not set-up, please run /pk setup")
-            .await?;
+    let Some(cat_id) = db::get_fronter_category(&ctx.services.db, guild.id).await? else {
+        error_response(
+            &ctx,
+            "Fronter category not set-up, please run `/pk fronters setup`",
+        )
+        .await?;
         return Ok(());
     };
 
@@ -29,6 +35,6 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     update_fronter_channels(&ctx.client(), &ctx.services.cache, guild, &gs, cat, None).await?;
 
-    ctx.update("fronter list updated!").await?;
+    success_response(&ctx, "Fronter category updated!").await?;
     Ok(())
 }

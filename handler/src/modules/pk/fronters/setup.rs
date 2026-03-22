@@ -1,7 +1,11 @@
 use tulpje_framework::Error;
 
 use super::{db, shared::create_or_get_fronter_channel};
-use crate::{context::CommandContext, modules::pk::db::get_guild_settings_for_id};
+use crate::{
+    context::CommandContext,
+    modules::pk::db::get_guild_settings_for_id,
+    util::{error_response, success_response},
+};
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
@@ -14,8 +18,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         .await?
         .is_none()
     {
-        ctx.update("PluralKit module not set-up, please run /pk setup")
-            .await?;
+        error_response(&ctx, "PluralKit module not set-up, please run `/pk setup`").await?;
         return Ok(());
     };
 
@@ -26,6 +29,6 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     db::save_fronter_category(&ctx.services.db, guild.id, fronters_category.id).await?;
 
     // Inform user of success
-    ctx.update("fronter list setup!").await?;
+    success_response(&ctx, "Fronter category succesfully set-up!").await?;
     Ok(())
 }
