@@ -1,7 +1,28 @@
+use tulpje_framework::Error;
 use tulpje_shared::color::{self, Color};
 
-use twilight_model::channel::message::Component;
+use twilight_model::channel::message::{Component, MessageFlags};
 use twilight_util::builder::message::{ContainerBuilder, TextDisplayBuilder};
+
+use crate::context::CommandContext;
+
+pub(crate) async fn success_response(ctx: &CommandContext, text: &str) -> Result<(), Error> {
+    response(ctx, &color::roles::GREEN, text).await
+}
+
+pub(crate) async fn error_response(ctx: &CommandContext, text: &str) -> Result<(), Error> {
+    response(ctx, &color::roles::RED, text).await
+}
+
+pub(crate) async fn response(ctx: &CommandContext, color: &Color, text: &str) -> Result<(), Error> {
+    ctx.interaction()
+        .update_response(&ctx.event.token)
+        .flags(MessageFlags::IS_COMPONENTS_V2)
+        .components(Some(&[message(color, text)]))
+        .await?;
+
+    Ok(())
+}
 
 pub(crate) fn message(color: &Color, text: &str) -> Component {
     ContainerBuilder::new()
