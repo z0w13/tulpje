@@ -37,11 +37,7 @@ pub fn build() -> Module<Services> {
                         )
                         .handler(handler_func!(commands::setup_pk)),
                 )
-                .subcommand(
-                    SubCommandBuilder::new("update-member-roles", "update the member roles")
-                        .option(StringBuilder::new("token", "(optional) PluralKit token"))
-                        .handler(handler_func!(roles::update_member_roles)),
-                )
+                .group(roles::commands())
                 .group(fronters::commands())
                 .group(notify::commands()),
         )

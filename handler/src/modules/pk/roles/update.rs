@@ -8,9 +8,96 @@ use twilight_model::id::marker::RoleMarker;
 
 use tulpje_framework::Error;
 
-use super::db::get_guild_settings_for_id;
-use super::util::{get_member_name, pk_color_to_discord};
 use crate::context::CommandContext;
+use crate::modules::pk::{
+    db::get_guild_settings_for_id,
+    util::{get_member_name, pk_color_to_discord},
+};
+
+pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
+    let Some(guild) = ctx.guild().await? else {
+        unreachable!("command is guild_only");
+    };
+
+    ctx.defer_ephemeral().await?; // delay responding and make reply ephemeral
+
+    let Some(gs) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
+        ctx.update("PluralKit module not set-up, please run /pk setup")
+            .await?;
+        return Ok(());
+    };
+
+    let token = ctx.get_arg_string_optional("token")?;
+    let current_role_map = get_current_roles(guild.clone());
+    let desired_role_map =
+        get_desired_roles(&PkId(gs.system_id), token.unwrap_or_default()).await?;
+    let ops = get_ops(&current_role_map, &desired_role_map);
+
+    // TODO: actually handle errors
+    // TODO: set mention permissions?
+    for op in &ops {
+        match op {
+            ChangeOperation::Update { id, name, color } => {
+                ctx.client
+                    .update_role(guild.id, *id)
+                    .color(Some(*color))
+                    .await
+                    .map_err(|err| format!("error updating role {name} ({id}): {err}"))?;
+
+                debug!(
+                    guild_id = guild.id.get(),
+                    guild_name = guild.name,
+                    "updated role: {}",
+                    name,
+                );
+            }
+            ChangeOperation::Create { name, color } => {
+                ctx.client
+                    .create_role(guild.id)
+                    .name(name)
+                    .color(*color)
+                    .await
+                    .map_err(|err| format!("error creating role {name}: {err}"))?;
+
+                debug!(
+                    guild_id = guild.id.get(),
+                    guild_name = guild.name,
+                    "created role: {}",
+                    name
+                );
+            }
+            ChangeOperation::Delete { id, name } => {
+                ctx.client
+                    .delete_role(guild.id, *id)
+                    .await
+                    .map_err(|err| format!("error deleting role {name} ({id}): {err}"))?;
+
+                debug!(
+                    guild_id = guild.id.get(),
+                    guild_name = guild.name,
+                    "deleted_role: {}",
+                    name
+                );
+            }
+        };
+    }
+
+    // aggregate stats
+    let (created, deleted, updated) =
+        ops.into_iter()
+            .fold((0, 0, 0), |(created, deleted, updated), op| match op {
+                ChangeOperation::Create { .. } => (created + 1, deleted, updated),
+                ChangeOperation::Delete { .. } => (created, deleted + 1, updated),
+                ChangeOperation::Update { .. } => (created, deleted, updated + 1),
+            });
+
+    ctx.update(format!(
+        "roles updated, {} created, {} deleted, {} updated",
+        created, deleted, updated
+    ))
+    .await?;
+    Ok(())
+}
 
 #[derive(Debug, Hash, Eq, PartialEq)]
 struct MemberRole {
@@ -112,89 +199,4 @@ fn get_ops(
             }
         })
         .collect()
-}
-
-pub(crate) async fn update_member_roles(ctx: CommandContext) -> Result<(), Error> {
-    let Some(guild) = ctx.guild().await? else {
-        unreachable!("command is guild_only");
-    };
-
-    ctx.defer_ephemeral().await?; // delay responding and make reply ephemeral
-
-    let Some(gs) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
-        ctx.update("PluralKit module not set-up, please run /pk setup")
-            .await?;
-        return Ok(());
-    };
-
-    let token = ctx.get_arg_string_optional("token")?;
-    let current_role_map = get_current_roles(guild.clone());
-    let desired_role_map =
-        get_desired_roles(&PkId(gs.system_id), token.unwrap_or_default()).await?;
-    let ops = get_ops(&current_role_map, &desired_role_map);
-
-    // TODO: actually handle errors
-    // TODO: set mention permissions?
-    for op in &ops {
-        match op {
-            ChangeOperation::Update { id, name, color } => {
-                ctx.client
-                    .update_role(guild.id, *id)
-                    .color(Some(*color))
-                    .await
-                    .map_err(|err| format!("error updating role {name} ({id}): {err}"))?;
-
-                debug!(
-                    guild_id = guild.id.get(),
-                    guild_name = guild.name,
-                    "updated role: {}",
-                    name,
-                );
-            }
-            ChangeOperation::Create { name, color } => {
-                ctx.client
-                    .create_role(guild.id)
-                    .name(name)
-                    .color(*color)
-                    .await
-                    .map_err(|err| format!("error creating role {name}: {err}"))?;
-
-                debug!(
-                    guild_id = guild.id.get(),
-                    guild_name = guild.name,
-                    "created role: {}",
-                    name
-                );
-            }
-            ChangeOperation::Delete { id, name } => {
-                ctx.client
-                    .delete_role(guild.id, *id)
-                    .await
-                    .map_err(|err| format!("error deleting role {name} ({id}): {err}"))?;
-
-                debug!(
-                    guild_id = guild.id.get(),
-                    guild_name = guild.name,
-                    "deleted_role: {}",
-                    name
-                );
-            }
-        };
-    }
-
-    // aggregate stats
-    let (created, deleted, updated) =
-        ops.into_iter()
-            .fold((0, 0, 0), |(created, deleted, updated), op| match op {
-                ChangeOperation::Create { .. } => (created + 1, deleted, updated),
-                ChangeOperation::Delete { .. } => (created, deleted + 1, updated),
-                ChangeOperation::Update { .. } => (created, deleted, updated + 1),
-            });
-
-    ctx.update(format!(
-        "roles updated, {} created, {} deleted, {} updated",
-        created, deleted, updated
-    ))
-    .await?;
-    Ok(())
 }
