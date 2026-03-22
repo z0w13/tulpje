@@ -1,4 +1,4 @@
-use std::{collections::HashSet, slice, sync::Arc};
+use std::{slice, sync::Arc};
 
 use chrono::{DateTime, NaiveDateTime};
 use pkrs_fork::{
@@ -11,10 +11,7 @@ use tulpje_cache::Cache;
 use twilight_http::Client;
 use twilight_model::{
     channel::message::Embed,
-    id::{
-        Id,
-        marker::{ChannelMarker, GuildMarker},
-    },
+    id::{Id, marker::ChannelMarker},
     util::Timestamp,
 };
 
@@ -24,15 +21,12 @@ use twilight_util::builder::embed::EmbedBuilder;
 use self::pk::db::ModPkGuildRow;
 use crate::{
     context::TaskContext,
-    modules::{
-        core,
-        pk::{
-            self,
-            db::ModPkSystem,
-            fronters::db,
-            notify::db::{self as notify_db, get_notify_channel},
-            util::get_member_name,
-        },
+    modules::pk::{
+        self,
+        db::ModPkSystem,
+        fronters::db,
+        notify::db::{self as notify_db, get_notify_channel},
+        util::get_member_name,
     },
 };
 
@@ -104,7 +98,6 @@ async fn update_fronter_category(
     db: &sqlx::PgPool,
     discord_client: &Arc<Client>,
     cache: &Cache,
-    enabled_guilds: &HashSet<Id<GuildMarker>>,
     system: &ModPkSystem,
     switch: &Switch,
 ) -> Result<(), Error> {
@@ -118,16 +111,6 @@ async fn update_fronter_category(
     };
 
     metrics::counter!("pk:front-category", "type" => "total").increment(1);
-    if !enabled_guilds.contains(&guild_settings.guild_id) {
-        metrics::counter!("pk:front-category", "type" => "module-disabled").increment(1);
-        tracing::debug!(
-            method = "update_fronter_category",
-            "Guild {} has pk module disabled, skipping",
-            guild_settings.guild_id
-        );
-        return Ok(());
-    }
-
     let Some(category_id) = db::get_fronter_category(db, *guild_settings.guild_id).await? else {
         metrics::counter!("pk:front-category", "type" => "category-missing").increment(1);
         tracing::debug!(
@@ -192,7 +175,6 @@ fn create_front_change_embed(system: &ModPkSystem, switch: &Switch) -> Result<Em
 async fn notify_front_change(
     db: &sqlx::PgPool,
     discord_client: &Arc<Client>,
-    enabled_guilds: &HashSet<Id<GuildMarker>>,
     system: &ModPkSystem,
     switch: &Switch,
 ) -> Result<(), Error> {
@@ -213,16 +195,6 @@ async fn notify_front_change(
             guild_id,
             system.id
         );
-        if !enabled_guilds.contains(&guild_id) {
-            metrics::counter!("pk:notifications", "type" => "module-disabled").increment(1);
-            tracing::debug!(
-                method = "notify_front_change",
-                "not notifying guild {} of front change in {} pk module is disabled",
-                guild_id,
-                system.uuid
-            );
-            continue;
-        }
 
         let Some(channel_id) = get_notify_channel(db, *guild_id).await? else {
             metrics::counter!("pk:notifications", "type" => "channel-missing").increment(1);
@@ -259,15 +231,13 @@ async fn process_system(
     pk_client: &PkClient,
     discord_client: &Arc<Client>,
     cache: &Cache,
-    enabled_guilds: &HashSet<Id<GuildMarker>>,
     system: &ModPkSystem,
 ) -> Result<(), Error> {
     let changed = update_system_fronters(db, system, pk_client).await?;
     match changed {
         FrontChange::Changed(switch) => {
-            update_fronter_category(db, discord_client, cache, enabled_guilds, system, &switch)
-                .await?;
-            notify_front_change(db, discord_client, enabled_guilds, system, &switch).await?;
+            update_fronter_category(db, discord_client, cache, system, &switch).await?;
+            notify_front_change(db, discord_client, system, &switch).await?;
         }
         FrontChange::Unchanged => {}
     }
@@ -287,11 +257,6 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
 
     let systems_to_update = db::get_systems_to_update(&ctx.services.db).await?;
     let pk_client = PkClient::default();
-    let pk_guilds: HashSet<Id<GuildMarker>> =
-        core::db::guilds_with_module(&ctx.services.db, "pluralkit")
-            .await?
-            .into_iter()
-            .collect();
 
     for system in &systems_to_update {
         if let Err(err) = process_system(
@@ -299,7 +264,6 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
             &pk_client,
             &ctx.client,
             &ctx.services.cache,
-            &pk_guilds,
             system,
         )
         .await

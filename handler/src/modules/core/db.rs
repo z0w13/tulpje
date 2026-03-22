@@ -50,6 +50,7 @@ pub(super) async fn guild_modules(
     .await?)
 }
 
+#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn guilds_with_module(
     db: &sqlx::PgPool,
     module: &str,

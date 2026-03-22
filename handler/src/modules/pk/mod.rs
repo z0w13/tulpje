@@ -25,7 +25,6 @@ pub fn build() -> Module<Services> {
     metrics::describe_counter!("pk:front-category", "Front Category Stats");
 
     ModuleBuilder::<Services>::new("pluralkit")
-        .guild()
         // commands
         .command(
             CommandBuilder::new("pk", "PluralKit related commands", CommandType::ChatInput)
