@@ -5,8 +5,10 @@ use crate::{
     context::CommandContext,
     modules::pk::{
         db::{self as pk_db},
-        notify::{db, shared::resolve_system_from_reference},
-        util::SystemRef,
+        notify::{
+            db,
+            shared::{handle_system_ref, resolve_system_from_reference},
+        },
     },
     util::{error_response, success_response},
 };
@@ -17,17 +19,9 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
     ctx.defer().await?;
 
-    let ref_str = ctx.get_arg_string("id")?;
-    let system_ref: SystemRef =
-        match ref_str.parse() {
-            Ok(system_ref) => system_ref,
-            Err(_) => {
-                error_response(&ctx, &format!(
-                    "Invalid system reference `{ref_str}`, are you sure you entered it correctly?",
-                )).await?;
-                return Ok(());
-            }
-        };
+    let Some(system_ref) = handle_system_ref(&ctx, &ctx.get_arg_string("id")?).await? else {
+        return Ok(());
+    };
     let Some(system) =
         resolve_system_from_reference(&system_ref, &PkClient::default(), &ctx.services.db).await?
     else {

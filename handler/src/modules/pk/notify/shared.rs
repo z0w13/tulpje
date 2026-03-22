@@ -3,9 +3,13 @@ use pkrs_fork::{client::PkClient, model::PkId};
 use reqwest::StatusCode;
 use tulpje_framework::Error;
 
-use crate::modules::pk::{
-    db::{self, ModPkSystem},
-    util::SystemRef,
+use crate::{
+    context::CommandContext,
+    modules::pk::{
+        db::{self, ModPkSystem},
+        util::SystemRef,
+    },
+    util::error_response,
 };
 
 // TODO: Fetch from DB first, and only fetch from PK if outdated
@@ -33,5 +37,26 @@ pub(super) async fn resolve_system_from_reference(
             }
         }
         Err(err) => Err(err.into()),
+    }
+}
+
+/// try to parse a system ref, and let the end user know if it fails
+/// returns None if failed to parse
+pub(super) async fn handle_system_ref(
+    ctx: &CommandContext,
+    system_ref: &str,
+) -> Result<Option<SystemRef>, Error> {
+    match system_ref.parse() {
+        Ok(system_ref) => Ok(Some(system_ref)),
+        Err(_) => {
+            error_response(
+                ctx,
+                &format!(
+                    "Invalid system reference `{system_ref}`, are you sure you entered it correctly?",
+                ),
+            )
+            .await?;
+            Ok(None)
+        }
     }
 }
