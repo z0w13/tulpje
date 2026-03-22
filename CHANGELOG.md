@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0-rc.3] - 2026-03-22
+
+### Changed
+
+ - More logging in `process_system`
+
+### Fixed
+
+ - Fix RUST_LOG not being honoured, and spans not showing
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(shared/logging): fix RUST_LOG not being honoured, and spans not showing ([`dea1dc3`](https://github.com/z0w13/tulpje/commit/dea1dc3ed96d4ef65f5666dba510b2b8db1ea896))
+ * chore(module/pk): more logging in `process_system` ([`94b7f61`](https://github.com/z0w13/tulpje/commit/94b7f6110dafe7f0cc150e3a244ad1624172a6c1))
+</details>
+
 ## [0.20.0-rc.2] - 2026-03-22
 
 ### Fixed
