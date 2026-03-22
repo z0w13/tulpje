@@ -4,6 +4,7 @@ use twilight_model::id::{Id, marker::ApplicationMarker};
 use tulpje_framework::Metadata;
 
 pub mod color;
+pub mod logging;
 pub mod metrics;
 pub mod shard_state;
 

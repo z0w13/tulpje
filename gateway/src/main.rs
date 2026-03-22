@@ -24,7 +24,7 @@ use crate::shard_manager::ShardManagerHandle;
 #[tokio::main]
 async fn main() {
     // set-up logging
-    tracing_subscriber::fmt::init();
+    tulpje_shared::logging::init();
     tracing::info!("starting tulpje-gateway {} ...", version!());
 
     // register signal handlers
@@ -101,7 +101,6 @@ async fn main() {
         tracing::error!(?err, "error starting shard, shutting down ...");
         shard_manager.shutdown();
     }
-
 
     tokio::spawn(async move {
         tokio::select! {

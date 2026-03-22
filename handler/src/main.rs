@@ -27,7 +27,7 @@ use config::Config;
 #[tokio::main]
 async fn main() {
     // set-up logging
-    tracing_subscriber::fmt::init();
+    tulpje_shared::logging::init();
     tracing::info!("starting tulpje-handler {} ...", version!());
 
     // configure tls
