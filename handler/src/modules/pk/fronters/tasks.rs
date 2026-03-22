@@ -236,10 +236,13 @@ async fn process_system(
     let changed = update_system_fronters(db, system, pk_client).await?;
     match changed {
         FrontChange::Changed(switch) => {
+            tracing::debug!(id = ?system.id, name =? system.name, "front changed");
             update_fronter_category(db, discord_client, cache, system, &switch).await?;
             notify_front_change(db, discord_client, system, &switch).await?;
         }
-        FrontChange::Unchanged => {}
+        FrontChange::Unchanged => {
+            tracing::debug!(id = ?system.id, name =? system.name, "front unchanged unchanged");
+        }
     }
     Ok(())
 }
