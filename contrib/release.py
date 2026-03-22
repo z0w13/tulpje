@@ -820,7 +820,8 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
                 "--notes-file=-",
                 "--title",
                 release.curr_tag,
-            ],
+            ]
+            + (["--prerelease"] if release.curr_version.prerelease is not None else []),
             input=release.changelog.encode("utf-8"),
         )
 
