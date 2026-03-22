@@ -6,7 +6,7 @@ use twilight_util::builder::command::StringBuilder;
 
 use tulpje_framework::{
     Module, ModuleBuilder, handler_func,
-    module::command_builder::{CommandBuilder, SubCommandBuilder, SubCommandGroupBuilder},
+    module::command_builder::{CommandBuilder, SubCommandBuilder},
 };
 
 use crate::context::Services;
@@ -42,22 +42,7 @@ pub fn build() -> Module<Services> {
                         .option(StringBuilder::new("token", "(optional) PluralKit token"))
                         .handler(handler_func!(roles::update_member_roles)),
                 )
-                .group(
-                    SubCommandGroupBuilder::new("fronters", "fronter related commands")
-                        .subcommand(
-                            SubCommandBuilder::new("setup", "set-up fronter channels")
-                                .option(
-                                    StringBuilder::new("name", "Name of the fronters category")
-                                        .max_length(100)
-                                        .required(true),
-                                )
-                                .handler(handler_func!(fronters::commands::setup_fronters)),
-                        )
-                        .subcommand(
-                            SubCommandBuilder::new("update", "manually update fronter channels")
-                                .handler(handler_func!(fronters::commands::update_fronters)),
-                        ),
-                )
+                .group(fronters::commands())
                 .group(notify::commands()),
         )
         // tasks
