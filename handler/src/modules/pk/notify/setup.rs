@@ -12,7 +12,11 @@ use twilight_util::permission_calculator::PermissionCalculator;
 use tulpje_cache::Cache;
 use tulpje_framework::Error;
 
-use crate::{context::CommandContext, modules::pk::notify::db};
+use crate::{
+    context::CommandContext,
+    modules::pk::notify::db,
+    util::{error_response, success_response},
+};
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
@@ -39,10 +43,10 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
 
     db::save_notify_channel(&ctx.services.db, guild.id, channel.id).await?;
-    ctx.update(format!(
-        "SUCCESS: Bot will notify you of front changes in <#{}>",
-        channel.id
-    ))
+    success_response(
+        &ctx,
+        &format!("bot will notify you of front changes in <#{}>", channel.id),
+    )
     .await?;
 
     Ok(())
@@ -96,19 +100,25 @@ async fn handle_channel_permissions(
     // NOTE: We need to check VIEW_CHANNEL too, because of implicit permissions
     //       see: https://docs.discord.com/developers/topics/permissions#implicit-permissions
     if !calculated_permissions.contains(Permissions::VIEW_CHANNEL) {
-        ctx.update(format!(
-            "Error: bot is missing VIEW_CHANNEL permission in <#{}>",
-            channel.id
-        ))
+        error_response(
+            ctx,
+            &format!(
+                "bot is missing VIEW_CHANNEL permission in <#{}>",
+                channel.id
+            ),
+        )
         .await?;
         return Ok(false);
     }
 
     if !calculated_permissions.contains(Permissions::SEND_MESSAGES) {
-        ctx.update(format!(
-            "Error: bot is missing SEND_MESSAGES permission in <#{}>",
-            channel.id
-        ))
+        error_response(
+            ctx,
+            &format!(
+                "bot is missing SEND_MESSAGES permission in <#{}>",
+                channel.id
+            ),
+        )
         .await?;
         return Ok(false);
     }
