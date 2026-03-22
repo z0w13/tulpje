@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0-rc.4] - 2026-03-22
+
+### Fixed
+
+ - Predefine metrics
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(handler/pk): predefine metrics ([`efef4be`](https://github.com/z0w13/tulpje/commit/efef4beb8bcca8d7b6dd902102c651feb9602ad5))
+</details>
+
 ## [0.20.0-rc.3] - 2026-03-22
 
 ### Changed
