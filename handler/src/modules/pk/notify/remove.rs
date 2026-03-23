@@ -18,6 +18,20 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
     ctx.defer().await?;
 
+    // check whether notification channel is set up
+    if db::get_notify_channel(&ctx.services.db, guild.id)
+        .await?
+        .is_none()
+    {
+        error_response(
+            &ctx,
+            "Notification channel not set-up please run `/pk notify setup` first",
+        )
+        .await?;
+
+        return Ok(());
+    }
+
     let Some(system_ref) = handle_system_ref(&ctx, &ctx.get_arg_string("id")?).await? else {
         return Ok(());
     };
