@@ -1,11 +1,20 @@
 use tulpje_framework::Error;
+use twilight_http::Client;
+use twilight_model::{
+    channel::{
+        Channel, ChannelType,
+        permission_overwrite::{PermissionOverwrite, PermissionOverwriteType},
+    },
+    guild::{Guild, Permissions},
+    id::marker::GenericMarker,
+};
 
-use super::{db, shared::create_or_get_fronter_channel};
+use super::db;
 use crate::{
     context::CommandContext,
     modules::pk::{
         db::{get_guild_settings_for_id, get_system},
-        fronters::shared::handle_private_front,
+        fronters::shared::{get_fronter_category, handle_private_front},
         util::SystemRef,
     },
     util::{error_response, success_response},
@@ -48,4 +57,43 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     // Inform user of success
     success_response(&ctx, "Fronter category succesfully set-up!").await?;
     Ok(())
+}
+
+async fn create_or_get_fronter_channel(
+    client: &Client,
+    guild: &Guild,
+    cat_name: String,
+) -> Result<Channel, Error> {
+    if let Some(fronters_category) =
+        get_fronter_category(client, guild, Some(cat_name.clone())).await?
+    {
+        return Ok(fronters_category);
+    }
+
+    // get the bot's user id
+    let user_id = client.current_user().await?.model().await?.id;
+
+    // define permissions
+    let permissions = vec![
+        PermissionOverwrite {
+            deny: Permissions::VIEW_CHANNEL,
+            allow: Permissions::empty(),
+            id: guild.id.cast(),
+            kind: PermissionOverwriteType::Role,
+        },
+        PermissionOverwrite {
+            allow: Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL,
+            deny: Permissions::empty(),
+            id: user_id.cast::<GenericMarker>(),
+            kind: PermissionOverwriteType::Member,
+        },
+    ];
+
+    Ok(client
+        .create_guild_channel(guild.id, &cat_name)
+        .permission_overwrites(&permissions)
+        .kind(ChannelType::GuildCategory)
+        .await?
+        .model()
+        .await?)
 }

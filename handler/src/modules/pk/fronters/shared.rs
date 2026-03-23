@@ -311,45 +311,6 @@ pub(super) async fn update_fronter_channels(
     Ok(())
 }
 
-pub(super) async fn create_or_get_fronter_channel(
-    client: &Client,
-    guild: &Guild,
-    cat_name: String,
-) -> Result<Channel, Error> {
-    if let Some(fronters_category) =
-        get_fronter_category(client, guild, Some(cat_name.clone())).await?
-    {
-        return Ok(fronters_category);
-    }
-
-    // get the bot's user id
-    let user_id = client.current_user().await?.model().await?.id;
-
-    // define permissions
-    let permissions = vec![
-        PermissionOverwrite {
-            deny: Permissions::VIEW_CHANNEL,
-            allow: Permissions::empty(),
-            id: guild.id.cast(),
-            kind: PermissionOverwriteType::Role,
-        },
-        PermissionOverwrite {
-            allow: Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL,
-            deny: Permissions::empty(),
-            id: user_id.cast::<GenericMarker>(),
-            kind: PermissionOverwriteType::Member,
-        },
-    ];
-
-    Ok(client
-        .create_guild_channel(guild.id, &cat_name)
-        .permission_overwrites(&permissions)
-        .kind(ChannelType::GuildCategory)
-        .await?
-        .model()
-        .await?)
-}
-
 // check whether a system's front is private and if so
 // inform the user with the specified message.
 //
