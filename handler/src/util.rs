@@ -4,14 +4,19 @@ use tulpje_shared::color::{self, Color};
 
 use twilight_http::Client;
 use twilight_model::{
-    channel::message::Component,
-    guild::Role,
+    channel::{Channel, message::Component},
+    guild::{Permissions, Role},
     id::{
         Id,
         marker::{GuildMarker, RoleMarker, UserMarker},
     },
 };
-use twilight_util::builder::message::{ContainerBuilder, TextDisplayBuilder};
+use twilight_util::{
+    builder::message::{ContainerBuilder, TextDisplayBuilder},
+    permission_calculator::PermissionCalculator,
+};
+
+use crate::{context::CommandContext, responses};
 
 pub(crate) fn message(color: &Color, text: &str) -> Component {
     ContainerBuilder::new()
@@ -82,4 +87,71 @@ pub(crate) async fn get_member_roles(
     }
 
     Ok(roles)
+}
+
+/// check whether the specified user has the required permissions and
+/// communicates to the end user if it doesn't.
+///
+/// returns a boolean indicating whether the permissions were present
+pub(crate) async fn handle_permissions(
+    ctx: &CommandContext,
+    guild_id: Id<GuildMarker>,
+    user_id: Id<UserMarker>,
+    channel: &Channel,
+    permissions: Permissions,
+) -> Result<bool, Error> {
+    let everyone_role = get_everyone_role(&ctx.client, &ctx.services.cache, guild_id).await?;
+    let member_roles =
+        get_member_roles(&ctx.client, &ctx.services.cache, user_id, guild_id).await?;
+    let member_role_permissions: Vec<_> =
+        member_roles.iter().map(|r| (r.id, r.permissions)).collect();
+
+    let calculator = PermissionCalculator::new(
+        guild_id,
+        user_id,
+        everyone_role.permissions,
+        &member_role_permissions,
+    );
+
+    // calculate effective permissions
+    let calculated_permissions = calculator.in_channel(
+        channel.kind,
+        &channel.permission_overwrites.clone().unwrap_or_default(),
+    );
+
+    // calculate missing permissions
+    let missing_permissions = permissions.difference(calculated_permissions);
+
+    // return if user has all permissions
+    if missing_permissions.is_empty() {
+        return Ok(true);
+    }
+
+    // get permission names
+    let mut permission_names: Vec<_> = missing_permissions.iter_names().map(|(k, _)| k).collect();
+
+    // pop the last one for string formatting
+    let last_permission = permission_names
+        .pop()
+        .expect("missing_permissions isn't empty so shouldn't fail");
+
+    // format the permission string
+    let permissions_string = if !permission_names.is_empty() {
+        format!(
+            "{} and {} permissions",
+            permission_names.join(", "),
+            last_permission
+        )
+    } else {
+        format!("{} permission", last_permission)
+    };
+
+    // inform the user
+    responses::error(
+        ctx,
+        &format!("bot is missing {permissions_string} in <#{}>", channel.id),
+    )
+    .await?;
+
+    Ok(false)
 }

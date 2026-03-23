@@ -7,13 +7,9 @@ use twilight_model::{
         marker::{ChannelMarker, GuildMarker},
     },
 };
-use twilight_util::permission_calculator::PermissionCalculator;
 
 use crate::{
-    context::CommandContext,
-    modules::pk::notify::db,
-    responses,
-    util::{get_everyone_role, get_member_roles},
+    context::CommandContext, modules::pk::notify::db, responses, util::handle_permissions,
 };
 use tulpje_framework::Error;
 
@@ -24,6 +20,8 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     ctx.defer().await?;
 
     let channel_name = ctx.get_arg_string("channel")?;
+    let bot_user = ctx.client.current_user().await?.model().await?;
+    let required_permissions = Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES;
 
     let channel = if channel_name.starts_with("<#") {
         // handle channel references
@@ -61,13 +59,13 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         }
 
         // check permissions
-        if !handle_channel_permissions(&ctx, guild.id, &channel).await? {
+        if !handle_permissions(&ctx, guild.id, bot_user.id, &channel, required_permissions).await? {
             return Ok(());
         }
 
         channel
     } else if let Some(channel) = find_channel_by_name(&ctx.client, guild.id, &channel_name).await?
-        && handle_channel_permissions(&ctx, guild.id, &channel).await?
+        && handle_permissions(&ctx, guild.id, bot_user.id, &channel, required_permissions).await?
     {
         // return the channel if we found it by name
         channel
@@ -109,67 +107,4 @@ async fn find_channel_by_name(
                 .to_lowercase()
                 == name.to_lowercase()
         }))
-}
-
-/// check channel permissions and inform user of missing ones
-async fn handle_channel_permissions(
-    ctx: &CommandContext,
-    guild_id: Id<GuildMarker>,
-    channel: &Channel,
-) -> Result<bool, Error> {
-    let current_user = ctx.client.current_user().await?.model().await?;
-    let everyone_role = get_everyone_role(&ctx.client, &ctx.services.cache, guild_id).await?;
-    let member_roles =
-        get_member_roles(&ctx.client, &ctx.services.cache, current_user.id, guild_id).await?;
-    let member_role_permissions: Vec<_> =
-        member_roles.iter().map(|r| (r.id, r.permissions)).collect();
-
-    let calculator = PermissionCalculator::new(
-        guild_id,
-        current_user.id,
-        everyone_role.permissions,
-        &member_role_permissions,
-    );
-
-    let calculated_permissions = calculator.in_channel(
-        ChannelType::GuildText,
-        &channel.permission_overwrites.clone().unwrap_or_default(),
-    );
-
-    // NOTE: We need to check VIEW_CHANNEL too, because of implicit permissions
-    //       see: https://docs.discord.com/developers/topics/permissions#implicit-permissions
-    let missing_permissions =
-        (Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES).difference(calculated_permissions);
-
-    if missing_permissions.is_empty() {
-        return Ok(true);
-    }
-
-    // get permission names
-    let mut permission_names: Vec<_> = missing_permissions.iter_names().map(|(k, _)| k).collect();
-
-    // pop the last one for string formatting
-    let last_permission = permission_names
-        .pop()
-        .expect("missing_permissions isn't empty so shouldn't fail");
-
-    // format the permission string
-    let permissions_string = if !permission_names.is_empty() {
-        format!(
-            "{} and {} permissions",
-            permission_names.join(", "),
-            last_permission
-        )
-    } else {
-        format!("{} permission", last_permission)
-    };
-
-    // inform the user
-    responses::error(
-        ctx,
-        &format!("bot is missing {permissions_string} in <#{}>", channel.id),
-    )
-    .await?;
-
-    Ok(false)
 }
