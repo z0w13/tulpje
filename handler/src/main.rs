@@ -14,7 +14,7 @@ use sqlx::{
     ConnectOptions as _,
     postgres::{PgConnectOptions, PgPoolOptions},
 };
-use tokio::sync::mpsc;
+use tokio::{signal::unix::SignalKind, sync::mpsc};
 use tracing::{Instrument as _, Span, log::LevelFilter};
 use twilight_gateway::Event;
 
@@ -30,6 +30,12 @@ async fn main() {
     // set-up logging
     tulpje_shared::logging::init();
     tracing::info!("starting tulpje-handler {} ...", version!());
+
+    // register signal handlers
+    let mut sigterm = tokio::signal::unix::signal(SignalKind::terminate())
+        .expect("error registering SIGTERM handler");
+    let mut sigint = tokio::signal::unix::signal(SignalKind::interrupt())
+        .expect("error registering SIGINT (Ctrl+C) handler");
 
     // configure tls
     rustls::crypto::aws_lc_rs::default_provider()
@@ -208,9 +214,33 @@ async fn main() {
         }
     });
 
-    framework.join().await.expect("error joining framework");
-    main_handle.await.expect("error joining main_handle");
-    amqp.join().await.expect("error joining amqp");
+    // listen for SIGTERM/SIGINT signal
+    {
+        tokio::select! {
+            _ = sigint.recv() => {},
+            _ = sigterm.recv() => {},
+        }
+        tracing::info!("shutting down...");
+    }
+
+    amqp.shutdown();
+    tracing::trace!("waiting for amqp loop to exit...");
+    if let Err(err) = amqp.join().await {
+        tracing::error!("error joining amqp: {err}");
+    }
+
+    tracing::trace!("waiting for main loop to exit...");
+    if let Err(err) = main_handle.await {
+        tracing::error!("error joining main_handle: {err}");
+    }
+
+    framework.shutdown().await;
+    tracing::trace!("waiting for framework to exit...");
+    if let Err(err) = framework.join().await {
+        tracing::error!("error joining framework: {err}");
+    }
+
+    tracing::info!("cleanup finished, exiting...");
 }
 
 #[tracing::instrument(name="event", fields(shard = meta.shard, uuid = %meta.uuid), skip_all)]
