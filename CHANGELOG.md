@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.2-rc.1] - 2026-03-23
+
+### Added
+
+ - Add a user guide
+ - Add missing permission overwrites in `/pk notify setup`
+
+### Changed
+
+ - Use `handle_system_ref` in `/pk setup`
+ - Move `handle_system_ref` to module wide utils
+ - Handle 404 on `/pk setup`
+ - Nicer messages in various places
+ - Use new channel and permission code for `/pk fronters setup`
+ - Rework and split out channel finding and permission checking logic
+ - Make permission checking code generic
+ - Better permission check code
+ - Move reusable responses into dedicated module
+ - Move some utility functions to crate root
+ - Move `create_or_get_fronter_channel` next to setup command
+ - Handle channel references in `/pk notify setup`
+ - Error if user haven't set up a notify channel yet but they try to add a system
+
+### Fixed
+
+ - Make `find_channel_by_name` filter on channel type
+ - Also release if we go from prerelease to full
+
+### Removed
+
+ - Remove old debug statement
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * chore(docs): add a user guide ([`30cfe3f`](https://github.com/z0w13/tulpje/commit/30cfe3f22ac088c7d864d7d8af9e3c1df8c1ee8f))
+ * refactor(handler/pk): use `handle_system_ref` in `/pk setup` ([`81190d2`](https://github.com/z0w13/tulpje/commit/81190d2886f0e0249271effdf556d3762b067f09))
+ * refactor(handler/pk): move `handle_system_ref` to module wide utils ([`73b484e`](https://github.com/z0w13/tulpje/commit/73b484ed0348bc17e7483d298b6684566b29bdaf))
+ * chore(handler/pk): remove old debug statement ([`a4fb31d`](https://github.com/z0w13/tulpje/commit/a4fb31d7fded72710ac210d3c04bff9bcca8f421))
+ * feat(handler/pk): handle 404 on `/pk setup` ([`0ea20bf`](https://github.com/z0w13/tulpje/commit/0ea20bfeb389476a5f0cdcd12dfec7ad3ced73f6))
+ * feat(handler/pk): nicer messages in various places ([`31f73fa`](https://github.com/z0w13/tulpje/commit/31f73fa4b6ba1458f4373a20e7d5a814baceecd2))
+ * fix(handler): make `find_channel_by_name` filter on channel type ([`bf3dc02`](https://github.com/z0w13/tulpje/commit/bf3dc0215dfddb89bea49741fc75afa8928031f6))
+ * fix(handler/pk): add missing permission overwrites in `/pk notify setup` ([`2d7bbee`](https://github.com/z0w13/tulpje/commit/2d7bbee392ea1edba2827d11d9cfd0deebfba0ee))
+ * refactor(handler/pk): use new channel and permission code for `/pk fronters setup` ([`af24809`](https://github.com/z0w13/tulpje/commit/af2480953f34ea4adb79ecb41f8db3ae366635c9))
+ * refactor(handler/pk): rework and split out channel finding and permission checking logic ([`2f4950d`](https://github.com/z0w13/tulpje/commit/2f4950dffd23f4b726aa14f51b016b79823c2325))
+ * refactor(handler): make permission checking code generic ([`bc28a85`](https://github.com/z0w13/tulpje/commit/bc28a859a6b8d1948ea5eb5b332fa9a4eae9a442))
+ * refactor(handler): better permission check code ([`f229022`](https://github.com/z0w13/tulpje/commit/f229022f0b55f7f54389b86f920061ba3fd7ec88))
+ * refactor(handler): move reusable responses into dedicated module ([`061aa52`](https://github.com/z0w13/tulpje/commit/061aa52763faa029673f690327e233870e4f426a))
+ * refactor(handler): move some utility functions to crate root ([`4ddb652`](https://github.com/z0w13/tulpje/commit/4ddb652c6171245fb58cf01460a6cf219a65c19b))
+ * refactor(handler/pk): move `create_or_get_fronter_channel` next to setup command ([`e90e7a7`](https://github.com/z0w13/tulpje/commit/e90e7a74439b39722d3aadba630ecf7570dadd16))
+ * feat(handler/pk): handle channel references in `/pk notify setup` ([`c94ed9e`](https://github.com/z0w13/tulpje/commit/c94ed9ef4b88618ad405f3bd15e9ab6edda1d96f))
+ * feat(handler/pk): error if user haven't set up a notify channel yet but they try to add a system ([`5e05b05`](https://github.com/z0w13/tulpje/commit/5e05b05200234dd93e38b2d43d261e53ddaaf5ab))
+ * fix(build): also release if we go from prerelease to full ([`6172382`](https://github.com/z0w13/tulpje/commit/61723827f9ea937d6c4acfecee0c653d52aeacd9))
+</details>
+
 ## [0.20.1] - 2026-03-23
 
 ### Changed
