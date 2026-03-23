@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0-rc.2] - 2026-03-23
+
+### Fixed
+
+ - Correctly use `Span`s with async functions
+
+### Removed
+
+ - Remove stray log statement
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix: correctly use `Span`s with async functions ([`b99f172`](https://github.com/z0w13/tulpje/commit/b99f172eee7c140ad55a2a5378bac1f63c23fc1f))
+ * fix(framework): remove stray log statement ([`b3183d4`](https://github.com/z0w13/tulpje/commit/b3183d48bb265a7cd7c3346553ca44b6a6c35941))
+</details>
+
 ## [0.16.0-rc.1] - 2026-03-22
 
 ### Added
