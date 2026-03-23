@@ -19,9 +19,12 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
     ctx.defer().await?;
 
+    // parse the system reference the user provided
     let Some(system_ref) = handle_system_ref(&ctx, &ctx.get_arg_string("id")?).await? else {
         return Ok(());
     };
+
+    // try to get the system from PluralKit or the database
     let Some(system) =
         resolve_system_from_reference(&system_ref, &PkClient::default(), &ctx.services.db).await?
     else {
@@ -34,6 +37,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
+    // update the system in our database and add it to the watch list
     pk_db::update_system(&ctx.services.db, &system).await?;
     db::add_notify_system(&ctx.services.db, guild.id, system.uuid).await?;
 
