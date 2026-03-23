@@ -20,9 +20,10 @@ use crate::modules::pk::util::SystemRef;
 use crate::modules::pk::{db::ModPkGuildRow, util::get_member_name};
 use crate::util::error_response;
 
-pub(super) async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
-    let pk = PkClient::default();
-
+pub(super) async fn get_desired_fronters(
+    pk: &PkClient,
+    system: &PkId,
+) -> Result<Vec<String>, Error> {
     Ok(pk
         .get_system_fronters(system)
         .await?
@@ -153,6 +154,7 @@ fn debug_fronter_order(
 
 pub(super) async fn update_fronter_channels(
     client: &Client,
+    pk: &PkClient,
     cache: &Cache,
     guild: Guild,
     gs: &ModPkGuildRow,
@@ -166,7 +168,7 @@ pub(super) async fn update_fronter_channels(
     let desired_fronters = if let Some(members) = members {
         members.iter().map(get_member_name).collect()
     } else {
-        get_desired_fronters(&PkId(gs.system_id.clone())).await?
+        get_desired_fronters(pk, &PkId(gs.system_id.clone())).await?
     };
 
     let current_fronters: HashSet<String> = fronter_channels
@@ -355,11 +357,12 @@ pub(super) async fn create_or_get_fronter_channel(
 // the calling functions early returns after
 pub(crate) async fn handle_private_front(
     ctx: &CommandContext,
-    pk_client: &PkClient,
     system_ref: SystemRef,
     message: &str,
 ) -> Result<bool, Error> {
-    if let Err(err) = pk_client
+    if let Err(err) = ctx
+        .services
+        .pk
         .get_system_fronters(&PkId(system_ref.into()))
         .await
     {

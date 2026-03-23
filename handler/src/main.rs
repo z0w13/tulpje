@@ -8,6 +8,7 @@ mod util;
 use std::{sync::Arc, time::Duration};
 
 use context::Services;
+use pkrs_fork::client::PkClient;
 use redis::aio::ConnectionManagerConfig;
 use sqlx::{
     ConnectOptions as _,
@@ -131,6 +132,10 @@ async fn main() {
     let services = Arc::new(context::Services {
         handler_id: config.handler_id,
 
+        pk: Arc::new(PkClient {
+            user_agent: format!("Tulpje {}", version!()),
+            ..Default::default()
+        }),
         cache: Arc::clone(&cache),
         redis,
         db,

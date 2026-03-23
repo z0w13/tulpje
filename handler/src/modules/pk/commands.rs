@@ -1,4 +1,4 @@
-use pkrs_fork::{client::PkClient, model::PkId};
+use pkrs_fork::model::PkId;
 use tracing::debug;
 
 use tulpje_framework::Error;
@@ -35,12 +35,8 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
 
     db::save_guild_settings(&ctx.services.db, guild.id, user_id, &system_id).await?;
 
-    let pk = PkClient {
-        ..Default::default()
-    };
-
     // TODO: fix pkrs to actually handle 404s correctly
-    let system = match pk.get_system(&PkId(system_id.clone())).await {
+    let system = match ctx.services.pk.get_system(&PkId(system_id.clone())).await {
         Ok(system) => system,
         Err(err) => {
             ctx.update(format!(

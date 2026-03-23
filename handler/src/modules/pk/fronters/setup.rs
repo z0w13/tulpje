@@ -1,4 +1,3 @@
-use pkrs_fork::client::PkClient;
 use tulpje_framework::Error;
 
 use super::{db, shared::create_or_get_fronter_channel};
@@ -31,7 +30,6 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     // inform the user if their front is private
     if handle_private_front(
         &ctx,
-        &PkClient::default(),
         system_ref.clone(),
         &format!("Front for system `{display_name}` is private, please set it to public to use the fronter list")
     )

@@ -114,6 +114,7 @@ fn gather_fronters_from_switch(
 
 async fn update_fronter_category(
     db: &sqlx::PgPool,
+    pk: &PkClient,
     discord_client: &Arc<Client>,
     cache: &Cache,
     system: &ModPkSystem,
@@ -141,6 +142,7 @@ async fn update_fronter_category(
 
     if let Err(err) = update_fronters_for_guild(
         discord_client,
+        pk,
         cache,
         &guild_settings,
         *category_id,
@@ -255,7 +257,7 @@ async fn process_system(
     match changed {
         FrontChange::Changed(switch) => {
             tracing::debug!(id = ?system.id, name =? system.name, "front changed");
-            update_fronter_category(db, discord_client, cache, system, &switch).await?;
+            update_fronter_category(db, pk_client, discord_client, cache, system, &switch).await?;
             notify_front_change(db, discord_client, system, &switch).await?;
         }
         FrontChange::Unchanged => {
@@ -277,12 +279,11 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
     }
 
     let systems_to_update = db::get_systems_to_update(&ctx.services.db).await?;
-    let pk_client = PkClient::default();
 
     for system in &systems_to_update {
         if let Err(err) = process_system(
             &ctx.services.db,
-            &pk_client,
+            &ctx.services.pk,
             &ctx.client,
             &ctx.services.cache,
             system,
@@ -298,6 +299,7 @@ pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
 
 async fn update_fronters_for_guild(
     client: &Client,
+    pk: &PkClient,
     cache: &Cache,
     guild_settings: &ModPkGuildRow,
     category_id: Id<ChannelMarker>,
@@ -330,6 +332,7 @@ async fn update_fronters_for_guild(
 
     super::shared::update_fronter_channels(
         client,
+        pk,
         cache,
         guild.clone(),
         guild_settings,

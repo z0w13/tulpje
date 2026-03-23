@@ -126,6 +126,8 @@ async fn get_desired_roles(
     system: &PkId,
     token: String,
 ) -> Result<HashMap<String, MemberRole>, Error> {
+    // TODO: Figure something out to use the existing PluralKit client with
+    //       a temporary token
     let pk = PkClient {
         token,
         ..Default::default()

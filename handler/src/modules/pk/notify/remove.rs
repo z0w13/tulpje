@@ -1,4 +1,3 @@
-use pkrs_fork::client::PkClient;
 use tulpje_framework::Error;
 
 use crate::{
@@ -23,7 +22,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
     let Some(system) =
-        resolve_system_from_reference(&system_ref, &PkClient::default(), &ctx.services.db).await?
+        resolve_system_from_reference(&system_ref, &ctx.services.pk, &ctx.services.db).await?
     else {
         error_response(&ctx, &format!(
             "Couldn't find system `{}`, are you sure you're following them and that you spelled it correctly?",

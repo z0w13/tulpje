@@ -33,7 +33,16 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     cat.guild_id
         .ok_or_else(|| format!("channel {} isn't a guild channel", cat_id))?;
 
-    update_fronter_channels(&ctx.client(), &ctx.services.cache, guild, &gs, cat, None).await?;
+    update_fronter_channels(
+        &ctx.client(),
+        &ctx.services.pk,
+        &ctx.services.cache,
+        guild,
+        &gs,
+        cat,
+        None,
+    )
+    .await?;
 
     success_response(&ctx, "Fronter category updated!").await?;
     Ok(())
