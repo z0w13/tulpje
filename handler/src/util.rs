@@ -32,13 +32,16 @@ pub(crate) fn message(color: &Color, text: &str) -> Component {
         .into()
 }
 
+#[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn success_message(text: &str) -> Component {
     message(&color::roles::GREEN, text)
 }
 
+#[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn error_message(text: &str) -> Component {
     message(&color::roles::RED, text)
 }
+
 #[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn warning_message(text: &str) -> Component {
     message(&color::roles::ORANGE, text)
