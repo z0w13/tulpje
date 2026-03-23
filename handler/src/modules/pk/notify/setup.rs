@@ -1,15 +1,10 @@
-use twilight_http::{Client, error::ErrorType, response::StatusCode};
-use twilight_model::{
-    channel::{Channel, ChannelType},
-    guild::Permissions,
-    id::{
-        Id,
-        marker::{ChannelMarker, GuildMarker},
-    },
-};
+use twilight_model::{channel::ChannelType, guild::Permissions};
 
 use crate::{
-    context::CommandContext, modules::pk::notify::db, responses, util::handle_permissions,
+    context::CommandContext,
+    modules::pk::notify::db,
+    responses,
+    util::{find_channel_by_name, handle_channel_from_id, handle_permissions, parse_channel_ref},
 };
 use tulpje_framework::Error;
 
@@ -19,60 +14,31 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
     ctx.defer().await?;
 
-    let channel_name = ctx.get_arg_string("channel")?;
+    let channel_name_or_ref = ctx.get_arg_string("channel")?;
     let bot_user = ctx.client.current_user().await?.model().await?;
     let required_permissions = Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES;
 
-    let channel = if channel_name.starts_with("<#") {
+    let existing_channel = if let Some(channel_id) = parse_channel_ref(&channel_name_or_ref) {
         // handle channel references
-
-        // parse the channel id
-        let channel_id: Id<ChannelMarker> = channel_name
-            .trim()
-            .trim_start_matches("<#")
-            .trim_end_matches(">")
-            .parse()?;
-
-        // try and retrieve the channel, handling any errors
-        let channel = match ctx.client.channel(channel_id).await {
-            Ok(resp) => resp.model().await?,
-            Err(err) => {
-                match err.kind() {
-                    // NOT_FOUND indicates the channel doesn't exist, FORBIDDEN indicates the bot
-                    // doesn't have access to it, either way inform the user the same
-                    ErrorType::Response { status, .. }
-                        if *status == StatusCode::NOT_FOUND || *status == StatusCode::FORBIDDEN =>
-                    {
-                        responses::channel_not_found(&ctx, channel_id).await?;
-                        return Ok(());
-                    }
-                    _ => return Err(err.into()),
-                };
-            }
-        };
-
-        // We need to separately handle channels the bot _can_ access but that are
-        // outside of the user's guild. Give the same error message though
-        if channel.guild_id.is_some_and(|i| i != guild.id) {
-            responses::channel_not_found(&ctx, channel.id).await?;
+        let Some(channel) = handle_channel_from_id(&ctx, guild.id, channel_id).await? else {
             return Ok(());
-        }
+        };
+        Some(channel)
+    } else {
+        // handle channel names
+        find_channel_by_name(&ctx.client, guild.id, &channel_name_or_ref).await?
+    };
 
-        // check permissions
+    let channel = if let Some(channel) = existing_channel {
+        // if existing channel, check permissions and return if missing
         if !handle_permissions(&ctx, guild.id, bot_user.id, &channel, required_permissions).await? {
             return Ok(());
         }
-
-        channel
-    } else if let Some(channel) = find_channel_by_name(&ctx.client, guild.id, &channel_name).await?
-        && handle_permissions(&ctx, guild.id, bot_user.id, &channel, required_permissions).await?
-    {
-        // return the channel if we found it by name
         channel
     } else {
-        // if all else fails make a new one
+        // otherwise create the channel
         ctx.client
-            .create_guild_channel(guild.id, &channel_name)
+            .create_guild_channel(guild.id, &channel_name_or_ref)
             .kind(ChannelType::GuildText)
             .await?
             .model()
@@ -87,24 +53,4 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     .await?;
 
     Ok(())
-}
-
-async fn find_channel_by_name(
-    client: &Client,
-    guild_id: Id<GuildMarker>,
-    name: &str,
-) -> Result<Option<Channel>, Error> {
-    Ok(client
-        .guild_channels(guild_id)
-        .await?
-        .models()
-        .await?
-        .into_iter()
-        .find(|c| {
-            c.name
-                .as_ref()
-                .expect("guild channels have names")
-                .to_lowercase()
-                == name.to_lowercase()
-        }))
 }

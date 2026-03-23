@@ -2,13 +2,13 @@ use tulpje_cache::Cache;
 use tulpje_framework::Error;
 use tulpje_shared::color::{self, Color};
 
-use twilight_http::Client;
+use twilight_http::{Client, error::ErrorType, response::StatusCode};
 use twilight_model::{
     channel::{Channel, message::Component},
     guild::{Permissions, Role},
     id::{
         Id,
-        marker::{GuildMarker, RoleMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
 };
 use twilight_util::{
@@ -154,4 +154,72 @@ pub(crate) async fn handle_permissions(
     .await?;
 
     Ok(false)
+}
+
+pub(crate) async fn find_channel_by_name(
+    client: &Client,
+    guild_id: Id<GuildMarker>,
+    name: &str,
+) -> Result<Option<Channel>, Error> {
+    Ok(client
+        .guild_channels(guild_id)
+        .await?
+        .models()
+        .await?
+        .into_iter()
+        .find(|c| {
+            c.name
+                .as_ref()
+                .expect("guild channels have names")
+                .to_lowercase()
+                == name.to_lowercase()
+        }))
+}
+
+pub(crate) async fn handle_channel_from_id(
+    ctx: &CommandContext,
+    guild_id: Id<GuildMarker>,
+    channel_id: Id<ChannelMarker>,
+) -> Result<Option<Channel>, Error> {
+    // try and retrieve the channel, handling any errors
+    match ctx.client.channel(channel_id).await {
+        Ok(resp) => {
+            let channel = resp.model().await?;
+
+            // ensure channel is in current guild, otherwise send an error to user
+            if channel
+                .guild_id
+                .is_some_and(|channel_guild_id| channel_guild_id != guild_id)
+            {
+                responses::channel_not_found(ctx, channel_id).await?;
+                Ok(None)
+            } else {
+                Ok(Some(channel))
+            }
+        }
+        Err(err) => match err.kind() {
+            // NOT_FOUND indicates the channel doesn't exist, FORBIDDEN indicates the bot
+            // doesn't have access to it, either way inform the user the same
+            ErrorType::Response { status, .. }
+                if *status == StatusCode::NOT_FOUND || *status == StatusCode::FORBIDDEN =>
+            {
+                responses::channel_not_found(ctx, channel_id).await?;
+                Ok(None)
+            }
+            _ => Err(err.into()),
+        },
+    }
+}
+
+pub(crate) fn parse_channel_ref(channel_ref: &str) -> Option<Id<ChannelMarker>> {
+    if !channel_ref.starts_with("<#") {
+        return None;
+    }
+
+    channel_ref
+        .trim()
+        .trim_start_matches("<#")
+        .trim_end_matches(">")
+        .parse()
+        .ok()
 }
