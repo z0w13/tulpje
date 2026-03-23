@@ -1,4 +1,5 @@
 use pkrs_fork::model::PkId;
+use reqwest::StatusCode;
 use tracing::debug;
 
 use tulpje_framework::Error;
@@ -37,18 +38,20 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     // TODO: fix pkrs to actually handle 404s correctly
     let system = match ctx.services.pk.get_system(&PkId(system_id.clone())).await {
         Ok(system) => system,
-        Err(err) => {
+        Err(err)
+            if err
+                .status()
+                .is_some_and(|status| status == StatusCode::NOT_FOUND) =>
+        {
             responses::error(
                 &ctx,
-                &format!(
-                    "### Error\nPluralKit API is having issues or system doesn't exist: {:?}",
-                    err
-                ),
+                &format!("### Error\nCouldn't find system `{system_id}`"),
             )
             .await?;
 
             return Ok(());
         }
+        Err(err) => return Err(err.into()),
     };
 
     // Inform user of success
