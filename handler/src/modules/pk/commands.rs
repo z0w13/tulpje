@@ -1,7 +1,5 @@
 use pkrs_fork::model::PkId;
 use reqwest::StatusCode;
-use tracing::debug;
-
 use tulpje_framework::Error;
 
 use super::db;
@@ -18,13 +16,6 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
 
     let user_id = ctx.event.author_id().ok_or("no author?")?;
     let system_id = ctx.get_arg_string("system_id")?;
-
-    debug!(
-        guild_id = guild.id.get(),
-        guild_name = guild.name,
-        command = "setup-pk",
-        system_id = system_id
-    );
 
     // sanitise and validate system id
     let system_id = system_id.trim().replace("-", "").to_lowercase();
