@@ -5,7 +5,9 @@ use tulpje_framework::Error;
 use super::{db, shared::create_or_get_fronter_channel};
 use crate::{
     context::CommandContext,
-    modules::pk::db::get_guild_settings_for_id,
+    modules::pk::{
+        db::get_guild_settings_for_id, fronters::shared::handle_private_front, util::SystemRef,
+    },
     util::{error_response, success_response},
 };
 
@@ -21,24 +23,20 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
-    // check for private front list
-    let pk_client = PkClient::default();
-    if let Err(err) = pk_client
-        .get_system_fronters(&PkId(guild_settings.system_id.clone()))
-        .await
-        && let Some(status) = err.status()
-        && status == StatusCode::FORBIDDEN
+    // inform the user if their front is private
+    if handle_private_front(
+        &ctx,
+        &PkClient::default(),
+        SystemRef::Id(guild_settings.system_id.clone()),
+        &format!(
+            "Front for system `{}` is private, please set it to public to use the fronter list",
+            guild_settings.system_id
+        ),
+    )
+    .await?
     {
-        error_response(
-            &ctx,
-            &format!(
-                "Front for system {} is private, please set it to public to use the fronter list",
-                guild_settings.system_id
-            ),
-        )
-        .await?;
         return Ok(());
-    };
+    }
 
     // create or get the front category
     let name = ctx.get_arg_string("name")?;

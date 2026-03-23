@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use pkrs_fork::model::Member;
 use pkrs_fork::{client::PkClient, model::PkId};
+use reqwest::StatusCode;
 use serde_either::StringOrStruct;
 use tracing::{Level, error};
 use tulpje_cache::Cache;
@@ -14,7 +15,10 @@ use twilight_model::id::marker::{ChannelMarker, GenericMarker, GuildMarker};
 
 use tulpje_framework::Error;
 
+use crate::context::CommandContext;
+use crate::modules::pk::util::SystemRef;
 use crate::modules::pk::{db::ModPkGuildRow, util::get_member_name};
+use crate::util::error_response;
 
 pub(super) async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
     let pk = PkClient::default();
@@ -342,4 +346,34 @@ pub(super) async fn create_or_get_fronter_channel(
         .await?
         .model()
         .await?)
+}
+
+// check whether a system's front is private and if so
+// inform the user with the specified message.
+//
+// returns true if front is private, with the assumption
+// the calling functions early returns after
+pub(crate) async fn handle_private_front(
+    ctx: &CommandContext,
+    pk_client: &PkClient,
+    system_ref: SystemRef,
+    message: &str,
+) -> Result<bool, Error> {
+    if let Err(err) = pk_client
+        .get_system_fronters(&PkId(system_ref.into()))
+        .await
+    {
+        // inform user front is private and return
+        if let Some(status) = err.status()
+            && status == StatusCode::FORBIDDEN
+        {
+            error_response(ctx, message).await?;
+            return Ok(true);
+        }
+
+        // propagate any other errors
+        return Err(err.into());
+    };
+
+    Ok(false)
 }
