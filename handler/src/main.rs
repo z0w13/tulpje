@@ -14,12 +14,12 @@ use sqlx::{
     postgres::{PgConnectOptions, PgPoolOptions},
 };
 use tokio::sync::mpsc;
-use tracing::{Level, log::LevelFilter};
+use tracing::{Instrument as _, Span, log::LevelFilter};
 use twilight_gateway::Event;
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
-use tulpje_framework::{Framework, Metadata, Registry};
+use tulpje_framework::{Framework, Metadata, Registry, framework::Sender};
 use tulpje_shared::{DiscordEvent, version};
 
 use config::Config;
@@ -199,27 +199,26 @@ async fn main() {
                 }
             };
 
-            let span =
-                tracing::span!(Level::ERROR, "event", uuid = ?meta.uuid, shard = ?meta.shard);
-            let span_guard = span.enter();
-
-            if let Err(err) = cache.update(&event).await {
-                tracing::warn!("error updating cache: {}", err);
-            }
-
-            tracing::debug!(event = ?event.kind(), "event received");
-
-            if let Err(err) = sender.with_span(meta, event, span.clone()) {
-                tracing::error!("error queueing event: {}", err);
-            };
-
-            drop(span_guard);
+            handle_message(&cache, &sender, meta, event).await;
         }
     });
 
     framework.join().await.expect("error joining framework");
     main_handle.await.expect("error joining main_handle");
     amqp.join().await.expect("error joining amqp");
+}
+
+#[tracing::instrument(name="event", fields(shard = meta.shard, uuid = %meta.uuid), skip_all)]
+async fn handle_message(cache: &Cache, sender: &Sender, meta: Metadata, event: Event) {
+    if let Err(err) = cache.update(&event).in_current_span().await {
+        tracing::warn!("error updating cache: {err}");
+    }
+
+    tracing::debug!("{:?} received", event.kind());
+
+    if let Err(err) = sender.with_span(meta, event, Span::current()) {
+        tracing::error!("error queueing event: {err}");
+    };
 }
 
 fn parse_delivery(message: Vec<u8>) -> Result<(Metadata, Event), Box<dyn std::error::Error>> {

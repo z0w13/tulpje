@@ -1,7 +1,7 @@
 use std::{future::Future, pin::Pin, sync::Arc};
 
 use tokio::{sync::mpsc, task::JoinHandle};
-use tracing::Span;
+use tracing::{Instrument as _, Span};
 
 use crate::Metadata;
 use tokio_util::{sync::CancellationToken, task::TaskTracker};
@@ -226,13 +226,7 @@ impl<T: Clone + Send + Sync + 'static> Dispatch<T> {
                     let ctx = self.ctx.clone();
 
                     self.tracker.spawn(async move {
-                        if let Some(span) = span {
-                            span.in_scope(async || {
-                                crate::handle(meta, ctx, &registry, event).await;
-                            }).await;
-                        } else {
-                            crate::handle(meta, ctx, &registry, event).await;
-                        }
+                        crate::handle(meta, ctx, &registry, event).instrument(span.unwrap_or(Span::none())).await;
                     });
                 },
                 () = self.shutdown.cancelled() => break,
