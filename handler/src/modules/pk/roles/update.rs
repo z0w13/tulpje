@@ -29,8 +29,12 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     let token = ctx.get_arg_string_optional("token")?;
     let current_role_map = get_current_roles(guild.clone());
-    let desired_role_map =
-        get_desired_roles(&PkId(gs.system_id), token.unwrap_or_default()).await?;
+    let desired_role_map = get_desired_roles(
+        &ctx.services.pk,
+        &PkId(gs.system_id),
+        token.unwrap_or_default(),
+    )
+    .await?;
     let ops = get_ops(&current_role_map, &desired_role_map);
 
     // TODO: actually handle errors
@@ -123,17 +127,12 @@ enum ChangeOperation {
 }
 
 async fn get_desired_roles(
+    pk: &PkClient,
     system: &PkId,
     token: String,
 ) -> Result<HashMap<String, MemberRole>, Error> {
-    // TODO: Figure something out to use the existing PluralKit client with
-    //       a temporary token
-    let pk = PkClient {
-        token,
-        ..Default::default()
-    };
-
     let roles = pk
+        .with_token(token)
         .get_system_members(system)
         .await?
         .into_iter()

@@ -1703,9 +1703,9 @@ checksum = "953ec861398dccce10c670dfeaf3ec4911ca479e9c02154b3a215178c5f566f2"
 
 [[package]]
 name = "pkrs-fork"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fba242e8e3f257aeeeddb968c73b6ec88bddcc6f62429352f3be5ace6359a62a"
+checksum = "acbff080966a07e4a680cc3e04ea780355c91b5fb1afb8ab96bdb23b957c2773"
 dependencies = [
  "reqwest 0.12.25",
  "serde",
