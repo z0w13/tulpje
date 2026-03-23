@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use pkrs_fork::model::Member;
 use tulpje_shared::color;
@@ -55,6 +55,16 @@ impl From<SystemRef> for String {
             SystemRef::Id(id) => id,
             SystemRef::DiscordId(user_id) => user_id.to_string(),
             SystemRef::Uuid(uuid) => uuid.to_string(),
+        }
+    }
+}
+
+impl Display for SystemRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Id(id) => id.fmt(f),
+            Self::DiscordId(user_id) => user_id.fmt(f),
+            Self::Uuid(uuid) => uuid.fmt(f),
         }
     }
 }
