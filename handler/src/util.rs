@@ -14,6 +14,10 @@ pub(crate) async fn error_response(ctx: &CommandContext, text: &str) -> Result<(
     response(ctx, &color::roles::RED, text).await
 }
 
+pub(crate) async fn info_response(ctx: &CommandContext, text: &str) -> Result<(), Error> {
+    response(ctx, &color::roles::BLUE, text).await
+}
+
 pub(crate) async fn response(ctx: &CommandContext, color: &Color, text: &str) -> Result<(), Error> {
     ctx.interaction()
         .update_response(&ctx.event.token)

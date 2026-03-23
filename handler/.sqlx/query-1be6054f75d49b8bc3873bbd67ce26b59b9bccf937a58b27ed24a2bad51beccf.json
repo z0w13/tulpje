@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                COUNT(id) AS \"count!\"\n            FROM\n                pk_notify_systems\n            WHERE\n                guild_id = $1 AND system_uuid = $2\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1be6054f75d49b8bc3873bbd67ce26b59b9bccf937a58b27ed24a2bad51beccf"
+}

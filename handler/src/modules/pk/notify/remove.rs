@@ -9,7 +9,7 @@ use crate::{
             shared::{handle_system_ref, resolve_system_from_reference},
         },
     },
-    util::{error_response, success_response},
+    util::{error_response, info_response, success_response},
 };
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
@@ -32,7 +32,21 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
+    // update stored system info
+    // TODO: Don't update if we fetched from the database instead of PluralKit
     pk_db::update_system(&ctx.services.db, &system).await?;
+
+    // handle not following
+    if !db::does_guild_follow(&ctx.services.db, guild.id, system.uuid).await? {
+        info_response(
+            &ctx,
+            &format!("You don't follow `{}`", system.name.unwrap_or(system.id)),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
     db::remove_notify_system(&ctx.services.db, guild.id, system.uuid).await?;
     pk_db::cleanup_system(&ctx.services.db, system.uuid).await?;
 

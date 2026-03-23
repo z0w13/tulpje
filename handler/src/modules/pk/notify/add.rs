@@ -38,6 +38,20 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
+    // handle already following
+    if db::does_guild_follow(&ctx.services.db, guild.id, system.uuid).await? {
+        info_response(
+            &ctx,
+            &format!(
+                "You're already following `{}`",
+                system.name.unwrap_or(system.id)
+            ),
+        )
+        .await?;
+
+        return Ok(());
+    }
+
     // handle follow limit
     if db::get_guild_follow_count(&ctx.services.db, guild.id).await? >= MAX_FOLLOW_COUNT {
         error_response(
