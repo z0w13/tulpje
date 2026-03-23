@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1] - 2026-03-23
+
+### Changed
+
+ - Clean shutdown
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * feat(handler): clean shutdown ([`6e5e297`](https://github.com/z0w13/tulpje/commit/6e5e2973ae6afff43313733d2c5928b3ab6753de))
+</details>
+
 ## [0.20.1-rc.1] - 2026-03-23
 
 ### Added
