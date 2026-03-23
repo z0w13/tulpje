@@ -1,4 +1,11 @@
-use twilight_model::{channel::ChannelType, guild::Permissions};
+use twilight_model::{
+    channel::{
+        ChannelType,
+        permission_overwrite::{PermissionOverwrite, PermissionOverwriteType},
+    },
+    guild::Permissions,
+    id::marker::GenericMarker,
+};
 
 use crate::{
     context::CommandContext,
@@ -37,8 +44,15 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         channel
     } else {
         // otherwise create the channel
+        let permission_overwrites = vec![PermissionOverwrite {
+            allow: required_permissions,
+            deny: Permissions::empty(),
+            id: bot_user.id.cast::<GenericMarker>(),
+            kind: PermissionOverwriteType::Member,
+        }];
         ctx.client
             .create_guild_channel(guild.id, &channel_name_or_ref)
+            .permission_overwrites(&permission_overwrites)
             .kind(ChannelType::GuildText)
             .await?
             .model()
