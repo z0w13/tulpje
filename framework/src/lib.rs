@@ -25,8 +25,6 @@ pub async fn handle_interaction<T: Clone + Send + Sync + 'static>(
     meta: &Metadata,
     registry: &Registry<T>,
 ) -> Result<(), Error> {
-    tracing::info!("interaction");
-
     match interaction::parse(&event, meta.clone(), context) {
         Ok(InteractionContext::Command(ctx)) => {
             let Some(command) = registry.find_command(&ctx.name) else {
