@@ -3,6 +3,15 @@
 ## Invite The Bot
 Tulpje can be invited to your server using the following link: [Add To Discord](https://discord.com/oauth2/authorize?client_id=1220754275530051605)
 
+## Permissions
+What permissions the bot requests and why
+
+* **View Channels:** required to do anything with channels
+* **Manage Channels:** needed to set up fronter category and notification channel
+* **Create/Manage Expressions:** needed to create emojis
+* **Send Messages:** bot responses and front change notifications
+* **Read Message History:** used to track emoji usage in messages
+
 ## Commands
 
 ### Emojis
