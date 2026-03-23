@@ -1,10 +1,10 @@
-use twilight_http::Client;
+use twilight_http::{Client, error::ErrorType, response::StatusCode};
 use twilight_model::{
     channel::{Channel, ChannelType},
     guild::{Permissions, Role},
     id::{
         Id,
-        marker::{GuildMarker, RoleMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
 };
 use twilight_util::permission_calculator::PermissionCalculator;
@@ -18,6 +18,21 @@ use crate::{
     util::{error_response, success_response},
 };
 
+async fn channel_not_found_response(
+    ctx: &CommandContext,
+    id: Id<ChannelMarker>,
+) -> Result<(), Error> {
+    error_response(
+        ctx,
+        &format!(
+            "### Error\nCouldn't find channel, are you sure it's in this server and the bot can access it?\n\nChannel ID: `{id}`",
+        ),
+    )
+    .await?;
+
+    Ok(())
+}
+
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
         unreachable!("command is guild_only");
@@ -26,14 +41,54 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     let channel_name = ctx.get_arg_string("channel")?;
 
-    // get the channel if it already exists
+    let channel = if channel_name.starts_with("<#") {
+        // handle channel references
 
-    let channel = if let Some(channel) =
-        find_channel_by_name(&ctx.client, guild.id, &channel_name).await?
+        // parse the channel id
+        let channel_id: Id<ChannelMarker> = channel_name
+            .trim()
+            .trim_start_matches("<#")
+            .trim_end_matches(">")
+            .parse()?;
+
+        // try and retrieve the channel, handling any errors
+        let channel = match ctx.client.channel(channel_id).await {
+            Ok(resp) => resp.model().await?,
+            Err(err) => {
+                match err.kind() {
+                    // NOT_FOUND indicates the channel doesn't exist, FORBIDDEN indicates the bot
+                    // doesn't have access to it, either way inform the user the same
+                    ErrorType::Response { status, .. }
+                        if *status == StatusCode::NOT_FOUND || *status == StatusCode::FORBIDDEN =>
+                    {
+                        channel_not_found_response(&ctx, channel_id).await?;
+                        return Ok(());
+                    }
+                    _ => return Err(err.into()),
+                };
+            }
+        };
+
+        // We need to separately handle channels the bot _can_ access but that are
+        // outside of the user's guild. Give the same error message though
+        if channel.guild_id.is_some_and(|i| i != guild.id) {
+            channel_not_found_response(&ctx, channel.id).await?;
+            return Ok(());
+        }
+
+        // check permissions
+        if !handle_channel_permissions(&ctx, guild.id, &channel).await? {
+            return Ok(());
+        }
+
+        channel
+    } else if let Some(channel) = find_channel_by_name(&ctx.client, guild.id, &channel_name).await?
         && handle_channel_permissions(&ctx, guild.id, &channel).await?
     {
+        // return the channel if we found it by name
         channel
     } else {
+        // if all else fails make a new one
         ctx.client
             .create_guild_channel(guild.id, &channel_name)
             .kind(ChannelType::GuildText)
