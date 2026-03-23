@@ -1,12 +1,13 @@
-use pkrs_fork::{client::PkClient, model::PkId};
-use reqwest::StatusCode;
+use pkrs_fork::client::PkClient;
 use tulpje_framework::Error;
 
 use super::{db, shared::create_or_get_fronter_channel};
 use crate::{
     context::CommandContext,
     modules::pk::{
-        db::get_guild_settings_for_id, fronters::shared::handle_private_front, util::SystemRef,
+        db::{get_guild_settings_for_id, get_system},
+        fronters::shared::handle_private_front,
+        util::SystemRef,
     },
     util::{error_response, success_response},
 };
@@ -23,15 +24,16 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
+    let system_ref = SystemRef::Id(guild_settings.system_id);
+    let system = get_system(&ctx.services.db, &system_ref).await?;
+    let display_name = system.map_or_else(|| system_ref.to_string(), |s| s.name.unwrap_or(s.id));
+
     // inform the user if their front is private
     if handle_private_front(
         &ctx,
         &PkClient::default(),
-        SystemRef::Id(guild_settings.system_id.clone()),
-        &format!(
-            "Front for system `{}` is private, please set it to public to use the fronter list",
-            guild_settings.system_id
-        ),
+        system_ref.clone(),
+        &format!("Front for system `{display_name}` is private, please set it to public to use the fronter list")
     )
     .await?
     {
