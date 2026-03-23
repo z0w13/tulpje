@@ -138,29 +138,38 @@ async fn handle_channel_permissions(
 
     // NOTE: We need to check VIEW_CHANNEL too, because of implicit permissions
     //       see: https://docs.discord.com/developers/topics/permissions#implicit-permissions
-    if !calculated_permissions.contains(Permissions::VIEW_CHANNEL) {
-        responses::error(
-            ctx,
-            &format!(
-                "bot is missing VIEW_CHANNEL permission in <#{}>",
-                channel.id
-            ),
-        )
-        .await?;
-        return Ok(false);
+    let missing_permissions =
+        (Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES).difference(calculated_permissions);
+
+    if missing_permissions.is_empty() {
+        return Ok(true);
     }
 
-    if !calculated_permissions.contains(Permissions::SEND_MESSAGES) {
-        responses::error(
-            ctx,
-            &format!(
-                "bot is missing SEND_MESSAGES permission in <#{}>",
-                channel.id
-            ),
-        )
-        .await?;
-        return Ok(false);
-    }
+    // get permission names
+    let mut permission_names: Vec<_> = missing_permissions.iter_names().map(|(k, _)| k).collect();
 
-    Ok(true)
+    // pop the last one for string formatting
+    let last_permission = permission_names
+        .pop()
+        .expect("missing_permissions isn't empty so shouldn't fail");
+
+    // format the permission string
+    let permissions_string = if !permission_names.is_empty() {
+        format!(
+            "{} and {} permissions",
+            permission_names.join(", "),
+            last_permission
+        )
+    } else {
+        format!("{} permission", last_permission)
+    };
+
+    // inform the user
+    responses::error(
+        ctx,
+        &format!("bot is missing {permissions_string} in <#{}>", channel.id),
+    )
+    .await?;
+
+    Ok(false)
 }
