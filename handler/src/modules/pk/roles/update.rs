@@ -13,6 +13,21 @@ use crate::modules::pk::{
     db::get_guild_settings_for_id,
     util::{get_member_name, pk_color_to_discord},
 };
+use crate::util::error_response;
+
+// Discord's role limit
+// see https://support.discord.com/hc/en-us/articles/33694251638295-Discord-Account-Caps-Server-Caps-and-More
+const DISCORD_ROLE_LIMIT: usize = 250;
+const ROLE_BUFFER: usize = 25;
+
+fn role_limit_message(member_count: usize) -> String {
+    format!(
+        "### Error\n\
+        Can't create member roles, discord has a role limit of {DISCORD_ROLE_LIMIT} \
+        and your system has {member_count} (visible) members\n\n\
+        Additionally we keep a buffer of {ROLE_BUFFER} just in case"
+    )
+}
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
@@ -26,15 +41,19 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
             .await?;
         return Ok(());
     };
+    let system_id = PkId(gs.system_id);
+
+    // TODO: Actually check based on the number of roles in the server
+    let member_count = ctx.services.pk.get_system_members(&system_id).await?.len();
+    if member_count > DISCORD_ROLE_LIMIT.saturating_sub(ROLE_BUFFER) {
+        error_response(&ctx, &role_limit_message(member_count)).await?;
+        return Ok(());
+    }
 
     let token = ctx.get_arg_string_optional("token")?;
     let current_role_map = get_current_roles(guild.clone());
-    let desired_role_map = get_desired_roles(
-        &ctx.services.pk,
-        &PkId(gs.system_id),
-        token.unwrap_or_default(),
-    )
-    .await?;
+    let desired_role_map =
+        get_desired_roles(&ctx.services.pk, &system_id, token.unwrap_or_default()).await?;
     let ops = get_ops(&current_role_map, &desired_role_map);
 
     // TODO: actually handle errors
