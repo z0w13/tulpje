@@ -4,10 +4,8 @@ use crate::{
     context::CommandContext,
     modules::pk::{
         db::{self as pk_db},
-        notify::{
-            db,
-            shared::{handle_system_ref, resolve_system_from_reference},
-        },
+        notify::{db, shared::resolve_system_from_reference},
+        util::handle_system_ref,
     },
     responses,
 };

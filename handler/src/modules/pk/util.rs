@@ -1,9 +1,12 @@
 use std::{fmt::Display, str::FromStr};
 
 use pkrs_fork::model::Member;
+use tulpje_framework::Error;
 use tulpje_shared::color;
 use twilight_model::id::{Id, marker::UserMarker};
 use uuid::Uuid;
+
+use crate::{context::CommandContext, responses};
 
 pub(crate) fn get_member_name(member: &Member) -> String {
     member
@@ -65,6 +68,27 @@ impl Display for SystemRef {
             Self::Id(id) => id.fmt(f),
             Self::DiscordId(user_id) => user_id.fmt(f),
             Self::Uuid(uuid) => uuid.fmt(f),
+        }
+    }
+}
+
+/// try to parse a system ref, and let the end user know if it fails
+/// returns None if failed to parse
+pub(crate) async fn handle_system_ref(
+    ctx: &CommandContext,
+    system_ref: &str,
+) -> Result<Option<SystemRef>, Error> {
+    match system_ref.parse() {
+        Ok(system_ref) => Ok(Some(system_ref)),
+        Err(_) => {
+            responses::error(
+                ctx,
+                &format!(
+                    "Invalid system reference `{system_ref}`, are you sure you entered it correctly?",
+                ),
+            )
+            .await?;
+            Ok(None)
         }
     }
 }

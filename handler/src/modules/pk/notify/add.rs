@@ -5,10 +5,8 @@ use crate::{
     modules::pk::{
         db as pk_db,
         fronters::shared::handle_private_front,
-        notify::{
-            db,
-            shared::{handle_system_ref, resolve_system_from_reference},
-        },
+        notify::{db, shared::resolve_system_from_reference},
+        util::handle_system_ref,
     },
     responses,
 };
