@@ -534,7 +534,7 @@ def gather_release(
 
     log.debug(f"gathered {len(commits)} commits")
 
-    has_feature_commit = any(commit.subject.startswith("feat") for commit in commits)
+    has_feature_commit = any(commit.typ == "feat" for commit in commits)
     has_breaking_change_commit = any(commit.breaking for commit in commits)
     has_breaking_change_semver_checks, _ = cargo_semver_checks(
         latest_tag, crates[0].name if independent_crate else None
