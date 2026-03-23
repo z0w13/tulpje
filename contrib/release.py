@@ -539,11 +539,17 @@ def gather_release(
     has_breaking_change_semver_checks, _ = cargo_semver_checks(
         latest_tag, crates[0].name if independent_crate else None
     )
-    should_release = should_create_release(commits, file_whitelist, prefix)
     if independent_crate:
         old_version = crates[0].version
     else:
         old_version = Version.parse(latest_tag.removeprefix(prefix).removeprefix("v"))
+
+    # release if there's changes or we're going from prerelease -> regular release
+    should_release = (
+        should_create_release(commits, file_whitelist, prefix)
+        or old_version.prerelease is not None
+        and prerelease is None
+    )
 
     if independent_crate and not has_independent_tag:
         new_version = old_version
