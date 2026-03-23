@@ -4,7 +4,7 @@ use tracing::debug;
 use tulpje_framework::Error;
 
 use super::db;
-use crate::context::CommandContext;
+use crate::{context::CommandContext, responses};
 
 // TODO: command to see current settings
 
@@ -28,8 +28,7 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     // sanitise and validate system id
     let system_id = system_id.trim().replace("-", "").to_lowercase();
     if !system_id.chars().all(|c| char::is_ascii_alphabetic(&c)) {
-        ctx.update(format!("error: invalid system id, {}", system_id))
-            .await?;
+        responses::error(&ctx, &format!("### Error\nInvalid system id `{system_id}`")).await?;
         return Ok(());
     }
 
@@ -39,25 +38,31 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     let system = match ctx.services.pk.get_system(&PkId(system_id.clone())).await {
         Ok(system) => system,
         Err(err) => {
-            ctx.update(format!(
-                "PluralKit API is having issues or system doesn't exist: {:?}",
-                err
-            ))
+            responses::error(
+                &ctx,
+                &format!(
+                    "### Error\nPluralKit API is having issues or system doesn't exist: {:?}",
+                    err
+                ),
+            )
             .await?;
+
             return Ok(());
         }
     };
 
     // Inform user of success
-    let response_text = format!(
-        "PluralKit module setup with system: {}",
-        system.name.map_or_else(
-            || format!("`{}`", system_id),
-            |system_name| format!("{} (`{}`)", system_name, system_id)
-        )
-    );
-
-    ctx.update(response_text).await?;
+    responses::success(
+        &ctx,
+        &format!(
+            "### Success\nPluralKit module setup for {}",
+            system.name.map_or_else(
+                || format!("`{}`", system_id),
+                |system_name| format!("{} (`{}`)", system_name, system_id)
+            )
+        ),
+    )
+    .await?;
 
     Ok(())
 }

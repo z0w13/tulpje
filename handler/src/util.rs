@@ -149,7 +149,10 @@ pub(crate) async fn handle_permissions(
     // inform the user
     responses::error(
         ctx,
-        &format!("bot is missing {permissions_string} in <#{}>", channel.id),
+        &format!(
+            "### Error\nbot is missing {permissions_string} in <#{}>",
+            channel.id
+        ),
     )
     .await?;
 
