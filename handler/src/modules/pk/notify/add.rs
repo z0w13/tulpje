@@ -10,9 +10,10 @@ use crate::{
             shared::{handle_system_ref, resolve_system_from_reference},
         },
     },
-    util::{error_response, success_response},
+    util::{error_response, info_response, success_response},
 };
 
+const MAX_FOLLOW_COUNT: usize = 50;
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
         unreachable!("command is guild_only");
@@ -36,6 +37,17 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
         return Ok(());
     };
+
+    // handle follow limit
+    if db::get_guild_follow_count(&ctx.services.db, guild.id).await? >= MAX_FOLLOW_COUNT {
+        error_response(
+            &ctx,
+            &format!("### Error\nYou've hit the follow limit of {MAX_FOLLOW_COUNT} please consider unfollowing some systems"),
+        )
+        .await?;
+
+        return Ok(());
+    }
 
     // inform user if the system they're trying to follow has a private front
     if handle_private_front(

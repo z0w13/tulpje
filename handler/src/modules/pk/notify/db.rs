@@ -81,6 +81,25 @@ pub(crate) async fn get_notify_systems(
     .await?)
 }
 
+pub(crate) async fn get_guild_follow_count(
+    db: &sqlx::PgPool,
+    guild_id: Id<GuildMarker>,
+) -> Result<usize, Error> {
+    Ok(sqlx::query_scalar!(
+        r#"
+            SELECT
+                COUNT(id) AS "count!"
+            FROM
+                pk_notify_systems
+            WHERE
+                guild_id = $1
+        "#,
+        i64::from(DbId(guild_id))
+    )
+    .fetch_one(db)
+    .await? as usize)
+}
+
 pub(crate) async fn get_notify_guilds_for_system(
     db: &sqlx::PgPool,
     system: Uuid,
