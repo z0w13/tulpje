@@ -4,7 +4,7 @@ use tulpje_shared::color::{self, Color};
 
 use twilight_http::{Client, error::ErrorType, response::StatusCode};
 use twilight_model::{
-    channel::{Channel, message::Component},
+    channel::{Channel, ChannelType, message::Component},
     guild::{Permissions, Role},
     id::{
         Id,
@@ -160,6 +160,7 @@ pub(crate) async fn find_channel_by_name(
     client: &Client,
     guild_id: Id<GuildMarker>,
     name: &str,
+    kind: ChannelType,
 ) -> Result<Option<Channel>, Error> {
     Ok(client
         .guild_channels(guild_id)
@@ -168,11 +169,12 @@ pub(crate) async fn find_channel_by_name(
         .await?
         .into_iter()
         .find(|c| {
-            c.name
-                .as_ref()
-                .expect("guild channels have names")
-                .to_lowercase()
-                == name.to_lowercase()
+            c.kind == kind
+                && c.name
+                    .as_ref()
+                    .expect("guild channels have names")
+                    .to_lowercase()
+                    == name.to_lowercase()
         }))
 }
 

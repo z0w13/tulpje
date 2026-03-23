@@ -91,31 +91,6 @@ pub(super) async fn get_fronter_channels(
     }
 }
 
-pub(super) async fn get_fronter_category(
-    client: &Client,
-    guild: &Guild,
-    opt_cat_name: Option<String>,
-) -> Result<Option<Channel>, Error> {
-    let cat_name = opt_cat_name
-        .unwrap_or_else(|| "current fronters".into())
-        .to_lowercase();
-
-    Ok(client
-        .guild_channels(guild.id)
-        .await?
-        .models()
-        .await?
-        .into_iter()
-        .find(|c| {
-            c.name
-                .clone()
-                .expect("guild channels have names")
-                .to_lowercase()
-                == cat_name
-                && c.kind == ChannelType::GuildCategory
-        }))
-}
-
 /// output additional debugging information to debug issues with fronter order
 fn debug_fronter_order(
     guild: &Guild,

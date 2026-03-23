@@ -33,7 +33,13 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         Some(channel)
     } else {
         // handle channel names
-        find_channel_by_name(&ctx.client, guild.id, &channel_name_or_ref).await?
+        find_channel_by_name(
+            &ctx.client,
+            guild.id,
+            &channel_name_or_ref,
+            ChannelType::GuildText,
+        )
+        .await?
     };
 
     let channel = if let Some(channel) = existing_channel {

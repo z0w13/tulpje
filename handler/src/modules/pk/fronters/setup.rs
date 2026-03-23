@@ -60,7 +60,13 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         Some(channel)
     } else {
         // handle channel names
-        find_channel_by_name(&ctx.client, guild.id, &category_name_or_ref).await?
+        find_channel_by_name(
+            &ctx.client,
+            guild.id,
+            &category_name_or_ref,
+            ChannelType::GuildCategory,
+        )
+        .await?
     };
 
     let fronters_category = if let Some(category) = existing_category {
