@@ -128,7 +128,7 @@ async fn main() {
         tracing::error!("error joining amqp handle: {err}");
     }
 
-    tracing::info!("cleanup finished, existing...")
+    tracing::info!("cleanup finished, exiting...")
 }
 
 fn create_presence() -> UpdatePresencePayload {
