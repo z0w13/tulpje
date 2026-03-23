@@ -15,7 +15,7 @@ use tulpje_framework::Error;
 use crate::{
     context::CommandContext,
     modules::pk::notify::db,
-    util::{error_response, success_response},
+    util::{error_response, get_everyone_role, get_member_roles, success_response},
 };
 
 async fn channel_not_found_response(
@@ -179,47 +179,4 @@ async fn handle_channel_permissions(
     }
 
     Ok(true)
-}
-
-async fn get_member_roles(
-    client: &Client,
-    cache: &Cache,
-    user_id: Id<UserMarker>,
-    guild_id: Id<GuildMarker>,
-) -> Result<Vec<Role>, Error> {
-    let role_ids = if let Some(member) = cache.members.get(&(guild_id, user_id)).await? {
-        member.roles
-    } else {
-        client
-            .guild_member(guild_id, user_id)
-            .await?
-            .model()
-            .await?
-            .roles
-    };
-
-    let mut roles = Vec::new();
-    for role_id in role_ids {
-        if let Some(role) = cache.roles.get(&role_id).await? {
-            roles.push(role.inner());
-        } else {
-            roles.push(client.role(guild_id, role_id).await?.model().await?);
-        }
-    }
-
-    Ok(roles)
-}
-
-async fn get_everyone_role(
-    client: &Client,
-    cache: &Cache,
-    guild_id: Id<GuildMarker>,
-) -> Result<Role, Error> {
-    let role_id = guild_id.cast::<RoleMarker>();
-    let everyone_role = cache.roles.get(&role_id).await?;
-    if let Some(role) = everyone_role {
-        return Ok(role.inner());
-    }
-
-    Ok(client.role(guild_id, role_id).await?.model().await?)
 }
