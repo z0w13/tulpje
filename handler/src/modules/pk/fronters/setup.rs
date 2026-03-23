@@ -1,11 +1,10 @@
 use tulpje_framework::Error;
-use twilight_http::Client;
 use twilight_model::{
     channel::{
-        Channel, ChannelType,
+        ChannelType,
         permission_overwrite::{PermissionOverwrite, PermissionOverwriteType},
     },
-    guild::{Guild, Permissions},
+    guild::Permissions,
     id::marker::GenericMarker,
 };
 
@@ -14,10 +13,11 @@ use crate::{
     context::CommandContext,
     modules::pk::{
         db::{get_guild_settings_for_id, get_system},
-        fronters::shared::{get_fronter_category, handle_private_front},
+        fronters::shared::handle_private_front,
         util::SystemRef,
     },
     responses,
+    util::{find_channel_by_name, handle_channel_from_id, handle_permissions, parse_channel_ref},
 };
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
@@ -48,9 +48,52 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     }
 
     // create or get the front category
-    let name = ctx.get_arg_string("name")?;
+    let category_name_or_ref = ctx.get_arg_string("name")?;
+    let bot_user = ctx.client.current_user().await?.model().await?;
+    let required_permissions = Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL;
 
-    let fronters_category = create_or_get_fronter_channel(&ctx.client, &guild, name).await?;
+    let existing_category = if let Some(channel_id) = parse_channel_ref(&category_name_or_ref) {
+        // handle channel references
+        let Some(channel) = handle_channel_from_id(&ctx, guild.id, channel_id).await? else {
+            return Ok(());
+        };
+        Some(channel)
+    } else {
+        // handle channel names
+        find_channel_by_name(&ctx.client, guild.id, &category_name_or_ref).await?
+    };
+
+    let fronters_category = if let Some(category) = existing_category {
+        // if existing channel, check permissions and return if missing
+        if !handle_permissions(&ctx, guild.id, bot_user.id, &category, required_permissions).await?
+        {
+            return Ok(());
+        }
+        category
+    } else {
+        // otherwise create the channel
+        let permission_overwrites = vec![
+            PermissionOverwrite {
+                deny: Permissions::VIEW_CHANNEL,
+                allow: Permissions::empty(),
+                id: guild.id.cast(),
+                kind: PermissionOverwriteType::Role,
+            },
+            PermissionOverwrite {
+                allow: required_permissions,
+                deny: Permissions::empty(),
+                id: bot_user.id.cast::<GenericMarker>(),
+                kind: PermissionOverwriteType::Member,
+            },
+        ];
+        ctx.client
+            .create_guild_channel(guild.id, &category_name_or_ref)
+            .permission_overwrites(&permission_overwrites)
+            .kind(ChannelType::GuildCategory)
+            .await?
+            .model()
+            .await?
+    };
 
     // Save category into db
     db::save_fronter_category(&ctx.services.db, guild.id, fronters_category.id).await?;
@@ -58,43 +101,4 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     // Inform user of success
     responses::success(&ctx, "Fronter category succesfully set-up!").await?;
     Ok(())
-}
-
-async fn create_or_get_fronter_channel(
-    client: &Client,
-    guild: &Guild,
-    cat_name: String,
-) -> Result<Channel, Error> {
-    if let Some(fronters_category) =
-        get_fronter_category(client, guild, Some(cat_name.clone())).await?
-    {
-        return Ok(fronters_category);
-    }
-
-    // get the bot's user id
-    let user_id = client.current_user().await?.model().await?.id;
-
-    // define permissions
-    let permissions = vec![
-        PermissionOverwrite {
-            deny: Permissions::VIEW_CHANNEL,
-            allow: Permissions::empty(),
-            id: guild.id.cast(),
-            kind: PermissionOverwriteType::Role,
-        },
-        PermissionOverwrite {
-            allow: Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL,
-            deny: Permissions::empty(),
-            id: user_id.cast::<GenericMarker>(),
-            kind: PermissionOverwriteType::Member,
-        },
-    ];
-
-    Ok(client
-        .create_guild_channel(guild.id, &cat_name)
-        .permission_overwrites(&permissions)
-        .kind(ChannelType::GuildCategory)
-        .await?
-        .model()
-        .await?)
 }
