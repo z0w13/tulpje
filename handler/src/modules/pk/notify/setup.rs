@@ -1,37 +1,21 @@
 use twilight_http::{Client, error::ErrorType, response::StatusCode};
 use twilight_model::{
     channel::{Channel, ChannelType},
-    guild::{Permissions, Role},
+    guild::Permissions,
     id::{
         Id,
-        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
+        marker::{ChannelMarker, GuildMarker},
     },
 };
 use twilight_util::permission_calculator::PermissionCalculator;
 
-use tulpje_cache::Cache;
-use tulpje_framework::Error;
-
 use crate::{
     context::CommandContext,
     modules::pk::notify::db,
-    util::{error_response, get_everyone_role, get_member_roles, success_response},
+    responses,
+    util::{get_everyone_role, get_member_roles},
 };
-
-async fn channel_not_found_response(
-    ctx: &CommandContext,
-    id: Id<ChannelMarker>,
-) -> Result<(), Error> {
-    error_response(
-        ctx,
-        &format!(
-            "### Error\nCouldn't find channel, are you sure it's in this server and the bot can access it?\n\nChannel ID: `{id}`",
-        ),
-    )
-    .await?;
-
-    Ok(())
-}
+use tulpje_framework::Error;
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
@@ -61,7 +45,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
                     ErrorType::Response { status, .. }
                         if *status == StatusCode::NOT_FOUND || *status == StatusCode::FORBIDDEN =>
                     {
-                        channel_not_found_response(&ctx, channel_id).await?;
+                        responses::channel_not_found(&ctx, channel_id).await?;
                         return Ok(());
                     }
                     _ => return Err(err.into()),
@@ -72,7 +56,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         // We need to separately handle channels the bot _can_ access but that are
         // outside of the user's guild. Give the same error message though
         if channel.guild_id.is_some_and(|i| i != guild.id) {
-            channel_not_found_response(&ctx, channel.id).await?;
+            responses::channel_not_found(&ctx, channel.id).await?;
             return Ok(());
         }
 
@@ -98,7 +82,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     };
 
     db::save_notify_channel(&ctx.services.db, guild.id, channel.id).await?;
-    success_response(
+    responses::success(
         &ctx,
         &format!("bot will notify you of front changes in <#{}>", channel.id),
     )
@@ -155,7 +139,7 @@ async fn handle_channel_permissions(
     // NOTE: We need to check VIEW_CHANNEL too, because of implicit permissions
     //       see: https://docs.discord.com/developers/topics/permissions#implicit-permissions
     if !calculated_permissions.contains(Permissions::VIEW_CHANNEL) {
-        error_response(
+        responses::error(
             ctx,
             &format!(
                 "bot is missing VIEW_CHANNEL permission in <#{}>",
@@ -167,7 +151,7 @@ async fn handle_channel_permissions(
     }
 
     if !calculated_permissions.contains(Permissions::SEND_MESSAGES) {
-        error_response(
+        responses::error(
             ctx,
             &format!(
                 "bot is missing SEND_MESSAGES permission in <#{}>",

@@ -17,7 +17,7 @@ use crate::{
         fronters::shared::{get_fronter_category, handle_private_front},
         util::SystemRef,
     },
-    util::{error_response, success_response},
+    responses,
 };
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
@@ -28,7 +28,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     ctx.defer_ephemeral().await?;
 
     let Some(guild_settings) = get_guild_settings_for_id(&ctx.services.db, guild.id).await? else {
-        error_response(&ctx, "PluralKit module not set-up, please run `/pk setup`").await?;
+        responses::error(&ctx, "PluralKit module not set-up, please run `/pk setup`").await?;
         return Ok(());
     };
 
@@ -49,13 +49,14 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     // create or get the front category
     let name = ctx.get_arg_string("name")?;
+
     let fronters_category = create_or_get_fronter_channel(&ctx.client, &guild, name).await?;
 
     // Save category into db
     db::save_fronter_category(&ctx.services.db, guild.id, fronters_category.id).await?;
 
     // Inform user of success
-    success_response(&ctx, "Fronter category succesfully set-up!").await?;
+    responses::success(&ctx, "Fronter category succesfully set-up!").await?;
     Ok(())
 }
 

@@ -13,7 +13,7 @@ use crate::modules::pk::{
     db::get_guild_settings_for_id,
     util::{get_member_name, pk_color_to_discord},
 };
-use crate::util::error_response;
+use crate::responses;
 
 // Discord's role limit
 // see https://support.discord.com/hc/en-us/articles/33694251638295-Discord-Account-Caps-Server-Caps-and-More
@@ -46,7 +46,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     // TODO: Actually check based on the number of roles in the server
     let member_count = ctx.services.pk.get_system_members(&system_id).await?.len();
     if member_count > DISCORD_ROLE_LIMIT.saturating_sub(ROLE_BUFFER) {
-        error_response(&ctx, &role_limit_message(member_count)).await?;
+        responses::error(&ctx, &role_limit_message(member_count)).await?;
         return Ok(());
     }
 

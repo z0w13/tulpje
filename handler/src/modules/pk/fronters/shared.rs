@@ -18,7 +18,7 @@ use tulpje_framework::Error;
 use crate::context::CommandContext;
 use crate::modules::pk::util::SystemRef;
 use crate::modules::pk::{db::ModPkGuildRow, util::get_member_name};
-use crate::util::error_response;
+use crate::responses;
 
 pub(super) async fn get_desired_fronters(
     pk: &PkClient,
@@ -331,7 +331,7 @@ pub(crate) async fn handle_private_front(
         if let Some(status) = err.status()
             && status == StatusCode::FORBIDDEN
         {
-            error_response(ctx, message).await?;
+            responses::error(ctx, message).await?;
             return Ok(true);
         }
 

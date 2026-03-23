@@ -9,7 +9,7 @@ use crate::{
         db::{self, ModPkSystem},
         util::SystemRef,
     },
-    util::error_response,
+    responses,
 };
 
 // TODO: Fetch from DB first, and only fetch from PK if outdated
@@ -49,7 +49,7 @@ pub(super) async fn handle_system_ref(
     match system_ref.parse() {
         Ok(system_ref) => Ok(Some(system_ref)),
         Err(_) => {
-            error_response(
+            responses::error(
                 ctx,
                 &format!(
                     "Invalid system reference `{system_ref}`, are you sure you entered it correctly?",

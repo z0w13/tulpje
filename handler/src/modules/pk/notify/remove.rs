@@ -9,7 +9,7 @@ use crate::{
             shared::{handle_system_ref, resolve_system_from_reference},
         },
     },
-    util::{error_response, info_response, success_response},
+    responses,
 };
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
@@ -23,7 +23,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         .await?
         .is_none()
     {
-        error_response(
+        responses::error(
             &ctx,
             "Notification channel not set-up please run `/pk notify setup` first",
         )
@@ -38,7 +38,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(system) =
         resolve_system_from_reference(&system_ref, &ctx.services.pk, &ctx.services.db).await?
     else {
-        error_response(&ctx, &format!(
+        responses::error(&ctx, &format!(
             "Couldn't find system `{}`, are you sure you're following them and that you spelled it correctly?",
             String::from(system_ref),
         ))
@@ -52,7 +52,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     // handle not following
     if !db::does_guild_follow(&ctx.services.db, guild.id, system.uuid).await? {
-        info_response(
+        responses::info(
             &ctx,
             &format!("You don't follow `{}`", system.name.unwrap_or(system.id)),
         )
@@ -64,7 +64,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     db::remove_notify_system(&ctx.services.db, guild.id, system.uuid).await?;
     pk_db::cleanup_system(&ctx.services.db, system.uuid).await?;
 
-    success_response(
+    responses::success(
         &ctx,
         &format!(
             "{} removed from notification list",
