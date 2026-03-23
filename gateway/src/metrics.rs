@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use metrics::{counter, describe_counter};
+use metrics::{counter, describe_counter, describe_gauge, gauge};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use redis::aio::ConnectionManager as RedisConnectionManager;
 
@@ -22,10 +22,18 @@ pub(crate) fn install(
 
     // define metrics
     describe_counter!("gateway_events", "Discord Gateway Events");
+    describe_gauge!("guild_count", "Number Of Guilds Bot Is In");
 
     Ok(())
 }
 
+pub(crate) fn track_guild_count(shard: u32, guild_count: u64) {
+    gauge!(
+        "guild_count",
+        "shard" => shard.to_string(),
+    )
+    .set(guild_count as f64);
+}
 pub(crate) fn track_gateway_event(shard: u32, event_name: &str) {
     counter!(
         "gateway_events",

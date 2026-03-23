@@ -11,6 +11,8 @@ use twilight_gateway::{Event, EventType, EventTypeFlags, Latency};
 use tulpje_shared::shard_state::ShardState;
 use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Hello, Ready};
 
+use crate::metrics::track_guild_count;
+
 pub(crate) const SHARD_REPORTER_EVENTS: EventTypeFlags = EventTypeFlags::from_bits_truncate(
     EventTypeFlags::GATEWAY_HEARTBEAT_ACK.bits()
         | EventTypeFlags::GATEWAY_HELLO.bits()
@@ -186,6 +188,7 @@ impl ShardReporter {
             .try_into()
             .expect("couldn't convert len() to u64");
 
+        track_guild_count(self.shard.shard_id, self.shard.guild_count);
         self.save_shard().await
     }
 
@@ -216,6 +219,7 @@ impl ShardReporter {
             .try_into()
             .expect("couldn't convert len() to u64");
 
+        track_guild_count(self.shard.shard_id, self.shard.guild_count);
         self.save_shard().await
     }
 
@@ -234,6 +238,7 @@ impl ShardReporter {
             .try_into()
             .expect("couldn't convert len() to u64");
 
+        track_guild_count(self.shard.shard_id, self.shard.guild_count);
         self.save_shard().await
     }
 
