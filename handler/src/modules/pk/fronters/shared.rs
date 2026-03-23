@@ -19,18 +19,19 @@ use crate::modules::pk::{db::ModPkGuildRow, util::get_member_name};
 pub(super) async fn get_desired_fronters(system: &PkId) -> Result<Vec<String>, Error> {
     let pk = PkClient::default();
 
-    let fronters = pk
+    Ok(pk
         .get_system_fronters(system)
         .await?
-        .members
-        .into_iter()
-        .filter_map(|m| match m {
-            StringOrStruct::String(_) => None,
-            StringOrStruct::Struct(member) => Some(get_member_name(&member)),
-        })
-        .collect();
-
-    Ok(fronters)
+        .map_or_else(Vec::new, |switch| {
+            switch
+                .members
+                .into_iter()
+                .filter_map(|m| match m {
+                    StringOrStruct::String(_) => None,
+                    StringOrStruct::Struct(member) => Some(get_member_name(&member)),
+                })
+                .collect()
+        }))
 }
 
 pub(super) async fn get_fronter_channels(

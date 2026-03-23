@@ -1,6 +1,6 @@
 use std::{slice, sync::Arc};
 
-use chrono::{DateTime, NaiveDateTime};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use pkrs_fork::{
     client::PkClient,
     model::{Member, PkId, Switch as PkSwitch},
@@ -17,6 +17,7 @@ use twilight_model::{
 
 use tulpje_framework::Error;
 use twilight_util::builder::embed::EmbedBuilder;
+use uuid::Uuid;
 
 use self::pk::db::ModPkGuildRow;
 use crate::{
@@ -45,11 +46,11 @@ async fn update_system_fronters(
     system: &ModPkSystem,
     client: &PkClient,
 ) -> Result<FrontChange, Error> {
-    let current_front = match client
+    let latest_switch = match client
         .get_system_fronters(&PkId(system.uuid.to_string()))
         .await
     {
-        Ok(front) => Ok::<PkSwitch, Error>(front),
+        Ok(front) => Ok::<_, Error>(front),
         // still update the fronter timestamp if front is private to avoid
         // forever trying to update fronts we can't access
         Err(err)
@@ -63,38 +64,52 @@ async fn update_system_fronters(
         // pass through any other errors
         Err(err) => Err(err.into()),
     }?;
-    let mut fronters = Vec::<Member>::new();
-    for member in current_front.members {
-        match member {
-            StringOrStruct::String(_) => Err(format!(
-                "system {} returned uuids instead of member structs",
-                system.uuid
-            ))?,
-            StringOrStruct::Struct(member) => fronters.push(member),
-        };
-    }
 
-    let fronter_uuids: Vec<_> = fronters.iter().map(|m| m.uuid).collect();
+    let timestamp = if let Some(ref switch) = latest_switch {
+        DateTime::from_timestamp(switch.timestamp.to_utc().unix_timestamp(), 0)
+            .ok_or_else(|| {
+                format!(
+                    "timestamp out of range: {}",
+                    switch.timestamp.to_utc().unix_timestamp()
+                )
+            })?
+            .naive_utc()
+    } else {
+        Utc::now().naive_utc()
+    };
+    let fronters = gather_fronters_from_switch(system.uuid, latest_switch)?;
+    let fronter_uuids: Vec<_> = fronters.iter().map(|f| f.uuid).collect();
 
     if db::did_fronters_change(db, system.uuid, &fronter_uuids).await? {
         db::update_fronters(db, system.uuid, &fronter_uuids).await?;
         return Ok(FrontChange::Changed(Switch {
             fronters,
-            timestamp: DateTime::from_timestamp(
-                current_front.timestamp.to_utc().unix_timestamp(),
-                0,
-            )
-            .ok_or_else(|| {
-                format!(
-                    "timestamp out of range: {}",
-                    current_front.timestamp.to_utc().unix_timestamp()
-                )
-            })?
-            .naive_utc(),
+            timestamp,
         }));
     }
 
     Ok(FrontChange::Unchanged)
+}
+
+fn gather_fronters_from_switch(
+    system_uuid: Uuid,
+    switch: Option<PkSwitch>,
+) -> Result<Vec<Member>, Error> {
+    let Some(switch) = switch else {
+        return Ok(Vec::new());
+    };
+
+    let mut fronters = Vec::<Member>::new();
+    for member in switch.members {
+        match member {
+            StringOrStruct::String(_) => Err(format!(
+                "system {system_uuid} returned uuids instead of member structs",
+            ))?,
+            StringOrStruct::Struct(member) => fronters.push(member),
+        };
+    }
+
+    Ok(fronters)
 }
 
 async fn update_fronter_category(
