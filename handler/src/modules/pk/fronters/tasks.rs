@@ -50,6 +50,8 @@ async fn update_system_fronters(
         .await
     {
         Ok(front) => Ok::<PkSwitch, Error>(front),
+        // still update the fronter timestamp if front is private to avoid
+        // forever trying to update fronts we can't access
         Err(err)
             if err
                 .status()
@@ -58,6 +60,7 @@ async fn update_system_fronters(
             db::update_fronters_timestamp(db, system.uuid).await?;
             Err(err.into())
         }
+        // pass through any other errors
         Err(err) => Err(err.into()),
     }?;
     let mut fronters = Vec::<Member>::new();
