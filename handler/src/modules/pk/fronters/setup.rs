@@ -46,7 +46,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     }
 
-    let category_name = ctx.get_arg_string("name")?;
+    let category_title = ctx.get_arg_string("title")?;
     let bot_user = ctx.client.current_user().await?.model().await?;
     let required_permissions = Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL;
 
@@ -69,7 +69,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     // create the category
     let fronters_category = ctx
         .client
-        .create_guild_channel(guild.id, &category_name)
+        .create_guild_channel(guild.id, &category_title)
         .permission_overwrites(&permission_overwrites)
         .kind(ChannelType::GuildCategory)
         .await?

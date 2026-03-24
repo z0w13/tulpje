@@ -18,7 +18,7 @@ pub(crate) fn commands() -> SubCommandGroupBuilder<Services> {
         .subcommand(
             SubCommandBuilder::new("setup", "set-up fronter channels")
                 .option(
-                    StringBuilder::new("name", "Name of the fronters category")
+                    StringBuilder::new("title", "title of the fronters category")
                         .max_length(100)
                         .required(true),
                 )
