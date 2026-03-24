@@ -95,7 +95,9 @@ def version_bump(
     if sem_ver.major == 0:
         if breaking:
             sem_ver = sem_ver.bump_minor()
-        elif feature or prerelease is None:
+        elif prerelease is None or (
+            sem_ver.prerelease is None and prerelease is not None
+        ):
             sem_ver = sem_ver.next_version("patch")
     else:
         if breaking:
@@ -130,7 +132,7 @@ def test_bump_version():
         ("0.1.0", "0.1.1", False, False, None),
         ("1.0.0", "1.0.1", False, False, None),
         # normal -> prerelease bumps relevant parts and adds prerelease
-        ("0.1.0", "0.1.0-beta.1", False, False, "beta"),
+        ("0.1.0", "0.1.1-beta.1", False, False, "beta"),
         ("0.1.0", "0.1.1-beta.1", True, False, "beta"),
         ("0.1.0", "0.2.0-beta.1", False, True, "beta"),
         ("1.0.0", "1.0.0-beta.1", False, False, "beta"),
