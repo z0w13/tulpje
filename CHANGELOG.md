@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.0-rc.1] - 2026-03-24
+
+### Breaking Changes
+
+ - Switch to nirn-proxy instead of twilight-http-proxy
+
+### Changed
+
+ - Always create a new category when `/pk fronters setup` is used
+ - Restrict requested intents
+ - Document required permissions
+
+### Fixed
+
+ - Continue without loading secrets if directory is missing
+ - Use `title` for fronter category name argument to clarify usage
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(utils/secret-loader): continue without loading secrets if directory is missing ([`7a7c774`](https://github.com/z0w13/tulpje/commit/7a7c7747b05c24ff06bf2eb3e7518ee1547facd0))
+ * feat!: switch to nirn-proxy instead of twilight-http-proxy ([`951749d`](https://github.com/z0w13/tulpje/commit/951749d24d987abc215581f47acf623eaa133264))
+ * fix(handler/pk): use `title` for fronter category name argument to clarify usage ([`66744a1`](https://github.com/z0w13/tulpje/commit/66744a1e085356f28d7f9a62acbe0f1eba8e9069))
+ * refactor(handler/pk): always create a new category when `/pk fronters setup` is used ([`a9c7256`](https://github.com/z0w13/tulpje/commit/a9c7256fb4f6a3b5afc9a546a909763671f44fe4))
+ * chore(gateway): restrict requested intents ([`d054c86`](https://github.com/z0w13/tulpje/commit/d054c865eec1970e6f443063b9d7e1e208d893d0))
+ * chore(docs): document required permissions ([`1e57044`](https://github.com/z0w13/tulpje/commit/1e57044921278ff2fcb013fe9b1775a1c6b99e20))
+</details>
+
 ## [0.20.2] - 2026-03-23
 
 ### Commit Details

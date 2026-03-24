@@ -3145,7 +3145,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-gateway"
-version = "0.20.2"
+version = "0.21.0-rc.1"
 dependencies = [
  "figment",
  "figment_file_provider_adapter",
@@ -3168,7 +3168,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-handler"
-version = "0.20.2"
+version = "0.21.0-rc.1"
 dependencies = [
  "base64",
  "chrono",
@@ -3202,7 +3202,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-manager"
-version = "0.20.2"
+version = "0.21.0-rc.1"
 dependencies = [
  "rustls",
  "tokio",
@@ -3211,7 +3211,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-shared"
-version = "0.20.2"
+version = "0.21.0-rc.1"
 dependencies = [
  "metrics",
  "metrics-exporter-prometheus",
@@ -3228,7 +3228,7 @@ dependencies = [
 
 [[package]]
 name = "tulpje-utils"
-version = "0.20.2"
+version = "0.21.0-rc.1"
 dependencies = [
  "reqwest 0.13.1",
 ]
