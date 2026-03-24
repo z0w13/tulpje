@@ -18,7 +18,7 @@ services:
         depends_on:
             valkey: { condition: service_healthy }
             rabbitmq: { condition: service_healthy }
-            discord_proxy: { condition: service_started }
+            nirn-proxy: { condition: service_healthy }
             gateway_queue: { condition: service_started }
     handler:
         image: "tulpje-handler${IMAGE_SUFFIX}"
@@ -38,24 +38,22 @@ services:
             valkey: { condition: service_healthy }
             postgres: { condition: service_healthy }
             rabbitmq: { condition: service_healthy }
-            discord_proxy: { condition: service_started }
+            nirn-proxy: { condition: service_healthy }
     gateway_queue:
         image: "twilight-gateway-queue${IMAGE_SUFFIX}"
         pull_policy: never
         # NOTE: Unfortunately can't health check, only endpoint is the queue for rate limiting
         secrets:
            - discord_token
-    discord_proxy:
-        image: "twilight-http-proxy${IMAGE_SUFFIX}"
+    nirn-proxy:
+        image: "nirn-proxy${IMAGE_SUFFIX}"
         pull_policy: never
         healthcheck:
-          test: ["CMD", "/bin/check-http", "HEAD", "http://localhost/metrics"]
+          test: ["CMD", "/bin/check-http", "HEAD", "http://localhost:8080/nirn/healthz"]
           interval: 10s
           timeout: 5s
           retries: 3
           start_period: 5s
-        secrets:
-           - discord_token
     postgres:
         # https://hub.docker.com/_/postgres
         image: "postgres:17.2"

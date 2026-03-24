@@ -6,6 +6,7 @@ use tulpje_shared::metrics::MetricsListenAddr;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
+    pub discord_token: String,
     pub discord_proxy: String,
     pub rabbitmq_address: String,
     pub redis_url: String,

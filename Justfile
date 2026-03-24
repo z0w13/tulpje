@@ -19,7 +19,7 @@ sqlx-prepare: services-up
 up: build-docker
   docker compose --profile=full up
 
-services-up: (build-docker ".#docker-http-proxy" ".#docker-gateway-queue")
+services-up: (build-docker ".#docker-nirn-proxy" ".#docker-gateway-queue")
   docker compose up -d
 
 services-down:

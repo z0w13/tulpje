@@ -18,7 +18,7 @@ else
   PACKAGE_NAMES=(
     ".#docker-handler"
     ".#docker-gateway"
-    ".#docker-http-proxy"
+    ".#docker-nirn-proxy"
     ".#docker-gateway-queue"
   )
 fi

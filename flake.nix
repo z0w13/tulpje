@@ -91,9 +91,7 @@
             twilight-gateway-queue = pkgs.callPackage ./nix/pkgs/twilight-gateway-queue.nix {
               inherit craneLib;
             };
-            twilight-http-proxy = pkgs.callPackage ./nix/pkgs/twilight-http-proxy.nix {
-              inherit craneLib;
-            };
+            nirn-proxy = pkgs.callPackage ./nix/pkgs/nirn-proxy.nix { };
 
             # default package that builds all binaries
             default = pkgs.symlinkJoin {
@@ -104,7 +102,7 @@
                 self'.packages.tulpje-manager
                 self'.packages.tulpje-utils
                 self'.packages.twilight-gateway-queue
-                self'.packages.twilight-http-proxy
+                self'.packages.nirn-proxy
               ];
             };
 
@@ -119,8 +117,8 @@
               main = self'.packages.twilight-gateway-queue;
               utils = self'.packages.tulpje-utils;
             };
-            docker-http-proxy = pkgs.callPackage ./nix/oci-image.nix {
-              main = self'.packages.twilight-http-proxy;
+            docker-nirn-proxy = pkgs.callPackage ./nix/oci-image.nix {
+              main = self'.packages.nirn-proxy;
               utils = self'.packages.tulpje-utils;
             };
           };

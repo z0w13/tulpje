@@ -33,5 +33,5 @@ echo "* building docker images..."
 nix build --no-link --print-out-paths \
   ".#docker-handler" \
   ".#docker-gateway" \
-  ".#docker-http-proxy" \
+  ".#docker-nirn-proxy" \
   ".#docker-gateway-queue"

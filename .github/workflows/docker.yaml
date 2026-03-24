@@ -9,7 +9,7 @@ jobs:
         image:
           - { output: "docker-gateway", name: "tulpje-gateway" }
           - { output: "docker-handler", name: "tulpje-handler" }
-          - { output: "docker-http-proxy", name: "twilight-http-proxy"}
+          - { output: "docker-nirn-proxy", name: "nirn-proxy" }
           - { output: "docker-gateway-queue", name: "twilight-gateway-queue" }
     runs-on: ubuntu-latest
     permissions:

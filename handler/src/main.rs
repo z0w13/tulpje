@@ -50,6 +50,7 @@ async fn main() {
     let client = Arc::new(
         twilight_http::Client::builder()
             .proxy(config.discord_proxy, true)
+            .token(config.discord_token)
             .ratelimiter(None)
             .build(),
     );
