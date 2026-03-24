@@ -48,7 +48,8 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     let category_title = ctx.get_arg_string("title")?;
     let bot_user = ctx.client.current_user().await?.model().await?;
-    let required_permissions = Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL;
+    let required_permissions =
+        Permissions::MANAGE_CHANNELS | Permissions::VIEW_CHANNEL | Permissions::CONNECT;
 
     // define required permissions
     let permission_overwrites = vec![
