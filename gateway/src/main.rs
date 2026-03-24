@@ -2,6 +2,7 @@ use std::{env, time::Duration};
 
 use redis::aio::ConnectionManagerConfig;
 use tokio::signal::unix::SignalKind;
+use twilight_gateway::Intents;
 use twilight_model::gateway::{
     payload::outgoing::{identify::IdentifyProperties, update_presence::UpdatePresencePayload},
     presence::{Activity, MinimalActivity, Status},
@@ -66,19 +67,24 @@ async fn main() {
     metrics::install(config.metrics_listen_addr, redis.clone(), config.shard_id)
         .expect("error setting up metrics");
 
+    let desired_intents = Intents::empty()
+        | Intents::GUILDS
+        | Intents::GUILD_EMOJIS_AND_STICKERS
+        | Intents::GUILD_MEMBERS
+        | Intents::GUILD_MESSAGES
+        | Intents::GUILD_MESSAGE_REACTIONS
+        | Intents::MESSAGE_CONTENT;
+
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
-    let shard_config = twilight_gateway::ConfigBuilder::new(
-        config.discord_token,
-        twilight_gateway::Intents::all(),
-    )
-    .presence(create_presence())
-    .identify_properties(IdentifyProperties {
-        browser: "tulpje".into(),
-        device: "tulpje".into(),
-        os: std::env::consts::OS.into(),
-    })
-    .build();
+    let shard_config = twilight_gateway::ConfigBuilder::new(config.discord_token, desired_intents)
+        .presence(create_presence())
+        .identify_properties(IdentifyProperties {
+            browser: "tulpje".into(),
+            device: "tulpje".into(),
+            os: std::env::consts::OS.into(),
+        })
+        .build();
     let shard_id = twilight_gateway::ShardId::new_checked(config.shard_id, config.shard_count)
         .expect("error constructing shard ID");
     let shard = twilight_gateway::Shard::with_config(shard_id, shard_config);
