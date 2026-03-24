@@ -1,5 +1,5 @@
 name: "Continuous Integration"
-on: [ push ]
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,7 +16,7 @@ jobs:
       - uses: cachix/cachix-action@v14
         with:
           name: tulpje
-          authToken: '${{ secrets.CACHIX_TOKEN }}'
+          authToken: "${{ secrets.CACHIX_TOKEN }}"
       - name: Build binaries
         run: nix build .
       - name: Build docker images

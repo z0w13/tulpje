@@ -1,101 +1,103 @@
 name: "tulpje"
 
 services:
-    gateway:
-        image: "tulpje-gateway${IMAGE_SUFFIX}"
-        pull_policy: never
-        profiles: [ "full" ]
-        init: true
-        environment:
-            - SHARD_ID
-            - SHARD_COUNT
-            - RUST_LOG
-            - DISCORD_TOKEN
-            - DISCORD_GATEWAY_QUEUE
-            - RABBITMQ_ADDRESS
-            - DISCORD_PROXY
-            - REDIS_URL
-        depends_on:
-            valkey: { condition: service_healthy }
-            rabbitmq: { condition: service_healthy }
-            nirn-proxy: { condition: service_healthy }
-            gateway_queue: { condition: service_started }
-    handler:
-        image: "tulpje-handler${IMAGE_SUFFIX}"
-        pull_policy: never
-        profiles: [ "full" ]
-        init: true
-        environment:
-            - HANDLER_ID
-            - HANDLER_COUNT
-            - RUST_BACKTRACE=1
-            - RUST_LOG
-            - DATABASE_URL
-            - RABBITMQ_ADDRESS
-            - DISCORD_PROXY
-            - REDIS_URL
-        depends_on:
-            valkey: { condition: service_healthy }
-            postgres: { condition: service_healthy }
-            rabbitmq: { condition: service_healthy }
-            nirn-proxy: { condition: service_healthy }
-    gateway_queue:
-        image: "twilight-gateway-queue${IMAGE_SUFFIX}"
-        pull_policy: never
-        # NOTE: Unfortunately can't health check, only endpoint is the queue for rate limiting
-        secrets:
-           - discord_token
-    nirn-proxy:
-        image: "nirn-proxy${IMAGE_SUFFIX}"
-        pull_policy: never
-        healthcheck:
-          test: ["CMD", "/bin/check-http", "HEAD", "http://localhost:8080/nirn/healthz"]
-          interval: 10s
-          timeout: 5s
-          retries: 3
-          start_period: 5s
-    postgres:
-        # https://hub.docker.com/_/postgres
-        image: "postgres:17.2"
-        environment:
-            POSTGRES_DB:
-            POSTGRES_USER:
-            POSTGRES_PASSWORD:
-        healthcheck:
-            test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 60s
-        volumes: [ "postgres:/var/lib/postgresql/data" ]
-    valkey:
-        # https://hub.docker.com/r/valkey/valkey
-        image: "valkey/valkey:8.0.1"
-        environment:
-            # persist every 60s if at least one write was done
-            VALKEY_EXTRA_FLAGS: "--save 60 1"
-        healthcheck:
-            test: ["CMD-SHELL", "valkey-cli ping | grep PONG"]
-            interval: 5s
-            timeout: 3s
-            retries: 3
-            start_period: 10s
-        volumes: [ "valkey:/data" ]
-    rabbitmq:
-        # hostname needs to match hostname we connect with
-        hostname: "rabbitmq"
-        image: "rabbitmq:4.0.4"
-        healthcheck:
-            test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-            interval: 30s
-            timeout: 10s
-            retries: 3
-            start_period: 30s
+  gateway:
+    image: "tulpje-gateway${IMAGE_SUFFIX}"
+    pull_policy: never
+    profiles: ["full"]
+    init: true
+    environment:
+      - SHARD_ID
+      - SHARD_COUNT
+      - RUST_LOG
+      - DISCORD_TOKEN
+      - DISCORD_GATEWAY_QUEUE
+      - RABBITMQ_ADDRESS
+      - DISCORD_PROXY
+      - REDIS_URL
+    depends_on:
+      valkey: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      nirn-proxy: { condition: service_healthy }
+      gateway_queue: { condition: service_started }
+  handler:
+    image: "tulpje-handler${IMAGE_SUFFIX}"
+    pull_policy: never
+    profiles: ["full"]
+    init: true
+    environment:
+      - HANDLER_ID
+      - HANDLER_COUNT
+      - RUST_BACKTRACE=1
+      - RUST_LOG
+      - DATABASE_URL
+      - RABBITMQ_ADDRESS
+      - DISCORD_PROXY
+      - REDIS_URL
+    depends_on:
+      valkey: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      nirn-proxy: { condition: service_healthy }
+  gateway_queue:
+    image: "twilight-gateway-queue${IMAGE_SUFFIX}"
+    pull_policy: never
+    # NOTE: Unfortunately can't health check, only endpoint is the queue for rate limiting
+    secrets:
+      - discord_token
+  nirn-proxy:
+    image: "nirn-proxy${IMAGE_SUFFIX}"
+    pull_policy: never
+    healthcheck:
+      test:
+        ["CMD", "/bin/check-http", "HEAD", "http://localhost:8080/nirn/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+  postgres:
+    # https://hub.docker.com/_/postgres
+    image: "postgres:17.2"
+    environment:
+      POSTGRES_DB:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+    healthcheck:
+      test:
+        ["CMD", "pg_isready", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes: ["postgres:/var/lib/postgresql/data"]
+  valkey:
+    # https://hub.docker.com/r/valkey/valkey
+    image: "valkey/valkey:8.0.1"
+    environment:
+      # persist every 60s if at least one write was done
+      VALKEY_EXTRA_FLAGS: "--save 60 1"
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes: ["valkey:/data"]
+  rabbitmq:
+    # hostname needs to match hostname we connect with
+    hostname: "rabbitmq"
+    image: "rabbitmq:4.0.4"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 secrets:
   discord_token:
     environment: DISCORD_TOKEN
 
 volumes:
-    postgres:
-    valkey:
+  postgres:
+  valkey:
