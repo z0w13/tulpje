@@ -4,7 +4,7 @@ use pkrs_fork::model::Member;
 use pkrs_fork::{client::PkClient, model::PkId};
 use reqwest::StatusCode;
 use serde_either::StringOrStruct;
-use tracing::{Level, error};
+use tracing::Level;
 use tulpje_cache::Cache;
 use twilight_http::Client;
 use twilight_model::channel::permission_overwrite::{PermissionOverwrite, PermissionOverwriteType};
@@ -151,6 +151,7 @@ pub(super) async fn update_fronter_channels(
         .map(|c| c.name.clone().expect("guild channels have names"))
         .collect();
 
+    // map fronter names to desired channel positions
     let mut fronter_channel_map: HashMap<String, Channel> = fronter_channels
         .iter()
         .map(|c| {
@@ -177,36 +178,32 @@ pub(super) async fn update_fronter_channels(
         );
     }
 
+    // calculate wanted changes
     let desired_fronters_set = HashSet::from_iter(desired_fronters);
     let delete_fronters = current_fronters.difference(&desired_fronters_set);
     let create_fronters = desired_fronters_set.difference(&current_fronters);
 
-    // TODO: Use something like thiserror to narrow down error types.
-    //       that way we can give users better errors and also not just, string join
-    let mut fronter_errors = Vec::new();
-
+    // delete old channels
     for fronter in delete_fronters {
         #[expect(
             clippy::indexing_slicing,
             reason = "`delete_fronters` should only contain keys from `fronter_channel_map`"
         )]
         let channel = &fronter_channel_map[fronter];
-        if let Err(e) = client.delete_channel(channel.id).await {
-            let err = format!(
+
+        client.delete_channel(channel.id).await.map_err(|err| {
+            format!(
                 "error deleting channel '{}' ({}): {}",
                 channel.name.clone().unwrap_or_default(),
                 channel.id,
-                e
-            );
-            error!("{err}");
-            fronter_errors.push(err);
-
-            continue;
-        }
+                err
+            )
+        })?;
 
         fronter_channel_map.remove(fronter);
     }
 
+    // create new channels
     for fronter in create_fronters {
         let pos = fronter_pos_map
             .get(fronter)
@@ -227,35 +224,22 @@ pub(super) async fn update_fronter_channels(
             },
         ];
 
-        let channel = match client
+        let channel = client
             .create_guild_channel(guild.id, fronter)
             .permission_overwrites(&permissions)
             .position(u64::from(*pos))
             .parent_id(cat.id)
             .kind(ChannelType::GuildVoice)
             .await
-        {
-            Ok(response) => match response.model().await {
-                Ok(chan) => chan,
-                Err(e) => {
-                    let err = format!("error deserialising new channel for '{fronter}': {e}");
-                    error!("{err}");
-                    fronter_errors.push(err);
+            .map_err(|err| format!("error creating fronter channel `{fronter}`: {err}"))?
+            .model()
+            .await
+            .map_err(|err| format!("error deserialising new channel for `{fronter}`: {err}"))?;
 
-                    continue;
-                }
-            },
-            Err(e) => {
-                let err = format!("error creating fronter channel '{fronter}': {e}");
-                error!("{err}");
-                fronter_errors.push(err);
-
-                continue;
-            }
-        };
-
-        fronter_channel_map.insert(fronter.to_owned(), channel.clone());
+        fronter_channel_map.insert(fronter.to_owned(), channel);
     }
+
+    // update channel positions
     for (name, position) in fronter_pos_map {
         let channel = fronter_channel_map
             .get(&name)
@@ -266,21 +250,11 @@ pub(super) async fn update_fronter_channels(
             continue;
         }
 
-        if let Err(e) = client
+        client
             .update_channel(channel.id)
             .position(u64::from(position))
             .await
-        {
-            let err = format!("error moving channel '{name}': {e}");
-            error!("{err}");
-            fronter_errors.push(err);
-
-            continue;
-        }
-    }
-
-    if !fronter_errors.is_empty() {
-        return Err(fronter_errors.join("\n").into());
+            .map_err(|err| format!("error moving channel `{}` ({}): {}", name, channel.id, err))?;
     }
 
     Ok(())
