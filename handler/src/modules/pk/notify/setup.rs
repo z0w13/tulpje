@@ -23,7 +23,8 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
 
     let channel_name_or_ref = ctx.get_arg_string("channel")?;
     let bot_user = ctx.client.current_user().await?.model().await?;
-    let required_permissions = Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES;
+    let required_permissions =
+        Permissions::VIEW_CHANNEL | Permissions::SEND_MESSAGES | Permissions::EMBED_LINKS;
 
     let existing_channel = if let Some(channel_id) = parse_channel_ref(&channel_name_or_ref) {
         // handle channel references
