@@ -81,14 +81,17 @@ async fn update_system_fronters(
     let fronter_uuids: Vec<_> = fronters.iter().map(|f| f.uuid).collect();
 
     if db::did_fronters_change(db, system.uuid, &fronter_uuids).await? {
+        // update the fronters in the db if they changed
         db::update_fronters(db, system.uuid, &fronter_uuids).await?;
-        return Ok(FrontChange::Changed(Switch {
+        Ok(FrontChange::Changed(Switch {
             fronters,
             timestamp,
-        }));
+        }))
+    } else {
+        // otherwise just update the `updated_at` timestamp
+        db::update_fronters_timestamp(db, system.uuid).await?;
+        Ok(FrontChange::Unchanged)
     }
-
-    Ok(FrontChange::Unchanged)
 }
 
 fn gather_fronters_from_switch(
