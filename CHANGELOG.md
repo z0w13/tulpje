@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.3] - 2026-03-25
+
+### Fixed
+
+ - Run `guilds:cleanup` daily
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(handler): run `guilds:cleanup` daily ([`9a18e57`](https://github.com/tulpje/tulpje/commit/9a18e57f62239adf86b5f5d74e12651272ba3cea))
+</details>
+
 ## [0.21.3-rc.1] - 2026-03-25
 
 ### Changed
