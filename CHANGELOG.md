@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.4-rc.2] - 2026-03-25
+
+### Added
+
+ - Add `just release` shortcut for release script
+
+### Fixed
+
+ - Also store system info in `/pk setup`
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * feat(build): add `just release` shortcut for release script ([`f104e9b`](https://github.com/tulpje/tulpje/commit/f104e9b8e600e4e96f787e94d880ff676a5d866d))
+ * fix(handler/pk): also store system info in `/pk setup` ([`ebf3c6c`](https://github.com/tulpje/tulpje/commit/ebf3c6c1a7294c8194be75367cd5e2c9db7e38ff))
+</details>
+
 ## [0.21.4-rc.1] - 2026-03-25
 
 ### Fixed
