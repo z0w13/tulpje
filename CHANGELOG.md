@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.2-rc.1] - 2026-03-25
+
+### Changed
+
+ - Fancier feedback message on `/pk role update`
+ - Better `/pk role update` error messages
+ - Better `/pk role update` success message
+
+### Fixed
+
+ - Also assign member roles to user
+ - Fix `/pk roles update` not notifying user if system is private/not found, also fix using token
+
+### Removed
+
+ - Remove unnecessary GUILD_MEMBERS intent
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * chore(gateway): remove unnecessary GUILD_MEMBERS intent ([`5cf6c6c`](https://github.com/tulpje/tulpje/commit/5cf6c6c17ede4927272f8d9d2efeb15c5fd4f2e1))
+ * feat(handler/pk): fancier feedback message on `/pk role update` ([`2961c62`](https://github.com/tulpje/tulpje/commit/2961c6222b01fcd30ce0f8a3fe839f4cde4f9ccc))
+ * fix(handler/pk): also assign member roles to user ([`3f7f4bb`](https://github.com/tulpje/tulpje/commit/3f7f4bb4172e4b82a91db97afb4c1779dea0de89))
+ * fix(handler/pk): fix `/pk roles update` not notifying user if system is private/not found, also fix using token ([`b4b493d`](https://github.com/tulpje/tulpje/commit/b4b493dd10b6e474ce3fc11eda7f10c2a715af00))
+ * feat(handler/pk): better `/pk role update` error messages ([`5cf3016`](https://github.com/tulpje/tulpje/commit/5cf3016733c7714703cc024e48c8da45d7f87b79))
+ * feat(handler/pk): better `/pk role update` success message ([`0993a2a`](https://github.com/tulpje/tulpje/commit/0993a2a24d3586d4ec65de676f337ea469097b0d))
+</details>
+
 ## [0.21.1] - 2026-03-24
 
 ### Commit Details
