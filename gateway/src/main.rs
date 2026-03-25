@@ -70,7 +70,6 @@ async fn main() {
     let desired_intents = Intents::empty()
         | Intents::GUILDS
         | Intents::GUILD_EMOJIS_AND_STICKERS
-        | Intents::GUILD_MEMBERS
         | Intents::GUILD_MESSAGES
         | Intents::GUILD_MESSAGE_REACTIONS
         | Intents::MESSAGE_CONTENT;
