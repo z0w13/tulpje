@@ -34,30 +34,58 @@ fn role_limit_message(member_count: usize) -> String {
     )
 }
 
-fn update_success_message(created: u16, deleted: u16, updated: u16, assigned: usize) -> String {
-    format!(
-        "### Member Roles Updated\n{}{}{}{}",
-        if created > 0 {
-            format!("{created} created\n")
-        } else {
-            String::new()
-        },
-        if updated > 0 {
-            format!("{updated} updated\n")
-        } else {
-            String::new()
-        },
-        if deleted > 0 {
-            format!("{deleted} deleted\n")
-        } else {
-            String::new()
-        },
-        if assigned > 0 {
-            format!("{assigned} assigned\n")
-        } else {
-            String::new()
-        },
+async fn handle_update_success_message(
+    ctx: &CommandContext,
+    created: u16,
+    deleted: u16,
+    updated: u16,
+    assigned: u16,
+) -> Result<(), Error> {
+    if created + deleted + updated + assigned == 0 {
+        responses::info(ctx, "Member roles are already up-to-date").await?;
+        return Ok(());
+    }
+
+    // all this code is just to get messages to look like
+    //   1 role created, 2 updated, 1 assigned
+    //   2 roles updated, 1 assigned
+    //   etc
+    let mut parts = Vec::<(u16, &'static str)>::new();
+    if created > 0 {
+        parts.push((created, "created"));
+    }
+    if updated > 0 {
+        parts.push((updated, "updated"));
+    }
+    if deleted > 0 {
+        parts.push((deleted, "deleted"));
+    }
+    if assigned > 0 {
+        parts.push((assigned, "assigned"));
+    }
+
+    responses::success(
+        ctx,
+        &format!(
+            "### Member Roles Updated\n{}",
+            parts
+                .into_iter()
+                .enumerate()
+                .map(|(idx, (count, verb))| {
+                    if idx == 0 {
+                        let noun = if count == 1 { "role" } else { "roles" };
+                        format!("{count} {noun} {verb}")
+                    } else {
+                        format!("{count} {verb}")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
     )
+    .await?;
+
+    Ok(())
 }
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
@@ -210,15 +238,16 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
                 ChangeOperation::Update { .. } => (created, deleted, updated + 1),
             });
 
-    if created == 0 && deleted == 0 && updated == 0 && missing_user_role_names.is_empty() {
-        responses::info(&ctx, "Member roles are already up-to-date").await?;
-    } else {
-        responses::success(
-            &ctx,
-            &update_success_message(created, deleted, updated, missing_user_role_names.len()),
-        )
-        .await?;
-    }
+    // send success message to user
+    handle_update_success_message(
+        &ctx,
+        created,
+        deleted,
+        updated,
+        missing_user_role_names.len() as u16,
+    )
+    .await?;
+
     Ok(())
 }
 
