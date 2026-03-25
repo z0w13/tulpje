@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.21.4-rc.1] - 2026-03-25
+
+### Fixed
+
+ - Don't clean up systems that are still configured in guilds
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * fix(handler): don't clean up systems that are still configured in guilds ([`a8a1388`](https://github.com/tulpje/tulpje/commit/a8a13884a90c4229f519888dc2b957028fa68dfe))
+</details>
+
 ## [0.21.3] - 2026-03-25
 
 ### Fixed
