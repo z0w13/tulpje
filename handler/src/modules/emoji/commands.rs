@@ -141,9 +141,18 @@ async fn create_emoji_stats_embed(
         "No Data".to_string()
     };
 
+    let degraded_warn = if std::env::var("TULPJE_MESSAGE_CONTENT")
+        .unwrap_or_else(|_| "true".to_string())
+        == "true"
+    {
+        ""
+    } else {
+        "\n\n⚠️ bot is currently only tracking emoji reactions as it can't access message content. We're working on a fix"
+    };
+
     let mut builder = EmbedBuilder::new()
         .title(format!("{} Emotes in {}", sort.name(), guild.name))
-        .description(emoji_str);
+        .description(format!("{emoji_str}{degraded_warn}"));
 
     if total_pages > 0 {
         builder = builder.footer(

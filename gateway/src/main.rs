@@ -1,4 +1,4 @@
-use std::{env, time::Duration};
+use std::{env, error::Error, time::Duration};
 
 use redis::aio::ConnectionManagerConfig;
 use tokio::signal::unix::SignalKind;
@@ -21,6 +21,20 @@ use config::Config;
 use shard_reporter::ShardReporterHandle;
 
 use crate::shard_manager::ShardManagerHandle;
+
+async fn get_intents() -> Result<Intents, Box<dyn Error>> {
+    let mut intents = Intents::empty()
+        | Intents::GUILDS
+        | Intents::GUILD_EMOJIS_AND_STICKERS
+        | Intents::GUILD_MESSAGES
+        | Intents::GUILD_MESSAGE_REACTIONS;
+
+    if std::env::var("TULPJE_MESSAGE_CONTENT").unwrap_or_else(|_| "true".to_string()) == "true" {
+        intents |= Intents::MESSAGE_CONTENT;
+    }
+
+    Ok(intents)
+}
 
 #[tokio::main]
 async fn main() {
@@ -67,12 +81,7 @@ async fn main() {
     metrics::install(config.metrics_listen_addr, redis.clone(), config.shard_id)
         .expect("error setting up metrics");
 
-    let desired_intents = Intents::empty()
-        | Intents::GUILDS
-        | Intents::GUILD_EMOJIS_AND_STICKERS
-        | Intents::GUILD_MESSAGES
-        | Intents::GUILD_MESSAGE_REACTIONS
-        | Intents::MESSAGE_CONTENT;
+    let desired_intents = get_intents().await.expect("error calculating intents");
 
     // create the shard
     tracing::info!("shard: {}, total: {}", config.shard_id, config.shard_count);
