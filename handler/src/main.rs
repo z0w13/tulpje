@@ -84,7 +84,16 @@ async fn main() {
     // set-up cache
     let cache = Arc::new(Cache::new(
         redis.clone(),
-        CacheConfig::new().resource_types(ResourceType::EMOJI),
+        CacheConfig::new().resource_types(
+            ResourceType::empty()
+                | ResourceType::CHANNEL
+                | ResourceType::EMOJI
+                | ResourceType::GUILD
+                | ResourceType::MEMBER
+                | ResourceType::ROLE
+                | ResourceType::USER
+                | ResourceType::USER_CURRENT,
+        ),
     ));
 
     // create postgres connection
