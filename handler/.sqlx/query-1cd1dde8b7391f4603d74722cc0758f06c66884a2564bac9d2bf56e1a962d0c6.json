@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE\n                guilds\n            SET\n                deleted_at = NOW()\n            WHERE\n                guild_id = $1\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1cd1dde8b7391f4603d74722cc0758f06c66884a2564bac9d2bf56e1a962d0c6"
+}

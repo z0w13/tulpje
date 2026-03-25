@@ -20,6 +20,7 @@ use crate::context::Services;
 mod commands;
 pub(crate) mod db;
 mod event_handlers;
+mod tasks;
 
 pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
     let guild_module_choices: Vec<(String, String)> = registry
@@ -29,6 +30,7 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
         .collect();
 
     ModuleBuilder::<Services>::new("core")
+        // commands
         .command(
             CommandBuilder::new("mod", "module management", CommandType::ChatInput)
                 .default_member_permissions(Permissions::MANAGE_GUILD)
@@ -56,9 +58,20 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
                         .handler(handler_func!(commands::modules)),
                 ),
         )
+        // events
         .event(
             EventType::GuildCreate,
             handler_func!(event_handlers::guild_create),
+        )
+        .event(
+            EventType::GuildDelete,
+            handler_func!(event_handlers::guild_delete),
+        )
+        // tasks
+        .task(
+            "guilds:cleanup",
+            "@weekly", // every sunday at midnight
+            handler_func!(tasks::delete_removed_guilds),
         )
         .build()
 }

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                guild_id, deleted_at AS \"deleted_at!\"\n            FROM\n                guilds\n            WHERE\n                deleted_at IS NOT NULL\n            AND\n                deleted_at < NOW() - interval '7 days'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "guild_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "deleted_at!",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "6becbd9f7bf1a2b2ea12eddaa5ef65c1453c13a5dfa07c6881d7e56c8d38ce88"
+}

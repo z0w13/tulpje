@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use chrono::NaiveDateTime;
 use twilight_model::id::{Id, marker::GuildMarker};
 
 use tulpje_framework::Error;
@@ -66,6 +67,7 @@ pub(crate) async fn guilds_with_module(
     .collect())
 }
 
+#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn all_guild_modules(
     db: &sqlx::PgPool,
 ) -> Result<HashMap<Id<GuildMarker>, Vec<String>>, Error> {
@@ -82,4 +84,84 @@ pub(crate) async fn all_guild_modules(
     }
 
     Ok(result)
+}
+
+/// track that we've seen the guild in the database
+pub(super) async fn touch_guild(db: &sqlx::PgPool, guild_id: Id<GuildMarker>) -> Result<(), Error> {
+    sqlx::query!(
+        r#"
+            INSERT INTO
+                guilds (guild_id, created_at, updated_at)
+            VALUES
+                ($1, NOW(), NOW())
+            ON CONFLICT
+                (guild_id)
+            DO UPDATE
+                SET updated_at = NOW()
+        "#,
+        i64::from(DbId(guild_id))
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
+pub(super) async fn leave_guild(db: &sqlx::PgPool, guild_id: Id<GuildMarker>) -> Result<(), Error> {
+    sqlx::query!(
+        r#"
+            UPDATE
+                guilds
+            SET
+                deleted_at = NOW()
+            WHERE
+                guild_id = $1
+        "#,
+        i64::from(DbId(guild_id))
+    )
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
+pub(super) async fn _delete_guild(
+    db: &sqlx::PgPool,
+    guild_id: Id<GuildMarker>,
+) -> Result<bool, Error> {
+    Ok(sqlx::query_scalar!(
+        r#"
+            DELETE FROM
+                guilds
+            WHERE
+                guild_id = $1
+        "#,
+        i64::from(DbId(guild_id))
+    )
+    .execute(db)
+    .await?
+    .rows_affected()
+        > 0)
+}
+
+pub(super) async fn guilds_eligible_for_deletion(
+    db: &sqlx::PgPool,
+) -> Result<Vec<(Id<GuildMarker>, NaiveDateTime)>, Error> {
+    Ok(sqlx::query!(
+        r#"
+            SELECT
+                guild_id, deleted_at AS "deleted_at!"
+            FROM
+                guilds
+            WHERE
+                deleted_at IS NOT NULL
+            AND
+                deleted_at < NOW() - interval '7 days'
+        "#
+    )
+    .fetch_all(db)
+    .await?
+    .into_iter()
+    .map(|r| (*DbId::from(r.guild_id), r.deleted_at))
+    .collect())
 }
