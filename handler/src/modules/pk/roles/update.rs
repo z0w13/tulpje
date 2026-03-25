@@ -4,9 +4,11 @@ use pkrs_fork::model::Member;
 use pkrs_fork::{client::PkClient, model::PkId};
 use reqwest::StatusCode;
 use tracing::debug;
-use twilight_model::guild::Guild;
+use tulpje_cache::Cache;
+use twilight_http::Client;
+use twilight_model::guild::{Guild, Role};
 use twilight_model::id::Id;
-use twilight_model::id::marker::RoleMarker;
+use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 
 use tulpje_framework::Error;
 
@@ -32,9 +34,9 @@ fn role_limit_message(member_count: usize) -> String {
     )
 }
 
-fn update_success_message(created: u16, deleted: u16, updated: u16) -> String {
+fn update_success_message(created: u16, deleted: u16, updated: u16, assigned: usize) -> String {
     format!(
-        "### Member Roles Updated\n{}{}{}",
+        "### Member Roles Updated\n{}{}{}{}",
         if created > 0 {
             format!("{created} created\n")
         } else {
@@ -47,6 +49,11 @@ fn update_success_message(created: u16, deleted: u16, updated: u16) -> String {
         },
         if deleted > 0 {
             format!("{deleted} deleted\n")
+        } else {
+            String::new()
+        },
+        if assigned > 0 {
+            format!("{assigned} assigned\n")
         } else {
             String::new()
         },
@@ -89,10 +96,35 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     }
 
+    // get current and desired server roles
     let current_role_map = get_current_roles(&guild);
     let desired_role_map = get_desired_roles(&members);
 
-    let ops = get_ops(&current_role_map, &desired_role_map);
+    // get current and desired assigned roles for user
+    let current_user_roles =
+        get_user_roles(&ctx.client, &ctx.services.cache, *gs.guild_id, *gs.user_id).await?;
+
+    let current_user_role_names: HashSet<_> = current_user_roles
+        .iter()
+        .filter(|r| r.name.ends_with("(Alter)"))
+        .map(|r| r.name.clone())
+        .collect();
+    let desired_user_role_names: HashSet<_> = desired_role_map.keys().cloned().collect();
+    let missing_user_role_names: Vec<_> = desired_user_role_names
+        .difference(&current_user_role_names)
+        .collect();
+
+    let ops = get_role_ops(&current_role_map, &desired_role_map);
+
+    let mut role_name_id_map: HashMap<String, Id<RoleMarker>> = current_role_map
+        .iter()
+        .map(|(k, v)| {
+            (
+                k.clone(),
+                v.id.expect("get_current_roles always assigns id: Some(...)"),
+            )
+        })
+        .collect();
 
     // TODO: actually handle errors
     // TODO: set mention permissions?
@@ -113,12 +145,18 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
                 );
             }
             ChangeOperation::Create { name, color } => {
-                ctx.client
+                let role = ctx
+                    .client
                     .create_role(guild.id)
                     .name(name)
                     .color(*color)
                     .await
-                    .map_err(|err| format!("error creating role {name}: {err}"))?;
+                    .map_err(|err| format!("error creating role {name}: {err}"))?
+                    .model()
+                    .await
+                    .map_err(|err| format!("error parsing role {name}: {err}"))?;
+
+                role_name_id_map.insert(name.clone(), role.id);
 
                 debug!(
                     guild_id = guild.id.get(),
@@ -143,6 +181,26 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         };
     }
 
+    for missing_role_name in &missing_user_role_names {
+        let Some(role_id) = role_name_id_map.get(*missing_role_name) else {
+            tracing::warn!("couldn't get role id from `role_name_id_map` for {missing_role_name}");
+            continue;
+        };
+
+        ctx.client
+            .add_guild_member_role(*gs.guild_id, *gs.user_id, *role_id)
+            .await
+            .map_err(|err| {
+                format!("error assigning role {missing_role_name} ({role_id}): {err}")
+            })?;
+
+        debug!(
+            guild_id = guild.id.get(),
+            guild_name = guild.name,
+            "assigned role: {missing_role_name}"
+        );
+    }
+
     // aggregate stats
     let (created, deleted, updated) =
         ops.into_iter()
@@ -152,10 +210,14 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
                 ChangeOperation::Update { .. } => (created, deleted, updated + 1),
             });
 
-    if created == 0 && deleted == 0 && updated == 0 {
+    if created == 0 && deleted == 0 && updated == 0 && missing_user_role_names.is_empty() {
         responses::info(&ctx, "Member roles are already up-to-date").await?;
     } else {
-        responses::success(&ctx, &update_success_message(created, deleted, updated)).await?;
+        responses::success(
+            &ctx,
+            &update_success_message(created, deleted, updated, missing_user_role_names.len()),
+        )
+        .await?;
     }
     Ok(())
 }
@@ -224,6 +286,36 @@ enum ChangeOperation {
     },
 }
 
+// TODO: Persist updated info in the cache
+async fn get_user_roles(
+    client: &Client,
+    cache: &Cache,
+    guild_id: Id<GuildMarker>,
+    user_id: Id<UserMarker>,
+) -> Result<Vec<Role>, Error> {
+    let member_roles = if let Some(member) = cache.members.get(&(guild_id, user_id)).await? {
+        member.roles
+    } else {
+        client
+            .guild_member(guild_id, user_id)
+            .await?
+            .model()
+            .await?
+            .roles
+    };
+
+    let mut roles = Vec::new();
+    for role_id in member_roles {
+        roles.push(if let Some(role) = cache.roles.get(&role_id).await? {
+            role.inner()
+        } else {
+            client.role(guild_id, role_id).await?.model().await?
+        });
+    }
+
+    Ok(roles)
+}
+
 fn get_desired_roles(members: &[Member]) -> HashMap<String, MemberRole> {
     members
         .iter()
@@ -256,16 +348,16 @@ fn get_current_roles(guild: &Guild) -> HashMap<String, MemberRole> {
         .collect()
 }
 
-fn get_ops(
-    current: &HashMap<String, MemberRole>,
-    desired: &HashMap<String, MemberRole>,
+fn get_role_ops(
+    current_roles: &HashMap<String, MemberRole>,
+    desired_roles: &HashMap<String, MemberRole>,
 ) -> Vec<ChangeOperation> {
-    let all_roles: HashSet<&String> = current.keys().chain(desired.keys()).collect();
+    let all_roles: HashSet<&String> = current_roles.keys().chain(desired_roles.keys()).collect();
 
     all_roles
         .into_iter()
         .filter_map(|role| {
-            match (current.get(role), desired.get(role)) {
+            match (current_roles.get(role), desired_roles.get(role)) {
                 // Update, only if color changed
                 (Some(current), Some(desired)) => {
                     (current.color != desired.color).then(|| ChangeOperation::Update {

@@ -14,8 +14,6 @@ use crate::{
 };
 
 #[derive(Debug)]
-// TODO: tests to confirm this still matches the database structure
-#[expect(dead_code, reason = "reflects database structure")]
 pub(crate) struct ModPkGuildRow {
     pub(crate) guild_id: DbId<GuildMarker>,
     pub(crate) user_id: DbId<UserMarker>,
