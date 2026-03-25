@@ -3,7 +3,11 @@ use reqwest::StatusCode;
 use tulpje_framework::Error;
 
 use super::db;
-use crate::{context::CommandContext, modules::pk::util::handle_system_ref, responses};
+use crate::{
+    context::CommandContext,
+    modules::pk::{db::ModPkSystem, util::handle_system_ref},
+    responses,
+};
 
 // TODO: command to see current settings
 pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
@@ -18,13 +22,13 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
-    let system = match ctx
+    let system: ModPkSystem = match ctx
         .services
         .pk
         .get_system(&PkId(system_ref.clone().into()))
         .await
     {
-        Ok(system) => system,
+        Ok(system) => system.into(),
         Err(err)
             if err
                 .status()
@@ -41,7 +45,8 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
         Err(err) => return Err(err.into()),
     };
 
-    db::save_guild_settings(&ctx.services.db, guild.id, user_id, &system.id.0).await?;
+    db::update_system(&ctx.services.db, &system).await?;
+    db::save_guild_settings(&ctx.services.db, guild.id, user_id, &system.id).await?;
 
     // Inform user of success
     responses::success(
