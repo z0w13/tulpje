@@ -70,7 +70,7 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
         // tasks
         .task(
             "guilds:cleanup",
-            "@weekly", // every sunday at midnight
+            "@daily", // every day at midnight
             handler_func!(tasks::delete_removed_guilds),
         )
         .build()
