@@ -1,6 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
+use pkrs_fork::model::Member;
 use pkrs_fork::{client::PkClient, model::PkId};
+use reqwest::StatusCode;
 use tracing::debug;
 use twilight_model::guild::Guild;
 use twilight_model::id::Id;
@@ -9,6 +11,7 @@ use twilight_model::id::marker::RoleMarker;
 use tulpje_framework::Error;
 
 use crate::context::CommandContext;
+use crate::modules::pk::util::SystemRef;
 use crate::modules::pk::{
     db::get_guild_settings_for_id,
     util::{get_member_name, pk_color_to_discord},
@@ -65,19 +68,30 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         .await?;
         return Ok(());
     };
-    let system_id = PkId(gs.system_id);
+    let system_ref = SystemRef::Id(gs.system_id);
+    let token = ctx.get_arg_string_optional("token")?;
+
+    // fetch members from PluralKit
+    let Some(members) = handle_get_system_members(
+        &ctx,
+        &ctx.services.pk.with_token(token.unwrap_or_default()),
+        system_ref,
+    )
+    .await?
+    else {
+        return Ok(());
+    };
 
     // TODO: Actually check based on the number of roles in the server
-    let member_count = ctx.services.pk.get_system_members(&system_id).await?.len();
+    let member_count = members.len();
     if member_count > DISCORD_ROLE_LIMIT.saturating_sub(ROLE_BUFFER) {
         responses::error(&ctx, &role_limit_message(member_count)).await?;
         return Ok(());
     }
 
-    let token = ctx.get_arg_string_optional("token")?;
-    let current_role_map = get_current_roles(guild.clone());
-    let desired_role_map =
-        get_desired_roles(&ctx.services.pk, &system_id, token.unwrap_or_default()).await?;
+    let current_role_map = get_current_roles(&guild);
+    let desired_role_map = get_desired_roles(&members);
+
     let ops = get_ops(&current_role_map, &desired_role_map);
 
     // TODO: actually handle errors
@@ -146,6 +160,47 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     Ok(())
 }
 
+async fn handle_get_system_members(
+    ctx: &CommandContext,
+    client: &PkClient,
+    system_ref: SystemRef,
+) -> Result<Option<Vec<Member>>, Error> {
+    match client
+        .get_system_members(&PkId(system_ref.clone().into()))
+        .await
+    {
+        Ok(members) => Ok(Some(members)),
+        // private member list
+        Err(err)
+            if err
+                .status()
+                .is_some_and(|status| status == StatusCode::FORBIDDEN) =>
+        {
+            responses::error(
+                ctx,
+                &format!("### Error\nMember list for `{system_ref}` is private"),
+            )
+            .await?;
+            Ok(None)
+        }
+        // missing system
+        Err(err)
+            if err
+                .status()
+                .is_some_and(|status| status == StatusCode::NOT_FOUND) =>
+        {
+            responses::error(
+                    ctx,
+                    &format!("### Error\nPluralKit returned a `404 Not Found` error, does `{system_ref}` exist?"),
+                )
+                .await?;
+            Ok(None)
+        }
+        // miscellaneous errors
+        Err(err) => Err(err.into()),
+    }
+}
+
 #[derive(Debug, Hash, Eq, PartialEq)]
 struct MemberRole {
     id: Option<Id<RoleMarker>>,
@@ -169,37 +224,28 @@ enum ChangeOperation {
     },
 }
 
-async fn get_desired_roles(
-    pk: &PkClient,
-    system: &PkId,
-    token: String,
-) -> Result<HashMap<String, MemberRole>, Error> {
-    let roles = pk
-        .with_token(token)
-        .get_system_members(system)
-        .await?
-        .into_iter()
+fn get_desired_roles(members: &[Member]) -> HashMap<String, MemberRole> {
+    members
+        .iter()
         .map(|m| MemberRole {
             id: None,
             name: format!(
                 "{} (Alter)",
-                get_member_name(&m)
+                get_member_name(m)
                     .split(" (") // Remove parenthesised pronouns ' (she/her)' and such
                     .next() // get the first part of the split string
                     .unwrap()
             ),
-            color: pk_color_to_discord(m.color),
+            color: pk_color_to_discord(m.color.clone()),
         })
         .map(|r| (r.name.clone(), r))
-        .collect();
-
-    Ok(roles)
+        .collect()
 }
 
-fn get_current_roles(guild: Guild) -> HashMap<String, MemberRole> {
+fn get_current_roles(guild: &Guild) -> HashMap<String, MemberRole> {
     guild
         .roles
-        .into_iter()
+        .iter()
         .filter(|v| v.name.ends_with(" (Alter)"))
         .map(|v| MemberRole {
             id: Some(v.id),
