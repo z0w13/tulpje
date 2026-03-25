@@ -29,6 +29,27 @@ fn role_limit_message(member_count: usize) -> String {
     )
 }
 
+fn update_success_message(created: u16, deleted: u16, updated: u16) -> String {
+    format!(
+        "### Member Roles Updated\n{}{}{}",
+        if created > 0 {
+            format!("{created} created\n")
+        } else {
+            String::new()
+        },
+        if updated > 0 {
+            format!("{updated} updated\n")
+        } else {
+            String::new()
+        },
+        if deleted > 0 {
+            format!("{deleted} deleted\n")
+        } else {
+            String::new()
+        },
+    )
+}
+
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
         unreachable!("command is guild_only");
@@ -114,11 +135,11 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
                 ChangeOperation::Update { .. } => (created, deleted, updated + 1),
             });
 
-    ctx.update(format!(
-        "roles updated, {} created, {} deleted, {} updated",
-        created, deleted, updated
-    ))
-    .await?;
+    if created == 0 && deleted == 0 && updated == 0 {
+        responses::info(&ctx, "Member roles are already up-to-date").await?;
+    } else {
+        responses::success(&ctx, &update_success_message(created, deleted, updated)).await?;
+    }
     Ok(())
 }
 
