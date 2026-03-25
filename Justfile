@@ -7,6 +7,9 @@ check:
 gateway: (run-local "nix run .#tulpje-gateway")
 handler: (run-local "nix run .#tulpje-handler")
 
+release +args:
+  contrib/release.py {{ args }}
+
 run-local +command:
   contrib/run-local.sh {{ command }}
 
