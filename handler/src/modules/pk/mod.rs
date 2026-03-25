@@ -16,6 +16,7 @@ pub mod db;
 pub mod fronters;
 pub mod notify;
 pub mod roles;
+mod tasks;
 pub mod util;
 
 pub fn build() -> Module<Services> {
@@ -46,6 +47,11 @@ pub fn build() -> Module<Services> {
             "pk:update-fronters",
             "0 * * * * *", // every minute
             handler_func!(fronters::tasks::update_fronters),
+        )
+        .task(
+            "pk:cleanup-systems",
+            "@daily", // once a day at midnight
+            handler_func!(tasks::cleanup_systems),
         )
         .build()
 }

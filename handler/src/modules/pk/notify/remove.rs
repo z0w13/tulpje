@@ -60,7 +60,6 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     }
 
     db::remove_notify_system(&ctx.services.db, guild.id, system.uuid).await?;
-    pk_db::cleanup_system(&ctx.services.db, system.uuid).await?;
 
     responses::success(
         &ctx,

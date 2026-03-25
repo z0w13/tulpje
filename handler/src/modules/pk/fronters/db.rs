@@ -137,6 +137,7 @@ pub(crate) async fn update_fronters(
     Ok(())
 }
 
+#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn delete_fronters(db: &sqlx::PgPool, system_uuid: Uuid) -> Result<(), Error> {
     sqlx::query!(
         "DELETE FROM pk_system_fronters WHERE system_uuid = $1",

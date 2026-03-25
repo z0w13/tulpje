@@ -8,10 +8,7 @@ use twilight_model::id::{
 use tulpje_framework::Error;
 use uuid::Uuid;
 
-use crate::{
-    db::DbId,
-    modules::pk::{fronters::db as fronters_db, util::SystemRef},
-};
+use crate::{db::DbId, modules::pk::util::SystemRef};
 
 #[derive(Debug)]
 pub(crate) struct ModPkGuildRow {
@@ -147,6 +144,7 @@ pub(crate) async fn update_system(db: &sqlx::PgPool, system: &ModPkSystem) -> Re
     Ok(())
 }
 
+#[expect(dead_code, reason = "useful utility function")]
 pub(crate) async fn delete_system(db: &sqlx::PgPool, system_ref: SystemRef) -> Result<(), Error> {
     match system_ref {
         SystemRef::Uuid(uuid) => {
@@ -165,18 +163,23 @@ pub(crate) async fn delete_system(db: &sqlx::PgPool, system_ref: SystemRef) -> R
     }
 }
 
-pub(crate) async fn cleanup_system(db: &sqlx::PgPool, system_uuid: Uuid) -> Result<(), Error> {
-    let system_is_followed = sqlx::query_scalar!(
-        "SELECT system_uuid FROM pk_notify_systems WHERE system_uuid = $1",
-        system_uuid
+pub(crate) async fn cleanup_systems(db: &sqlx::PgPool) -> Result<u64, Error> {
+    Ok(sqlx::query!(
+        r#"
+            DELETE
+            FROM
+                pk_systems
+            WHERE
+                NOT EXISTS (
+                    SELECT 1 FROM pk_guilds WHERE pk_guilds.system_id = pk_systems.id
+                )
+            AND
+                NOT EXISTS (
+                    SELECT 1 FROM pk_notify_systems WHERE pk_notify_systems.system_uuid = pk_systems.uuid
+                )
+        "#
     )
-    .fetch_optional(db)
-    .await?;
-
-    if system_is_followed.is_none() {
-        fronters_db::delete_fronters(db, system_uuid).await?;
-        delete_system(db, SystemRef::Uuid(system_uuid)).await?;
-    }
-
-    Ok(())
+    .execute(db)
+    .await?
+    .rows_affected())
 }
