@@ -1,3 +1,4 @@
+use twilight_gateway::EventType;
 use twilight_http::client::InteractionClient;
 use twilight_model::{
     application::{
@@ -18,6 +19,7 @@ use crate::context::Services;
 
 mod commands;
 pub(crate) mod db;
+mod event_handlers;
 
 pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
     let guild_module_choices: Vec<(String, String)> = registry
@@ -53,6 +55,10 @@ pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
                     SubCommandBuilder::new("list", "list enabled and available server modules")
                         .handler(handler_func!(commands::modules)),
                 ),
+        )
+        .event(
+            EventType::GuildCreate,
+            handler_func!(event_handlers::guild_create),
         )
         .build()
 }

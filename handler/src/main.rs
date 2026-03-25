@@ -177,28 +177,6 @@ async fn main() {
                     .await
                     .map_err(|err| format!(".set_global_commands() error: {}", err))?;
 
-                // register guild commands
-                let guild_modules = modules::core::db::all_guild_modules(&ctx.services.db)
-                    .await
-                    .map_err(|err| format!("error fetching guild modules: {}", err))?;
-
-                for (guild_id, modules) in guild_modules {
-                    if let Err(err) = modules::core::set_guild_commands_for_guild(
-                        &modules,
-                        guild_id,
-                        ctx.interaction(),
-                        &ctx.services.registry,
-                    )
-                    .await
-                    {
-                        tracing::error!(
-                            "error registering commands for guild {}: {}",
-                            guild_id,
-                            err
-                        );
-                    }
-                }
-
                 Ok(())
             })
         }),
