@@ -272,8 +272,11 @@ async fn process_system(
 }
 
 pub(crate) async fn update_fronters(ctx: TaskContext) -> Result<(), Error> {
-    let system_count = db::get_tracked_system_count(&ctx.services.db).await?;
-    metrics::counter!("pk:tracked-systems").absolute(system_count as u64);
+    let tracked_system_count = db::get_tracked_system_count(&ctx.services.db).await?;
+    metrics::counter!("pk:tracked-systems").absolute(tracked_system_count as u64);
+
+    let system_count = db::get_system_count(&ctx.services.db).await?;
+    metrics::counter!("pk:total-systems").absolute(system_count as u64);
 
     if system_count > 100 {
         tracing::warn!(

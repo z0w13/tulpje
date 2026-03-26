@@ -22,6 +22,7 @@ pub mod util;
 pub fn build() -> Module<Services> {
     // define metrics
     metrics::describe_counter!("pk:tracked-systems", "Systems Tracked");
+    metrics::describe_counter!("pk:total-systems", "Total Systems Stored");
     metrics::describe_counter!("pk:notifications", "Front Notification Stats");
     metrics::describe_counter!("pk:front-category", "Front Category Stats");
 
