@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                uuid, id, name\n            FROM\n                pk_systems\n            LEFT JOIN\n                pk_system_fronters\n            ON pk_systems.uuid = pk_system_fronters.system_uuid\n            WHERE (\n                    updated_at IS NULL\n                OR\n                    updated_at <= NOW() - interval '10 minutes'\n            ) AND (\n                    uuid IN (\n                        SELECT\n                            system_uuid\n                        FROM\n                            pk_notify_systems\n                    )\n                OR\n                    id IN (\n                        SELECT\n                            system_id\n                        FROM\n                            pk_guilds\n                        INNER JOIN\n                            pk_fronters\n                        ON\n                            pk_guilds.guild_id = pk_fronters.guild_id\n                    )\n            )\n            ORDER BY\n                updated_at\n            ASC NULLS FIRST\n            LIMIT 10\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "uuid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "cf270c579dc15f53d21331df73821e13c0241098fb17f42ad710be4dd303abb7"
+}

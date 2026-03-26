@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            COUNT(uuid)\n        FROM\n            pk_systems\n        WHERE\n            uuid IN (\n                SELECT\n                    system_uuid\n                FROM\n                    pk_notify_systems\n            )\n        OR\n            id IN (\n                SELECT\n                    system_id\n                FROM\n                    pk_guilds\n                INNER JOIN\n                    pk_fronters\n                ON\n                    pk_guilds.guild_id = pk_fronters.guild_id\n            )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "351455e6b433bd9a5f30593bd08b2403bdd9b6e8b25030c1d7a71c0804858ab4"
+}

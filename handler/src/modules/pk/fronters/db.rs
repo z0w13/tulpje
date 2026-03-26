@@ -59,6 +59,38 @@ pub(crate) async fn save_fronter_category(
     Ok(())
 }
 
+pub(crate) async fn get_tracked_system_count(db: &sqlx::PgPool) -> Result<usize, Error> {
+    Ok(sqlx::query_scalar!(
+        r#"
+        SELECT
+            COUNT(uuid)
+        FROM
+            pk_systems
+        WHERE
+            uuid IN (
+                SELECT
+                    system_uuid
+                FROM
+                    pk_notify_systems
+            )
+        OR
+            id IN (
+                SELECT
+                    system_id
+                FROM
+                    pk_guilds
+                INNER JOIN
+                    pk_fronters
+                ON
+                    pk_guilds.guild_id = pk_fronters.guild_id
+            )
+        "#
+    )
+    .fetch_one(db)
+    .await?
+    .unwrap_or_default() as usize)
+}
+
 pub(crate) async fn get_system_count(db: &sqlx::PgPool) -> Result<usize, Error> {
     Ok(sqlx::query_scalar!(
         r#"
@@ -170,10 +202,29 @@ pub(crate) async fn get_systems_to_update(db: &sqlx::PgPool) -> Result<Vec<ModPk
             LEFT JOIN
                 pk_system_fronters
             ON pk_systems.uuid = pk_system_fronters.system_uuid
-            WHERE
-                updated_at IS NULL
-            OR
-                updated_at <= NOW() - interval '10 minutes'
+            WHERE (
+                    updated_at IS NULL
+                OR
+                    updated_at <= NOW() - interval '10 minutes'
+            ) AND (
+                    uuid IN (
+                        SELECT
+                            system_uuid
+                        FROM
+                            pk_notify_systems
+                    )
+                OR
+                    id IN (
+                        SELECT
+                            system_id
+                        FROM
+                            pk_guilds
+                        INNER JOIN
+                            pk_fronters
+                        ON
+                            pk_guilds.guild_id = pk_fronters.guild_id
+                    )
+            )
             ORDER BY
                 updated_at
             ASC NULLS FIRST
