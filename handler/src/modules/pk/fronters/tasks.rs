@@ -156,8 +156,9 @@ async fn update_fronter_category(
         metrics::counter!("pk:front-category", "type" => "error").increment(1);
         tracing::error!(
             method = "update_fronter_category",
-            guild_id = ?guild_settings.guild_id,
-            category_id = ?category_id,
+            "error updating fronters for {} category {}: {}",
+            guild_settings.guild_id,
+            category_id,
             err
         );
     } else {
