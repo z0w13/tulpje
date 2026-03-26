@@ -260,12 +260,12 @@ async fn process_system(
     let changed = update_system_fronters(db, system, pk_client).await?;
     match changed {
         FrontChange::Changed(switch) => {
-            tracing::debug!(id = ?system.id, name =? system.name, "front changed");
+            tracing::debug!("front changed for {}", system.uuid);
             update_fronter_category(db, pk_client, discord_client, cache, system, &switch).await?;
             notify_front_change(db, discord_client, system, &switch).await?;
         }
         FrontChange::Unchanged => {
-            tracing::debug!(id = ?system.id, name =? system.name, "front unchanged");
+            tracing::debug!("front unchanged for {}", system.uuid);
         }
     }
     Ok(())
@@ -318,19 +318,14 @@ async fn update_fronters_for_guild(
     let category = client
         .channel(category_id)
         .await
-        .map_err(|err| {
-            format!(
-                "couldn't find category for guild '{}' ({}) {}",
-                guild.name, guild.id, err
-            )
-        })?
+        .map_err(|err| format!("couldn't find category for guild {}: {}", guild.id, err))?
         .model()
         .await?;
 
     category.guild_id.ok_or_else(|| {
         format!(
-            "channel {} for guild '{}' ({}) isn't a guild channel",
-            category.id, guild.name, guild.id
+            "caetgory {} for guild {} isn't a guild channel",
+            category.id, guild.id
         )
     })?;
 
@@ -344,18 +339,8 @@ async fn update_fronters_for_guild(
         Some(members),
     )
     .await
-    .map_err(|err| {
-        format!(
-            "error updating fronters for {} ({}): {}",
-            guild.name, guild.id, err
-        )
-    })?;
+    .map_err(|err| format!("error updating fronters for {}: {}", guild.id, err))?;
 
-    tracing::info!(
-        guild.id = guild.id.get(),
-        guild.name = guild.name,
-        "fronters updated"
-    );
-
+    tracing::info!("fronters updated in {}", guild.id);
     Ok(())
 }
