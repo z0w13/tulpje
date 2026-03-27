@@ -1,7 +1,5 @@
 [workspace]
-members = [
-	"gateway", "handler", "manager", "utils", "shared", "framework", "cache", "reconnecting-amqp",
-]
+members = ["crates/*"]
 
 resolver = "3"
 

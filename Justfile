@@ -14,10 +14,10 @@ run-local +command:
   contrib/run-local.sh {{ command }}
 
 sqlx-migrate: database-up
-  contrib/run-local.sh sqlx migrate run --source handler/migrations
+  contrib/run-local.sh sqlx migrate run --source crates/tulpje-handler/migrations
 
 sqlx-prepare: database-up
-  cd handler && ../contrib/run-local.sh cargo sqlx prepare
+  cd crates/tulpje-handler && ../../contrib/run-local.sh cargo sqlx prepare
 
 up: build-docker
   docker compose --profile=full up

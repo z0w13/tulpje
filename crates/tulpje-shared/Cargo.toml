@@ -19,7 +19,7 @@ tokio = { workspace = true }
 twilight-model = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = [ "json" ] }
-tulpje-framework = { version = "0.16.0", path = "../framework" }
+tulpje-framework = { version = "0.16.0", path = "../tulpje-framework" }
 redis = { workspace = true }
 
 [lints]
