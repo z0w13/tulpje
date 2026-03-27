@@ -20,9 +20,9 @@ use twilight_util::{
 
 use crate::{context::CommandContext, responses};
 
-pub(crate) fn message(color: &Color, text: &str) -> Component {
+pub(crate) fn message(color: Color, text: &str) -> Component {
     ContainerBuilder::new()
-        .accent_color(Some(color.0))
+        .accent_color(color.into())
         .component(TextDisplayBuilder::new(text).build())
         .build()
         .into()
@@ -30,22 +30,22 @@ pub(crate) fn message(color: &Color, text: &str) -> Component {
 
 #[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn success_message(text: &str) -> Component {
-    message(&color::roles::GREEN, text)
+    message(color::roles::GREEN, text)
 }
 
 #[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn error_message(text: &str) -> Component {
-    message(&color::roles::RED, text)
+    message(color::roles::RED, text)
 }
 
 #[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn warning_message(text: &str) -> Component {
-    message(&color::roles::ORANGE, text)
+    message(color::roles::ORANGE, text)
 }
 
 #[expect(dead_code, reason = "useful utility function we want to keep")]
 pub(crate) fn info_message(text: &str) -> Component {
-    message(&color::roles::BLUE, text)
+    message(color::roles::BLUE, text)
 }
 
 pub(crate) async fn get_everyone_role(

@@ -8,7 +8,7 @@ use tulpje_framework::{Error, color};
 
 pub(crate) async fn with_color(
     ctx: &CommandContext,
-    color: &color::Color,
+    color: color::Color,
     text: &str,
 ) -> Result<(), Error> {
     ctx.interaction()
@@ -21,15 +21,15 @@ pub(crate) async fn with_color(
 }
 
 pub(crate) async fn success(ctx: &CommandContext, text: &str) -> Result<(), Error> {
-    with_color(ctx, &color::roles::GREEN, text).await
+    with_color(ctx, color::roles::GREEN, text).await
 }
 
 pub(crate) async fn error(ctx: &CommandContext, text: &str) -> Result<(), Error> {
-    with_color(ctx, &color::roles::RED, text).await
+    with_color(ctx, color::roles::RED, text).await
 }
 
 pub(crate) async fn info(ctx: &CommandContext, text: &str) -> Result<(), Error> {
-    with_color(ctx, &color::roles::BLUE, text).await
+    with_color(ctx, color::roles::BLUE, text).await
 }
 
 pub(crate) async fn channel_not_found(
