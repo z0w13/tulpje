@@ -17,7 +17,7 @@ sqlx-migrate: database-up
   contrib/run-local.sh sqlx migrate run --source crates/tulpje-handler/migrations
 
 sqlx-prepare: database-up
-  cd crates/tulpje-handler && ../../contrib/run-local.sh cargo sqlx prepare
+  contrib/run-local.sh cargo sqlx prepare --workspace
 
 up: build-docker
   docker compose --profile=full up

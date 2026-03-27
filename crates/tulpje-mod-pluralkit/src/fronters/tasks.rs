@@ -20,10 +20,8 @@ use tulpje_framework::Error;
 use twilight_util::builder::embed::EmbedBuilder;
 use uuid::Uuid;
 
-use self::pk::db::ModPkGuildRow;
-use crate::modules::pk::{
-    self,
-    db::ModPkSystem,
+use crate::{
+    db::{self as pk_db, ModPkGuildRow, ModPkSystem},
     fronters::db,
     notify::db::{self as notify_db, get_notify_channel},
     util::get_member_name,
@@ -121,7 +119,7 @@ async fn update_fronter_category(
     system: &ModPkSystem,
     switch: &Switch,
 ) -> Result<(), Error> {
-    let Some(guild_settings) = pk::db::get_guild_settings_for_system(db, &system.id).await? else {
+    let Some(guild_settings) = pk_db::get_guild_settings_for_system(db, &system.id).await? else {
         tracing::debug!(
             method = "update_fronter_category",
             "no guild with system {}, skipping",

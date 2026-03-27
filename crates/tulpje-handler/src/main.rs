@@ -127,8 +127,8 @@ async fn main() {
     let mut registry = Registry::<context::Services>::new();
 
     registry.register(modules::emoji::build());
-    registry.register(modules::pk::build());
     registry.register(modules::stats::build());
+    registry.register(tulpje_mod_pluralkit::build());
 
     // core should always be registered last because it needs the data from
     // previous modules to set up

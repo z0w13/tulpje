@@ -9,7 +9,7 @@ use twilight_model::{
 };
 
 use super::db;
-use crate::modules::pk::{
+use crate::{
     db::{get_guild_settings_for_id, get_system},
     fronters::shared::handle_private_front,
     util::SystemRef,

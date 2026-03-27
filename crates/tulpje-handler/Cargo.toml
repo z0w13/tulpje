@@ -16,6 +16,7 @@ tulpje-common = { version = "0.21.5", path = "../tulpje-common" }
 tulpje-lib = { version = "0.21.5", path = "../tulpje-lib" }
 tulpje-framework = { version = "0.16.0", path = "../tulpje-framework" }
 tulpje-cache = { version = "0.5.0", path = "../tulpje-cache" }
+tulpje-mod-pluralkit = { version = "0.21.5", path = "../tulpje-mod-pluralkit" }
 reconnecting-amqp = { version = "0.2.1", path = "../reconnecting-amqp" }
 rustls = { workspace = true }
 futures-util = "0.3.31"
@@ -34,13 +35,11 @@ sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "chrono", "
 reqwest = { workspace = true, features = ["rustls", "charset", "http2"] }
 base64 = "0.22.1"
 pkrs-fork = { version = "0.6.1", default-features = false, features = ["reqwest-client", "rustls-tls"] }
-serde_either = "0.2.1"
 metrics = "0.24.3"
 metrics-exporter-prometheus = { workspace = true }
 redis = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
 figment_file_provider_adapter = "0.1.1"
-uuid = { version = "1.19.0", features = ["v7", "serde"] }
 
 [lints]
 workspace = true

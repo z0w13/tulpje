@@ -1,6 +1,6 @@
 use tulpje_framework::Error;
 
-use crate::modules::pk::{
+use crate::{
     db::{self as pk_db},
     notify::{db, shared::resolve_system_from_reference},
     util::handle_system_ref,

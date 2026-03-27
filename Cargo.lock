@@ -3202,7 +3202,6 @@ dependencies = [
  "reqwest 0.13.1",
  "rustls",
  "serde",
- "serde_either",
  "serde_json",
  "sqlx",
  "tokio",
@@ -3211,11 +3210,11 @@ dependencies = [
  "tulpje-common",
  "tulpje-framework",
  "tulpje-lib",
+ "tulpje-mod-pluralkit",
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
  "twilight-util",
- "uuid",
 ]
 
 [[package]]
@@ -3241,6 +3240,26 @@ dependencies = [
  "rustls",
  "tokio",
  "twilight-http",
+]
+
+[[package]]
+name = "tulpje-mod-pluralkit"
+version = "0.21.5"
+dependencies = [
+ "chrono",
+ "metrics",
+ "pkrs-fork",
+ "reqwest 0.13.1",
+ "serde_either",
+ "sqlx",
+ "tracing",
+ "tulpje-cache",
+ "tulpje-framework",
+ "tulpje-lib",
+ "twilight-http",
+ "twilight-model",
+ "twilight-util",
+ "uuid",
 ]
 
 [[package]]

@@ -3,7 +3,7 @@ use pkrs_fork::{client::PkClient, model::PkId};
 use reqwest::StatusCode;
 use tulpje_framework::Error;
 
-use crate::modules::pk::{
+use crate::{
     db::{self, ModPkSystem},
     util::SystemRef,
 };

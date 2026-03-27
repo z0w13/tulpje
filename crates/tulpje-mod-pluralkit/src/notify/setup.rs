@@ -14,7 +14,7 @@ use tulpje_lib::{
     util::{find_channel_by_name, handle_channel_from_id, handle_permissions, parse_channel_ref},
 };
 
-use crate::modules::pk::notify::db;
+use crate::notify::db;
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {
