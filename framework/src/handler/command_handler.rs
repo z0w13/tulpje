@@ -22,7 +22,7 @@ impl<T: Clone + Send + Sync> CommandHandler<T> {
         // TODO: More elegant way of handling command errors
         // TODO: Test if errors work in DMs
         if let Err(err) = (self.func)(ctx.clone()).await {
-            tracing::info!(
+            tracing::error!(
                 "error during command {}, sending reference to client: {}",
                 self.name,
                 err
@@ -50,8 +50,6 @@ impl<T: Clone + Send + Sync> CommandHandler<T> {
             } else {
                 tracing::warn!(event = ?ctx.event, "channel on event was empty, can't send error");
             }
-
-            return Err(err);
         }
 
         Ok(())
