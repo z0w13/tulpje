@@ -1,10 +1,10 @@
 [package]
 name = "tulpje-shared"
+description = "Common code shared between Tulpje processes"
 publish = false
 
 version.workspace = true
 edition.workspace = true
-description.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
