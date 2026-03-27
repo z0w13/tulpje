@@ -72,6 +72,11 @@ class RustishFormatter(logging.Formatter):
 
 def argparser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--skip-slow",
+        action="store_true",
+        help="Skip `cargo semver-checks` and `git-cliff` to speed up runs",
+    )
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--prerelease")
 
@@ -500,6 +505,7 @@ def gather_release(
     crates: list[CrateInfo],
     independent_crates: list[CrateInfo],
     prerelease: Optional[str],
+    skip_slow: bool,
 ) -> ReleaseInfo:
     independent_crate = len(crates) == 1
     prefix = "" if not independent_crate else crates[0].name.removeprefix("tulpje-")
@@ -538,9 +544,14 @@ def gather_release(
 
     has_feature_commit = any(commit.typ == "feat" for commit in commits)
     has_breaking_change_commit = any(commit.breaking for commit in commits)
-    has_breaking_change_semver_checks, _ = cargo_semver_checks(
-        latest_tag, crates[0].name if independent_crate else None
+    has_breaking_change_semver_checks = (
+        cargo_semver_checks(latest_tag, crates[0].name if independent_crate else None)[
+            0
+        ]
+        if not skip_slow
+        else False
     )
+
     if independent_crate:
         old_version = crates[0].version
     else:
@@ -566,8 +577,12 @@ def gather_release(
                 prerelease,
             )
 
-    new_changelog = create_changelog_update(
-        prefix, old_version, new_version, independent_crate, independent_crates
+    new_changelog = (
+        create_changelog_update(
+            prefix, old_version, new_version, independent_crate, independent_crates
+        )
+        if not skip_slow
+        else ""
     )
 
     return ReleaseInfo(
@@ -863,14 +878,22 @@ def main(args: argparse.Namespace) -> int:
     log.addHandler(handler)
     log.setLevel(logging.DEBUG)
 
+    if args.skip_slow and args.execute:
+        print(" [!] combining --skip-slow with --execute is disallowed")
+        return 1
+
     crates = gather_crates()
     independent_crates = [crate for crate in crates if crate.independent]
     grouped_crates = [crate for crate in crates if not crate.independent]
 
     releases = [
-        gather_release([crate], independent_crates, args.prerelease)
+        gather_release([crate], independent_crates, args.prerelease, args.skip_slow)
         for crate in independent_crates
-    ] + [gather_release(grouped_crates, independent_crates, args.prerelease)]
+    ] + [
+        gather_release(
+            grouped_crates, independent_crates, args.prerelease, args.skip_slow
+        )
+    ]
     releases_by_deps = sort_releases_by_deps(releases)
     releasable = process_dependencies(releases_by_deps)
     do_releases(releasable, args.execute)
