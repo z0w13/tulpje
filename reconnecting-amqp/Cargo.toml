@@ -2,6 +2,7 @@
 name = "reconnecting-amqp"
 version = "0.2.1"
 description = "Auto-reconnecting amqprs wrapper"
+publish = true
 
 edition.workspace = true
 homepage.workspace = true

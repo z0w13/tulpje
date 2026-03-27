@@ -1,5 +1,6 @@
 [package]
 name = "tulpje-shared"
+publish = false
 
 version.workspace = true
 edition.workspace = true

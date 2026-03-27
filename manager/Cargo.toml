@@ -1,5 +1,6 @@
 [package]
 name = "tulpje-manager"
+publish = false
 
 version.workspace = true
 edition.workspace = true
