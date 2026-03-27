@@ -4,7 +4,7 @@ use std::{fmt::Formatter, num::ParseIntError, str::FromStr};
 // largely inspired by https://github.com/serenity-rs/serenity/blob/current/src/model/colour.rs
 ////////////////////////////////////
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub struct Color(pub u32);
 
 impl Color {
