@@ -84,7 +84,6 @@
             # project binaries
             tulpje-handler = buildCrate "tulpje-handler";
             tulpje-gateway = buildCrate "tulpje-gateway";
-            tulpje-manager = buildCrate "tulpje-manager";
             tulpje-utils = buildCrate "tulpje-utils";
 
             # third party binaries
@@ -99,7 +98,6 @@
               paths = [
                 self'.packages.tulpje-handler
                 self'.packages.tulpje-gateway
-                self'.packages.tulpje-manager
                 self'.packages.tulpje-utils
                 self'.packages.twilight-gateway-queue
                 self'.packages.nirn-proxy
