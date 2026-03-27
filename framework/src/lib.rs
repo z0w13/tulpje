@@ -8,6 +8,7 @@ pub use framework::Framework;
 pub use metadata::Metadata;
 pub use module::{Module, builder::ModuleBuilder, registry::Registry};
 
+pub mod color;
 pub mod context;
 pub mod framework;
 pub mod handler;

@@ -1,11 +1,10 @@
-use tulpje_shared::color;
 use twilight_model::{
     channel::message::MessageFlags,
     id::{Id, marker::ChannelMarker},
 };
 
 use crate::{context::CommandContext, util::message};
-use tulpje_framework::Error;
+use tulpje_framework::{Error, color};
 
 pub(crate) async fn with_color(
     ctx: &CommandContext,

@@ -1,8 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use pkrs_fork::model::Member;
-use tulpje_framework::Error;
-use tulpje_shared::color;
+use tulpje_framework::{Error, color};
 use twilight_model::id::{Id, marker::UserMarker};
 use uuid::Uuid;
 

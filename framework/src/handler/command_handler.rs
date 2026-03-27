@@ -5,7 +5,7 @@ use twilight_util::builder::message::{ContainerBuilder, TextDisplayBuilder};
 
 use super::super::context::CommandContext;
 
-use crate::Error;
+use crate::{Error, color};
 
 pub(crate) type CommandFunc<T> =
     fn(CommandContext<T>) -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
@@ -33,8 +33,7 @@ impl<T: Clone + Send + Sync> CommandHandler<T> {
                     .create_message(chan.id)
                     .flags(MessageFlags::IS_COMPONENTS_V2)
                     .components(&[ContainerBuilder::new()
-                        // The default red from the discord roles
-                        .accent_color(Some(0xE74C3C))
+                        .accent_color(Some(color::roles::RED.0))
                         .component(
                             // TODO: Better way to handle extra error info than, whatever this is
                             TextDisplayBuilder::new(format!(

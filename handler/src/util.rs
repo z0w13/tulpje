@@ -1,6 +1,8 @@
 use tulpje_cache::Cache;
-use tulpje_framework::Error;
-use tulpje_shared::color::{self, Color};
+use tulpje_framework::{
+    Error,
+    color::{self, Color},
+};
 
 use twilight_http::{Client, error::ErrorType, response::StatusCode};
 use twilight_model::{
