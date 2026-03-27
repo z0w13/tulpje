@@ -1,4 +1,4 @@
-use std::{fmt::Formatter, num::ParseIntError, str::FromStr};
+use std::{fmt::Formatter, num::ParseIntError, ops::Deref, str::FromStr};
 
 ////////////////////////////////////
 // largely inspired by https://github.com/serenity-rs/serenity/blob/current/src/model/colour.rs
@@ -10,6 +10,14 @@ pub struct Color(pub u32);
 impl Color {
     pub fn from_rgb(r: u8, g: u8, b: u8) -> Self {
         Self(u32::from_le_bytes([0, r, g, b]))
+    }
+}
+
+impl Deref for Color {
+    type Target = u32;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
