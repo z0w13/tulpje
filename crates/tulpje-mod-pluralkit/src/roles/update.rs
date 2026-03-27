@@ -13,10 +13,9 @@ use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 use tulpje_framework::Error;
 use tulpje_lib::{context::CommandContext, responses};
 
-use crate::modules::pk::util::SystemRef;
-use crate::modules::pk::{
+use crate::{
     db::get_guild_settings_for_id,
-    util::{get_member_name, pk_color_to_discord},
+    util::{SystemRef, get_member_name, pk_color_to_discord},
 };
 
 // Discord's role limit

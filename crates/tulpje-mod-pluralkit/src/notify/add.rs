@@ -1,6 +1,6 @@
 use tulpje_framework::Error;
 
-use crate::modules::pk::{
+use crate::{
     db as pk_db,
     fronters::shared::handle_private_front,
     notify::{db, shared::resolve_system_from_reference},

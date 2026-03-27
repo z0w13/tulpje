@@ -1,7 +1,7 @@
 use tulpje_framework::Error;
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFooterBuilder};
 
-use crate::modules::pk::{db as pk_db, notify::db};
+use crate::{db as pk_db, notify::db};
 use tulpje_lib::context::CommandContext;
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {

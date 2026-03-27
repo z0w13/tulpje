@@ -15,8 +15,8 @@ use twilight_model::id::marker::{ChannelMarker, GenericMarker, GuildMarker};
 
 use tulpje_framework::Error;
 
-use crate::modules::pk::util::SystemRef;
-use crate::modules::pk::{db::ModPkGuildRow, util::get_member_name};
+use crate::util::SystemRef;
+use crate::{db::ModPkGuildRow, util::get_member_name};
 use tulpje_lib::{context::CommandContext, responses};
 
 pub(super) async fn get_desired_fronters(

@@ -13,7 +13,7 @@ let
 
       # add migrations and sqlx related files to sources
       (unfilteredRoot + "/crates/tulpje-handler/migrations")
-      (unfilteredRoot + "/crates/tulpje-handler/.sqlx")
+      (unfilteredRoot + "/.sqlx")
     ];
   };
   commonArgs = {

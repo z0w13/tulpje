@@ -11,13 +11,13 @@ use tulpje_framework::{
 
 use tulpje_lib::context::Services;
 
-pub mod commands;
-pub mod db;
-pub mod fronters;
-pub mod notify;
-pub mod roles;
+mod commands;
+mod db;
+mod fronters;
+mod notify;
+mod roles;
 mod tasks;
-pub mod util;
+mod util;
 
 pub fn build() -> Module<Services> {
     // define metrics
