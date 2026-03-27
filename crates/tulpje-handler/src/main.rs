@@ -1,14 +1,9 @@
 mod config;
-mod context;
-mod db;
 mod metrics;
 mod modules;
-mod responses;
-mod util;
 
 use std::{sync::Arc, time::Duration};
 
-use context::Services;
 use pkrs_fork::client::PkClient;
 use redis::aio::ConnectionManagerConfig;
 use sqlx::{
@@ -17,6 +12,7 @@ use sqlx::{
 };
 use tokio::{signal::unix::SignalKind, sync::mpsc};
 use tracing::{Instrument as _, Span, log::LevelFilter};
+use tulpje_lib::context;
 use twilight_gateway::Event;
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
@@ -128,7 +124,7 @@ async fn main() {
 
     // register interaction handlers
     tracing::info!("registering handlers");
-    let mut registry = Registry::<Services>::new();
+    let mut registry = Registry::<context::Services>::new();
 
     registry.register(modules::emoji::build());
     registry.register(modules::pk::build());

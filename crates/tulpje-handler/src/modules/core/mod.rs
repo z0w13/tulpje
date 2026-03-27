@@ -14,8 +14,7 @@ use tulpje_framework::{
     Error, Module, ModuleBuilder, Registry, handler_func,
     module::command_builder::{CommandBuilder, SubCommandBuilder},
 };
-
-use crate::context::Services;
+use tulpje_lib::context::Services;
 
 mod commands;
 pub(crate) mod db;

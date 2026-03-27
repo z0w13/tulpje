@@ -2,12 +2,11 @@ use pkrs_fork::model::PkId;
 use reqwest::StatusCode;
 use tulpje_framework::Error;
 
-use super::db;
-use crate::{
-    context::CommandContext,
-    modules::pk::{db::ModPkSystem, util::handle_system_ref},
-    responses,
+use super::{
+    db::{self, ModPkSystem},
+    util::handle_system_ref,
 };
+use tulpje_lib::{context::CommandContext, responses};
 
 // TODO: command to see current settings
 pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {

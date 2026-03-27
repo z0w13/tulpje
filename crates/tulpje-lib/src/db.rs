@@ -7,7 +7,7 @@ use twilight_model::id::Id;
 #[repr(transparent)]
 // derive what we can from twilight_model::id::Id
 #[derive(Debug, Serialize, Deserialize, PartialOrd, Ord)]
-pub(crate) struct DbId<T>(pub Id<T>);
+pub struct DbId<T>(pub Id<T>);
 
 impl<T> Deref for DbId<T> {
     type Target = Id<T>;

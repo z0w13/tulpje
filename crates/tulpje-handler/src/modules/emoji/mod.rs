@@ -16,7 +16,7 @@ use tulpje_framework::{
     module::command_builder::{CommandBuilder, SubCommandBuilder},
 };
 
-use crate::context::Services;
+use tulpje_lib::context::Services;
 
 pub(crate) fn build() -> Module<Services> {
     ModuleBuilder::<Services>::new("emoji")

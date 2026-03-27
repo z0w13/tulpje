@@ -1,15 +1,13 @@
 use tulpje_framework::Error;
 
-use crate::{
-    context::CommandContext,
-    modules::pk::{
-        db as pk_db,
-        fronters::shared::handle_private_front,
-        notify::{db, shared::resolve_system_from_reference},
-        util::handle_system_ref,
-    },
-    responses,
+use crate::modules::pk::{
+    db as pk_db,
+    fronters::shared::handle_private_front,
+    notify::{db, shared::resolve_system_from_reference},
+    util::handle_system_ref,
 };
+
+use tulpje_lib::{context::CommandContext, responses};
 
 const MAX_FOLLOW_COUNT: usize = 50;
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {

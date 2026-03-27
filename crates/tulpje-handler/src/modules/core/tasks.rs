@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime;
 use tulpje_framework::Error;
+use tulpje_lib::context::TaskContext;
 use twilight_model::id::{Id, marker::GuildMarker};
 
-use crate::{context::TaskContext, modules::core::db};
+use crate::modules::core::db;
 
 #[tracing::instrument(level = "error", skip_all)]
 pub(super) async fn delete_removed_guilds(ctx: TaskContext) -> Result<(), Error> {

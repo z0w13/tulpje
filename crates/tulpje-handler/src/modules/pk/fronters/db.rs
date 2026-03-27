@@ -7,9 +7,10 @@ use twilight_model::id::{
 };
 
 use tulpje_framework::Error;
+use tulpje_lib::db::DbId;
 use uuid::Uuid;
 
-use crate::{db::DbId, modules::pk::db::ModPkSystem};
+use crate::modules::pk::db::ModPkSystem;
 
 #[expect(dead_code, reason = "reflects db structure, keep intact")]
 pub(crate) struct ModPkFrontersRow {

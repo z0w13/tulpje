@@ -3,10 +3,10 @@ use futures_util::StreamExt as _;
 use twilight_http::Client;
 
 use tulpje_framework::Error;
+use tulpje_lib::context::CommandContext;
 use twilight_model::id::Id;
 use twilight_model::id::marker::{EmojiMarker, GuildMarker};
 
-use crate::context::CommandContext;
 use crate::modules::emoji::db::Emoji;
 use crate::modules::emoji::shared::parse_emojis_from_string;
 

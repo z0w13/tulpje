@@ -4,8 +4,7 @@ use tulpje_framework::{
     Module, ModuleBuilder, handler_func,
     module::command_builder::{CommandBuilder, SubCommandBuilder},
 };
-
-use crate::context::Services;
+use tulpje_lib::context::Services;
 
 mod commands;
 mod redis;
