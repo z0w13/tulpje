@@ -5,7 +5,7 @@ use tokio::{
     task::JoinHandle,
 };
 use tokio_util::sync::CancellationToken;
-use tulpje_shared::DiscordEvent;
+use tulpje_common::DiscordEvent;
 use twilight_gateway::{CloseFrame, Message, Shard};
 
 use crate::{

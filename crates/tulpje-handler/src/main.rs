@@ -21,15 +21,15 @@ use twilight_gateway::Event;
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
 use tulpje_cache::{Cache, Config as CacheConfig, ResourceType};
+use tulpje_common::{DiscordEvent, version};
 use tulpje_framework::{Framework, Metadata, Registry, framework::Sender};
-use tulpje_shared::{DiscordEvent, version};
 
 use config::Config;
 
 #[tokio::main]
 async fn main() {
     // set-up logging
-    tulpje_shared::logging::init();
+    tulpje_common::logging::init();
     tracing::info!("starting tulpje-handler {} ...", version!());
 
     // register signal handlers

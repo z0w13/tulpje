@@ -1,6 +1,6 @@
 use metrics_exporter_prometheus::PrometheusBuilder;
 use redis::aio::ConnectionManager as RedisConnectionManager;
-use tulpje_shared::{metrics::MetricsListenAddr, version};
+use tulpje_common::{metrics::MetricsListenAddr, version};
 
 pub(crate) fn install(
     listen_addr: MetricsListenAddr,
@@ -8,7 +8,7 @@ pub(crate) fn install(
     handler_id: u32,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // install metrics collector and exporter
-    tulpje_shared::metrics::install(
+    tulpje_common::metrics::install(
         PrometheusBuilder::new(),
         listen_addr,
         redis,

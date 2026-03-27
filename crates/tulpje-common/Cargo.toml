@@ -1,5 +1,5 @@
 [package]
-name = "tulpje-shared"
+name = "tulpje-common"
 description = "Common code shared between Tulpje processes"
 publish = false
 

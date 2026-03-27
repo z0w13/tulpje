@@ -12,8 +12,8 @@ use twilight_model::{
 
 use crate::context::EventContext;
 
+use tulpje_common::is_pk_proxy;
 use tulpje_framework::Error;
-use tulpje_shared::is_pk_proxy;
 
 use super::{
     db::{self, delete_emojis_not_in_list_for_guild},

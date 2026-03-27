@@ -9,7 +9,7 @@ use twilight_model::gateway::{
 };
 
 use reconnecting_amqp::{AmqpHandle, ConnectionArguments};
-use tulpje_shared::version;
+use tulpje_common::version;
 
 mod config;
 mod metrics;
@@ -39,7 +39,7 @@ async fn get_intents() -> Result<Intents, Box<dyn Error>> {
 #[tokio::main]
 async fn main() {
     // set-up logging
-    tulpje_shared::logging::init();
+    tulpje_common::logging::init();
     tracing::info!("starting tulpje-gateway {} ...", version!());
 
     // register signal handlers
