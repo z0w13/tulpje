@@ -11,14 +11,13 @@ use twilight_model::id::Id;
 use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 
 use tulpje_framework::Error;
+use tulpje_lib::{context::CommandContext, responses};
 
-use crate::context::CommandContext;
 use crate::modules::pk::util::SystemRef;
 use crate::modules::pk::{
     db::get_guild_settings_for_id,
     util::{get_member_name, pk_color_to_discord},
 };
-use crate::responses;
 
 // Discord's role limit
 // see https://support.discord.com/hc/en-us/articles/33694251638295-Discord-Account-Caps-Server-Caps-and-More

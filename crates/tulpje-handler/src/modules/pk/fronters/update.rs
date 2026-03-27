@@ -1,7 +1,8 @@
 use tulpje_framework::Error;
+use tulpje_lib::{context::CommandContext, responses};
 
 use super::{db, shared::update_fronter_channels};
-use crate::{context::CommandContext, modules::pk::db::get_guild_settings_for_id, responses};
+use crate::modules::pk::db::get_guild_settings_for_id;
 
 pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {

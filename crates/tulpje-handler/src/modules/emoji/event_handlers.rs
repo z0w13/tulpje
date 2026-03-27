@@ -10,7 +10,7 @@ use twilight_model::{
     id::{Id, marker::EmojiMarker},
 };
 
-use crate::context::EventContext;
+use tulpje_lib::context::EventContext;
 
 use tulpje_common::is_pk_proxy;
 use tulpje_framework::Error;

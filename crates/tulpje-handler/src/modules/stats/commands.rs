@@ -13,7 +13,7 @@ use twilight_util::builder::{
 };
 
 use super::redis;
-use crate::context::CommandContext;
+use tulpje_lib::context::CommandContext;
 
 async fn minimal_stats_response(ctx: CommandContext, api_latency: i64) -> Result<(), Error> {
     if let Err(err) = ctx

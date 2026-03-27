@@ -20,7 +20,7 @@ use twilight_util::{
 
 use crate::{context::CommandContext, responses};
 
-pub(crate) fn message(color: Color, text: &str) -> Component {
+pub fn message(color: Color, text: &str) -> Component {
     ContainerBuilder::new()
         .accent_color(Some(*color))
         .component(TextDisplayBuilder::new(text).build())
@@ -28,27 +28,23 @@ pub(crate) fn message(color: Color, text: &str) -> Component {
         .into()
 }
 
-#[expect(dead_code, reason = "useful utility function we want to keep")]
-pub(crate) fn success_message(text: &str) -> Component {
+pub fn success_message(text: &str) -> Component {
     message(color::roles::GREEN, text)
 }
 
-#[expect(dead_code, reason = "useful utility function we want to keep")]
-pub(crate) fn error_message(text: &str) -> Component {
+pub fn error_message(text: &str) -> Component {
     message(color::roles::RED, text)
 }
 
-#[expect(dead_code, reason = "useful utility function we want to keep")]
-pub(crate) fn warning_message(text: &str) -> Component {
+pub fn warning_message(text: &str) -> Component {
     message(color::roles::ORANGE, text)
 }
 
-#[expect(dead_code, reason = "useful utility function we want to keep")]
-pub(crate) fn info_message(text: &str) -> Component {
+pub fn info_message(text: &str) -> Component {
     message(color::roles::BLUE, text)
 }
 
-pub(crate) async fn get_everyone_role(
+pub async fn get_everyone_role(
     client: &Client,
     cache: &Cache,
     guild_id: Id<GuildMarker>,
@@ -62,7 +58,7 @@ pub(crate) async fn get_everyone_role(
     Ok(client.role(guild_id, role_id).await?.model().await?)
 }
 
-pub(crate) async fn get_member_roles(
+pub async fn get_member_roles(
     client: &Client,
     cache: &Cache,
     user_id: Id<UserMarker>,
@@ -95,7 +91,7 @@ pub(crate) async fn get_member_roles(
 /// communicates to the end user if it doesn't.
 ///
 /// returns a boolean indicating whether the permissions were present
-pub(crate) async fn handle_permissions(
+pub async fn handle_permissions(
     ctx: &CommandContext,
     guild_id: Id<GuildMarker>,
     user_id: Id<UserMarker>,
@@ -161,7 +157,7 @@ pub(crate) async fn handle_permissions(
     Ok(false)
 }
 
-pub(crate) async fn find_channel_by_name(
+pub async fn find_channel_by_name(
     client: &Client,
     guild_id: Id<GuildMarker>,
     name: &str,
@@ -183,7 +179,7 @@ pub(crate) async fn find_channel_by_name(
         }))
 }
 
-pub(crate) async fn handle_channel_from_id(
+pub async fn handle_channel_from_id(
     ctx: &CommandContext,
     guild_id: Id<GuildMarker>,
     channel_id: Id<ChannelMarker>,
@@ -218,7 +214,7 @@ pub(crate) async fn handle_channel_from_id(
     }
 }
 
-pub(crate) fn parse_channel_ref(channel_ref: &str) -> Option<Id<ChannelMarker>> {
+pub fn parse_channel_ref(channel_ref: &str) -> Option<Id<ChannelMarker>> {
     if !channel_ref.starts_with("<#") {
         return None;
     }

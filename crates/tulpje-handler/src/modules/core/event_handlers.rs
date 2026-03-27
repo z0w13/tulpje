@@ -1,8 +1,9 @@
 use tulpje_framework::Error;
+use tulpje_lib::context::EventContext;
 use twilight_gateway::Event;
 use twilight_model::id::{Id, marker::GuildMarker};
 
-use crate::{context::EventContext, modules::core::db};
+use crate::modules::core::db;
 
 pub async fn guild_create(ctx: EventContext) -> Result<(), Error> {
     let Event::GuildCreate(guild_create) = &ctx.event else {

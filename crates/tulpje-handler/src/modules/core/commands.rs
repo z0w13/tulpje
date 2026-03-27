@@ -1,7 +1,7 @@
 use tulpje_framework::Error;
 
 use super::{db, set_guild_commands_for_guild};
-use crate::context::CommandContext;
+use tulpje_lib::context::CommandContext;
 
 pub(crate) async fn enable(ctx: CommandContext) -> Result<(), Error> {
     let Some(guild) = ctx.guild().await? else {

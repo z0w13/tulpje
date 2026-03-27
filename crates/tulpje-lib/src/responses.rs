@@ -6,7 +6,7 @@ use twilight_model::{
 use crate::{context::CommandContext, util::message};
 use tulpje_framework::{Error, color};
 
-pub(crate) async fn with_color(
+pub async fn with_color(
     ctx: &CommandContext,
     color: color::Color,
     text: &str,
@@ -20,22 +20,19 @@ pub(crate) async fn with_color(
     Ok(())
 }
 
-pub(crate) async fn success(ctx: &CommandContext, text: &str) -> Result<(), Error> {
+pub async fn success(ctx: &CommandContext, text: &str) -> Result<(), Error> {
     with_color(ctx, color::roles::GREEN, text).await
 }
 
-pub(crate) async fn error(ctx: &CommandContext, text: &str) -> Result<(), Error> {
+pub async fn error(ctx: &CommandContext, text: &str) -> Result<(), Error> {
     with_color(ctx, color::roles::RED, text).await
 }
 
-pub(crate) async fn info(ctx: &CommandContext, text: &str) -> Result<(), Error> {
+pub async fn info(ctx: &CommandContext, text: &str) -> Result<(), Error> {
     with_color(ctx, color::roles::BLUE, text).await
 }
 
-pub(crate) async fn channel_not_found(
-    ctx: &CommandContext,
-    id: Id<ChannelMarker>,
-) -> Result<(), Error> {
+pub async fn channel_not_found(ctx: &CommandContext, id: Id<ChannelMarker>) -> Result<(), Error> {
     error(
         ctx,
         &format!(

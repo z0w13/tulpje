@@ -20,12 +20,10 @@ use twilight_util::builder::{
 };
 
 use tulpje_framework::Error;
+use tulpje_lib::context::{CommandContext, ComponentInteractionContext};
 
 use super::db;
-use crate::{
-    context::{CommandContext, ComponentInteractionContext},
-    modules::emoji::shared::StatsSort,
-};
+use crate::modules::emoji::shared::StatsSort;
 
 const EMOJIS_PER_PAGE: u16 = 15;
 

@@ -5,7 +5,7 @@ use tulpje_framework::{
     module::command_builder::{SubCommandBuilder, SubCommandGroupBuilder},
 };
 
-use crate::context::Services;
+use tulpje_lib::context::Services;
 
 pub(crate) mod db;
 pub(crate) mod setup;

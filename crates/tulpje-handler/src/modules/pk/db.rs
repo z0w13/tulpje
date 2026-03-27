@@ -8,7 +8,8 @@ use twilight_model::id::{
 use tulpje_framework::Error;
 use uuid::Uuid;
 
-use crate::{db::DbId, modules::pk::util::SystemRef};
+use super::util::SystemRef;
+use tulpje_lib::db::DbId;
 
 #[derive(Debug)]
 pub(crate) struct ModPkGuildRow {

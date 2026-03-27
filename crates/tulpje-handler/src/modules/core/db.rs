@@ -4,8 +4,7 @@ use chrono::NaiveDateTime;
 use twilight_model::id::{Id, marker::GuildMarker};
 
 use tulpje_framework::Error;
-
-use crate::db::DbId;
+use tulpje_lib::db::DbId;
 
 pub(super) async fn enable_module(
     db: &sqlx::PgPool,

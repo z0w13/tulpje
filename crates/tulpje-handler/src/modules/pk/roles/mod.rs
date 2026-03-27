@@ -4,7 +4,7 @@ use tulpje_framework::{
 };
 use twilight_util::builder::command::StringBuilder;
 
-use crate::context::Services;
+use tulpje_lib::context::Services;
 
 mod update;
 

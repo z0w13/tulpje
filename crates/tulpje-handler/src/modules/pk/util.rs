@@ -5,7 +5,7 @@ use tulpje_framework::{Error, color};
 use twilight_model::id::{Id, marker::UserMarker};
 use uuid::Uuid;
 
-use crate::{context::CommandContext, responses};
+use tulpje_lib::{context::CommandContext, responses};
 
 pub(crate) fn get_member_name(member: &Member) -> String {
     member

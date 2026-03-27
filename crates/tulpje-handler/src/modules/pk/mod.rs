@@ -9,7 +9,7 @@ use tulpje_framework::{
     module::command_builder::{CommandBuilder, SubCommandBuilder},
 };
 
-use crate::context::Services;
+use tulpje_lib::context::Services;
 
 pub mod commands;
 pub mod db;
