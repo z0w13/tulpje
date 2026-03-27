@@ -33,7 +33,7 @@ impl<T: Clone + Send + Sync> CommandHandler<T> {
                     .create_message(chan.id)
                     .flags(MessageFlags::IS_COMPONENTS_V2)
                     .components(&[ContainerBuilder::new()
-                        .accent_color(Some(color::roles::RED.0))
+                        .accent_color(Some(*color::roles::RED))
                         .component(
                             // TODO: Better way to handle extra error info than, whatever this is
                             TextDisplayBuilder::new(format!(

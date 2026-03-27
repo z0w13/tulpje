@@ -22,7 +22,7 @@ use crate::{context::CommandContext, responses};
 
 pub(crate) fn message(color: Color, text: &str) -> Component {
     ContainerBuilder::new()
-        .accent_color(color.into())
+        .accent_color(Some(*color))
         .component(TextDisplayBuilder::new(text).build())
         .build()
         .into()
