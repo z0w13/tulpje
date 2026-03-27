@@ -12,6 +12,7 @@ from collections import defaultdict
 from typing import Iterable, NamedTuple, Optional, Self
 from fnmatch import fnmatchcase
 from graphlib import TopologicalSorter
+from glob import glob
 from semver import Version
 import tomllib
 import subprocess
@@ -864,12 +865,15 @@ def check_output_dry(title: Optional[str], execute: bool, *args, **kwargs):
 def gather_crates() -> list[CrateInfo]:
     log.info("gathering crates ... ")
     try:
-        members = tomllib.load(open("Cargo.toml", "rb"))["workspace"]["members"]
+        member_paths = tomllib.load(open("Cargo.toml", "rb"))["workspace"]["members"]
     except IndexError:
         log.debug("no workspace members ... ")
-        members = []
+        member_paths = []
 
-    return [CrateInfo.from_manifest(f"{member}/Cargo.toml") for member in members]
+    cargo_toml_paths = [c for p in member_paths for c in glob(f"{p}/Cargo.toml")]
+    return [
+        CrateInfo.from_manifest(cargo_toml_path) for cargo_toml_path in cargo_toml_paths
+    ]
 
 
 def main(args: argparse.Namespace) -> int:
