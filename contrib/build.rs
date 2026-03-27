@@ -2,6 +2,23 @@ use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
+fn check_output(prog: &str, args: &[&str]) -> Result<String, Box<dyn std::error::Error>> {
+    let result = Command::new(prog).args(args).output()?;
+    if !result.status.success() {
+        return Err(format!(
+            "command exited unsuccesfully ({})",
+            result
+                .status
+                .code()
+                .map(|code| code.to_string())
+                .unwrap_or_else(|| "??".to_string()),
+        )
+        .into());
+    }
+
+    Ok(String::from_utf8(result.stdout)?)
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo::rerun-if-changed=../../contrib/build.rs");
 
@@ -9,31 +26,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("cargo::rerun-if-changed=../../.git/HEAD");
         println!(
             "cargo::rerun-if-changed=../../.git/{}",
-            String::from_utf8(
-                Command::new("git")
-                    .args(["symbolic-ref", "HEAD"])
-                    .output()?
-                    .stdout
-                    .trim_ascii()
-                    .to_vec(),
-            )?
+            check_output("git", &["symbolic-ref", "HEAD"])?
         );
     }
 
     if env::var("TULPJE_VERSION_EXTRA").is_err() {
-        let rev = String::from_utf8(
-            Command::new("git")
-                .args(["rev-parse", "--short", "HEAD"])
-                .output()?
-                .stdout
-                .trim_ascii()
-                .to_vec(),
-        )?;
-        let dirty = !Command::new("git")
-            .args(["status", "--porcelain"])
-            .output()?
-            .stdout
-            .is_empty();
+        let rev = check_output("git", &["rev-parse", "--short", "HEAD"])?;
+        let dirty = !check_output("git", &["status", "--porcelain"])?.is_empty();
 
         println!(
             "cargo::rustc-env=TULPJE_VERSION_EXTRA={}{}",
