@@ -1,4 +1,5 @@
 import logging
+from termcolor import colored
 
 
 class RustishFormatter(logging.Formatter):
@@ -41,3 +42,7 @@ class RustishFormatter(logging.Formatter):
             + self.RESET
         )
         return super().format(record)
+
+
+def colored_bool(val: bool) -> str:
+    return colored(val, "green" if val else "red")

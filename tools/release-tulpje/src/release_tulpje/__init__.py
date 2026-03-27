@@ -14,10 +14,11 @@ import os
 import re
 import logging
 
+from termcolor import colored, cprint
 import tomlkit
 from tomlkit.items import AoT
 
-from release_tulpje.formatter import RustishFormatter
+from release_tulpje.formatter import RustishFormatter, colored_bool
 
 log = logging.getLogger(__name__)
 
@@ -352,11 +353,11 @@ class ReleaseInfo:
 
     def breaking_with_reason(self) -> str:
         if not self.is_breaking:
-            return "False"
+            return colored_bool(False)
         elif self.has_breaking_commit:
-            return "True (Breaking Commit)"
+            return f"{colored_bool(True)} (Breaking Commit)"
         elif self.is_breaking_semver_checks:
-            return "True (`cargo semver-checks` failed)"
+            return f"{colored_bool(True)} (`cargo semver-checks` failed)"
 
         raise Exception(
             "did we add a new conditional for breaking changes, shouldn't reach this"
@@ -690,16 +691,23 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
         return
 
     for release in releases_by_deps:
-        print(f"Crate: {release.crates[0].name if release.single_crate else 'root'}")
-        print(f" [*] Should release: {release.should_release}")
-        print(f" [*] Version: {release.prev_version} -> {release.curr_version}")
-        print(f" [*] Tag: {release.prev_tag} -> {release.curr_tag}")
-        print(f" [*] Commits since: {release.commit_count}")
-        print(f" [*] Feature: {release.has_feature_commit}")
+        cprint(
+            f"Crate: {release.crates[0].name if release.single_crate else 'root'}",
+            attrs=["bold"],
+        )
+        print(f" [*] Should release: {colored_bool(release.should_release)}")
+        print(
+            f" [*] Version: {colored(release.prev_version, 'red')} -> {colored(release.curr_version, 'green')}"
+        )
+        print(
+            f" [*] Tag: {colored(release.prev_tag, 'red')} -> {colored(release.curr_tag, 'green')}"
+        )
+        print(f" [*] Commits since: {colored(release.commit_count, 'light_grey')}")
+        print(f" [*] Feature: {colored_bool(release.has_feature_commit)}")
         print(f" [*] Breaking: {release.breaking_with_reason()}")
         print(f" [*] Commits ({release.commit_count}):")
         for commit in release.commits:
-            print(f"    - {commit.raw_subject} ({commit.sha[:8]})")
+            cprint(f"    - {commit.raw_subject} ({commit.sha[:8]})", "grey")
 
     # reverse dependency lookup
     depended_on_by: dict[str, set[CrateInfo]] = defaultdict(set)
@@ -712,10 +720,12 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
         release for release in releases_by_deps if release.should_release
     ]
 
-    print(" [-] Bumping versions..." + ("" if execute else " (dry-run)"))
+    dry_print(execute, " [-] Bumping versions...")
     for release in filtered_releases:
         name = release.crates[0].name if release.single_crate else "tulpje"
-        print(f"     - {name}: {release.prev_version} -> {release.curr_version}")
+        print(
+            f"     - {name}: {colored(release.prev_version, 'red')} -> {colored(release.curr_version, 'green')}"
+        )
 
         if execute:
             if release.single_crate:
@@ -729,7 +739,7 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
                 for depends_on in depended_on_by[crate.name]:
                     workspace_update_dependency(depends_on, crate, release.curr_version)
 
-    print(" [-] Writing changelogs..." + ("" if execute else " (dry-run)"))
+    dry_print(execute, " [-] Writing changelogs...")
     if execute:
         for release in filtered_releases:
             with open(release.changelog_path) as changelog_file:
@@ -785,7 +795,7 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
     print(" [-] Creating GitHub releases...")
     for release in filtered_releases:
         check_output_dry(
-            f"    - {release.crates[0].name if release.single_crate else 'tulpje'}",
+            f"     - {release.crates[0].name if release.single_crate else 'tulpje'}",
             execute,
             [
                 "gh",
@@ -801,11 +811,19 @@ def do_releases(releases_by_deps: list[ReleaseInfo], execute=False):
         )
 
 
+def dry_print(execute: bool, text: str) -> None:
+    print(text if execute else text + colored(" (dry-run)", attrs=["bold"]))
+
+
 def check_output_dry(title: Optional[str], execute: bool, *args, **kwargs):
     if title is not None:
         print(title)
 
-    print("     " + ("" if execute else "(dry-run) ") + "> " + " ".join(args[0]))
+    print(
+        "      ",
+        ("" if execute else colored("(dry-run)", "grey", attrs=["bold"])),
+        colored(f"> {' '.join(args[0])}", "grey"),
+    )
 
     if execute:
         return process_run(*args, **kwargs)
