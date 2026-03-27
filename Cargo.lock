@@ -3126,6 +3126,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "tulpje-common"
+version = "0.21.5"
+dependencies = [
+ "metrics",
+ "metrics-exporter-prometheus",
+ "metrics-process",
+ "redis",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "tulpje-framework",
+ "twilight-model",
+]
+
+[[package]]
 name = "tulpje-framework"
 version = "0.16.0"
 dependencies = [
@@ -3161,7 +3178,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
- "tulpje-shared",
+ "tulpje-common",
  "twilight-gateway",
  "twilight-model",
 ]
@@ -3191,8 +3208,8 @@ dependencies = [
  "tokio",
  "tracing",
  "tulpje-cache",
+ "tulpje-common",
  "tulpje-framework",
- "tulpje-shared",
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
@@ -3207,23 +3224,6 @@ dependencies = [
  "rustls",
  "tokio",
  "twilight-http",
-]
-
-[[package]]
-name = "tulpje-shared"
-version = "0.21.5"
-dependencies = [
- "metrics",
- "metrics-exporter-prometheus",
- "metrics-process",
- "redis",
- "serde",
- "serde_json",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "tulpje-framework",
- "twilight-model",
 ]
 
 [[package]]

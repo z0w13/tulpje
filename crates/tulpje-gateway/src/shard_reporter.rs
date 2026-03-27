@@ -8,7 +8,7 @@ use tokio::{sync::mpsc, task::JoinHandle};
 use tokio_util::sync::CancellationToken;
 use twilight_gateway::{Event, EventType, EventTypeFlags, Latency};
 
-use tulpje_shared::shard_state::ShardState;
+use tulpje_common::shard_state::ShardState;
 use twilight_model::gateway::payload::incoming::{GuildCreate, GuildDelete, Hello, Ready};
 
 use crate::metrics::track_guild_count;

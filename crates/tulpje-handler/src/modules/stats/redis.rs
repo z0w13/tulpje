@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use redis::{AsyncCommands as _, aio::ConnectionManager as RedisConnectionManager};
 
+use tulpje_common::{metrics::Metrics, shard_state::ShardState};
 use tulpje_framework::Error;
-use tulpje_shared::{metrics::Metrics, shard_state::ShardState};
 
 pub async fn get_all_shard_stats(
     redis: RedisConnectionManager,

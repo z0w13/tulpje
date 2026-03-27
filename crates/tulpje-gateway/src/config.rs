@@ -2,7 +2,7 @@ use figment::{Figment, providers::Env};
 use figment_file_provider_adapter::FileAdapter;
 use serde::{Deserialize, Serialize};
 
-use tulpje_shared::metrics::MetricsListenAddr;
+use tulpje_common::metrics::MetricsListenAddr;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
