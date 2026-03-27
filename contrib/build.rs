@@ -3,18 +3,19 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo::rerun-if-changed=build.rs");
-    println!("cargo::rerun-if-env-changed=TULPJE_VERSION_EXTRA");
+    println!("cargo::rerun-if-changed=../../contrib/build.rs");
 
-    if PathBuf::from(".git").is_dir() {
-        println!("cargo::rerun-if-changed=.git/HEAD");
+    if PathBuf::from("../../.git").is_dir() {
+        println!("cargo::rerun-if-changed=../../.git/HEAD");
         println!(
-            "cargo::rerun-if-changed=.git/{}",
+            "cargo::rerun-if-changed=../../.git/{}",
             String::from_utf8(
                 Command::new("git")
                     .args(["symbolic-ref", "HEAD"])
                     .output()?
-                    .stdout,
+                    .stdout
+                    .trim_ascii()
+                    .to_vec(),
             )?
         );
     }
@@ -24,7 +25,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Command::new("git")
                 .args(["rev-parse", "--short", "HEAD"])
                 .output()?
-                .stdout,
+                .stdout
+                .trim_ascii()
+                .to_vec(),
         )?;
         let dirty = !Command::new("git")
             .args(["status", "--porcelain"])
