@@ -1,12 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "semver",
-#     "tomlkit",
-# ]
-# ///
-
 from dataclasses import dataclass
 from collections import defaultdict
 from typing import Iterable, NamedTuple, Optional, Self
@@ -200,7 +191,7 @@ class CrateInfo(NamedTuple):
 
         try:
             independent = manifest["package"]["version"]["workspace"] is not True
-        except (IndexError, TypeError):
+        except IndexError, TypeError:
             independent = True
 
         version = Version.parse(
@@ -905,5 +896,5 @@ def main(args: argparse.Namespace) -> int:
     return 0
 
 
-if __name__ == "__main__":
+def entrypoint():
     sys.exit(main(argparser().parse_args(sys.argv[1:])))

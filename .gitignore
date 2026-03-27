@@ -10,3 +10,6 @@ compose.override.yml
 
 # nix
 /result
+
+# python
+__pycache__
