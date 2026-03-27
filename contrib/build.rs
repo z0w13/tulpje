@@ -22,6 +22,11 @@ fn check_output(prog: &str, args: &[&str]) -> Result<String, Box<dyn std::error:
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo::rerun-if-changed=../../contrib/build.rs");
 
+    // sqlx migrations in tulpje-handler
+    if env::var("CARGO_PKG_NAME").is_ok_and(|name| name == "tulpje-handler") {
+        println!("cargo::rerun-if-changed=migrations");
+    }
+
     if PathBuf::from("../../.git").is_dir() {
         println!("cargo::rerun-if-changed=../../.git/HEAD");
         println!(
