@@ -1,6 +1,6 @@
 [package]
 name = "tulpje-gateway"
-build = "../contrib/build.rs"
+build = "../../contrib/build.rs"
 publish = false
 
 version.workspace = true
@@ -12,7 +12,7 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-shared = { version = "0.21.5", path = "../shared" }
+tulpje-shared = { version = "0.21.5", path = "../tulpje-shared" }
 reconnecting-amqp = { version = "0.2.1", path = "../reconnecting-amqp" }
 rustls = { workspace = true }
 serde_json = "1.0.145"

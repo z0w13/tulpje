@@ -1,6 +1,6 @@
 [package]
 name = "tulpje-handler"
-build = "../contrib/build.rs"
+build = "../../contrib/build.rs"
 publish = false
 
 version.workspace = true
@@ -12,9 +12,9 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-shared = { version = "0.21.5", path = "../shared" }
-tulpje-framework = { version = "0.16.0", path = "../framework" }
-tulpje-cache = { version = "0.5.0", path = "../cache" }
+tulpje-shared = { version = "0.21.5", path = "../tulpje-shared" }
+tulpje-framework = { version = "0.16.0", path = "../tulpje-framework" }
+tulpje-cache = { version = "0.5.0", path = "../tulpje-cache" }
 reconnecting-amqp = { version = "0.2.1", path = "../reconnecting-amqp" }
 rustls = { workspace = true }
 futures-util = "0.3.31"

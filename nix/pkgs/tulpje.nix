@@ -12,8 +12,8 @@ let
       (craneLib.fileset.commonCargoSources unfilteredRoot)
 
       # add migrations and sqlx related files to sources
-      (unfilteredRoot + "/handler/migrations")
-      (unfilteredRoot + "/handler/.sqlx")
+      (unfilteredRoot + "/crates/tulpje-handler/migrations")
+      (unfilteredRoot + "/crates/tulpje-handler/.sqlx")
     ];
   };
   commonArgs = {
