@@ -23,7 +23,7 @@ twilight-model = { workspace = true }
 serde = { workspace = true }
 reqwest = { workspace = true, features = ["rustls", "charset", "http2"] }
 redis = { workspace = true }
-futures-util = "0.3.31"
+futures-util = "0.3.32"
 metrics = "0.24.3"
 metrics-exporter-prometheus = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
