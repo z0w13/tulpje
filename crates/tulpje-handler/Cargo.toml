@@ -41,7 +41,7 @@ metrics-exporter-prometheus = { workspace = true }
 redis = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
 figment_file_provider_adapter = "0.1.1"
-uuid = { version = "1.19.0", features = ["v7", "serde"] }
+uuid = { version = "1.23.0", features = ["v7", "serde"] }
 workspace-hack = { version = "0.1", path = "../workspace-hack" }
 
 [lints]
