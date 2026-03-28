@@ -107,9 +107,13 @@ async fn main() {
 
     // initialisation done, ratelimit on session_limit
     tracing::info!("waiting for gateway queue...");
-    reqwest::get(config.discord_gateway_queue)
-        .await
-        .expect("error waiting for gateway queue");
+    reqwest::get(format!(
+        "{}?shard={}",
+        config.discord_gateway_queue,
+        shard_id.number()
+    ))
+    .await
+    .expect("error waiting for gateway queue");
 
     if let Err(err) = shard_manager.start() {
         tracing::error!(?err, "error starting shard, shutting down ...");
