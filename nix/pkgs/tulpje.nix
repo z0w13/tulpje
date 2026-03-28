@@ -18,16 +18,18 @@ let
   };
   commonArgs = {
     inherit src;
-
-    pname = name;
     strictDeps = true;
   };
-  cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+  cargoArtifacts = craneLib.buildDepsOnly commonArgs // {
+    pname = "tulpje-deps";
+  };
 in
 craneLib.buildPackage (
   commonArgs
   // {
     inherit cargoArtifacts;
+
+    pname = name;
 
     # to build a pecific create
     cargoExtraArgs = "-p ${name}";
