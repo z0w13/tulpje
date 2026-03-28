@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2-rc.1] - 2026-03-28
+
+### Changed
+
+ - Move all crates into a crates/ subfolder
+ - Set `publish` in each crate's `Cargo.toml`
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * refactor: move all crates into a crates/ subfolder ([`60c1de0`](https://github.com/tulpje/tulpje/commit/60c1de0204ef80f95e82ff897882917966f33027))
+ * chore: set `publish` in each crate's `Cargo.toml` ([`e6748e7`](https://github.com/tulpje/tulpje/commit/e6748e79d1c5e354cf4315d7cdf8361962718a84))
+</details>
+
 ## [0.2.1] - 2026-03-20
 
 ### Changed

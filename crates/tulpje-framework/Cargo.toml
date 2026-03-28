@@ -1,6 +1,6 @@
 [package]
 name = "tulpje-framework"
-version = "0.16.0"
+version = "0.16.1-rc.1"
 publish = true
 
 edition.workspace = true

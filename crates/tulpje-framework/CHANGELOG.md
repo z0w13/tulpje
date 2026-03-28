@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1-rc.1] - 2026-03-28
+
+### Added
+
+ - Add `Deref` impl for `Color
+
+### Changed
+
+ - Move all crates into a crates/ subfolder
+ - Set `publish` in each crate's `Cargo.toml`
+ - Use the Color deref impl
+ - Move `Color` struct and role colors into `tulpje-framework`
+
+### Fixed
+
+ - Derive `Copy` and `Clone` for `Color
+ - Don't bubble up command error if it's already handled in the command handler
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * refactor: move all crates into a crates/ subfolder ([`60c1de0`](https://github.com/tulpje/tulpje/commit/60c1de0204ef80f95e82ff897882917966f33027))
+ * chore: set `publish` in each crate's `Cargo.toml` ([`e6748e7`](https://github.com/tulpje/tulpje/commit/e6748e79d1c5e354cf4315d7cdf8361962718a84))
+ * chore: use the Color deref impl ([`85639d1`](https://github.com/tulpje/tulpje/commit/85639d1b6c2f0f36a259c95a2d0e3169d66288fc))
+ * feat(framework): add `Deref` impl for `Color ([`f021b26`](https://github.com/tulpje/tulpje/commit/f021b26c37a31d06a51870da812a308984aeda89))
+ * fix(framework): derive `Copy` and `Clone` for `Color ([`17d2796`](https://github.com/tulpje/tulpje/commit/17d2796a505ec4e68fe01b89062f5493a34a209a))
+ * refactor: move `Color` struct and role colors into `tulpje-framework` ([`474807a`](https://github.com/tulpje/tulpje/commit/474807a168a3cdd502127d3da2ea0f87f48c81fd))
+ * fix(framework): don't bubble up command error if it's already handled in the command handler ([`4a200b7`](https://github.com/tulpje/tulpje/commit/4a200b7acdde1be47fa2c45ee633f7986ca7b93c))
+</details>
+
 ## [0.16.0] - 2026-03-23
 
 ### Commit Details

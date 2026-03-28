@@ -5,6 +5,104 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0-rc.1] - 2026-03-28
+
+### Added
+
+ - Add workspace hack with `cargo-hakari`
+ - Add a description to tulpje-shared
+ - Add `hyperfine` package
+ - Add more colored output
+ - Add glob support to workspace member resolution in `release.py`
+ - Add `--skip-slow` to `release.py` to speed up dry runs
+ - Add `Deref` impl for `Color
+
+### Changed
+
+ - Rename `db` module to `db_id`
+ - Convert `pk_guilds` to use `system_uuid` instead of `system_id` and add foreign key
+ - Move migrations to repository root
+ - Move Core module into `tulpje-mod-core` crate
+ - Move Stats module into `tulpje-mod-stats` crate
+ - Move `format_significant_duration` to `tulpje-lib`
+ - Move `is_pk_proxy` to `tulpje-lib`
+ - Move Emoji module into `tulpje-mod-emoji` crate
+ - Split out command calls into separate function in `build.rs`
+ - Move PluralKit module into `tulpje-mod-pluralkit` crate
+ - Move code shared between modules into `tulpje-lib` crate
+ - Rename `tulpje-shared` to `tulpje-common`
+ - Move all crates into a crates/ subfolder
+ - Use `wild` linker
+ - Use `debug = "line-tables-only" to improve debug build times and size
+ - Split log formatter into separate module
+ - Turn `release.py` into a proper python package
+ - Disable dependabot version updates, only use it for security
+ - Set `publish` in each crate's `Cargo.toml`
+ - Use the Color deref impl
+ - Move `Color` struct and role colors into `tulpje-framework`
+ - Point to new user guide
+
+### Fixed
+
+ - Properly add foreign keys to all databaes tables
+ - Pass shard id to gateway queue
+ - Rebuild `tulpje-handler` if migrations change
+ - Fix rerun-if-changed paths in build.rs
+ - Actually re-use the `cargoArtifacts` derivation
+ - Don't use references to Color, it's `Copy` now
+ - Derive `Copy` and `Clone` for `Color
+ - Don't bubble up command error if it's already handled in the command handler
+
+### Removed
+
+ - Remove unused dependency `serde-json` from `tulpje-common`
+ - Remove unused `tulpje-manager` crate
+
+### Commit Details
+
+<details><summary>view details</summary>
+
+ * refactor(tulpje-lib): rename `db` module to `db_id` ([`7dab097`](https://github.com/tulpje/tulpje/commit/7dab097051816a811af96c60765796f8704ffae4))
+ * fix(handler): properly add foreign keys to all databaes tables ([`a03bd6e`](https://github.com/tulpje/tulpje/commit/a03bd6e22728a69b7ef4b9b83927566cfec48459))
+ * refactor(handler): convert `pk_guilds` to use `system_uuid` instead of `system_id` and add foreign key ([`b609dc4`](https://github.com/tulpje/tulpje/commit/b609dc458c172c3e2dc147f195cf89b35b5de167))
+ * chore: move migrations to repository root ([`5d51a95`](https://github.com/tulpje/tulpje/commit/5d51a95c46fa51d55ba789f36fa851ec96ea4657))
+ * fix(gateway): pass shard id to gateway queue ([`e5e9a2a`](https://github.com/tulpje/tulpje/commit/e5e9a2a677d7f951978048fd8a358964d6577090))
+ * refactor: move Core module into `tulpje-mod-core` crate ([`3af4d9a`](https://github.com/tulpje/tulpje/commit/3af4d9ac77d5b99d036a59b87c9b00131d02c56a))
+ * refactor: move Stats module into `tulpje-mod-stats` crate ([`2e8c598`](https://github.com/tulpje/tulpje/commit/2e8c59800b7bc2501501a316a67a8d52d1b77772))
+ * chore(deps): remove unused dependency `serde-json` from `tulpje-common` ([`bb2cd8a`](https://github.com/tulpje/tulpje/commit/bb2cd8af78d7e5d07e2b4bee696b7580420af263))
+ * refactor: move `format_significant_duration` to `tulpje-lib` ([`4440e1a`](https://github.com/tulpje/tulpje/commit/4440e1a0119a3e8dbdef0cadbf21e76e4a9c465c))
+ * refactor: move `is_pk_proxy` to `tulpje-lib` ([`b5c9915`](https://github.com/tulpje/tulpje/commit/b5c9915018fae44eb02065bcbb639ffe5875872b))
+ * refactor: move Emoji module into `tulpje-mod-emoji` crate ([`eb420b2`](https://github.com/tulpje/tulpje/commit/eb420b22cd33972ab1e4ac9315bdcf51be8bcc5b))
+ * chore(build): add workspace hack with `cargo-hakari` ([`6dc409e`](https://github.com/tulpje/tulpje/commit/6dc409ed3ace68bc4e755842fae49deb3fb93baa))
+ * chore: remove unused `tulpje-manager` crate ([`18ad132`](https://github.com/tulpje/tulpje/commit/18ad1322ea1dca0b82d4b75c469099d551557f82))
+ * fix(build): rebuild `tulpje-handler` if migrations change ([`28740c6`](https://github.com/tulpje/tulpje/commit/28740c636741df35097da1d6ccf63157e9d88db8))
+ * refactor(build): split out command calls into separate function in `build.rs` ([`30d72ac`](https://github.com/tulpje/tulpje/commit/30d72ac6fceed739c58addabbb8e1d327d17524f))
+ * fix(build): fix rerun-if-changed paths in build.rs ([`f03f061`](https://github.com/tulpje/tulpje/commit/f03f0616a81cb38ad157a83c257224b86ea06929))
+ * refactor: move PluralKit module into `tulpje-mod-pluralkit` crate ([`3f06556`](https://github.com/tulpje/tulpje/commit/3f06556ea7c07f6046d1f9cac529380b3d08df07))
+ * refactor: move code shared between modules into `tulpje-lib` crate ([`ed80efe`](https://github.com/tulpje/tulpje/commit/ed80efeffadea4f87bbd065ddddec5d7d8dd828e))
+ * refactor: rename `tulpje-shared` to `tulpje-common` ([`0a3f97d`](https://github.com/tulpje/tulpje/commit/0a3f97d11d43fc01fad73a6a594e9e0a7d7816d6))
+ * chore: add a description to tulpje-shared ([`406a1a9`](https://github.com/tulpje/tulpje/commit/406a1a9e96efe36c58ef1b453b51cf6473ec171e))
+ * refactor: move all crates into a crates/ subfolder ([`60c1de0`](https://github.com/tulpje/tulpje/commit/60c1de0204ef80f95e82ff897882917966f33027))
+ * chore(build): use `wild` linker ([`9e4f298`](https://github.com/tulpje/tulpje/commit/9e4f298d751b9fc7ecfd8f1c7046486a23728368))
+ * chore(build): use `debug = "line-tables-only" to improve debug build times and size ([`ba7d931`](https://github.com/tulpje/tulpje/commit/ba7d931d112d9a056e6b4e921f02ea4c2aec64fa))
+ * fix(nix): actually re-use the `cargoArtifacts` derivation ([`98360d5`](https://github.com/tulpje/tulpje/commit/98360d5e2be635fb2062bbf66d6475e322c06a4d))
+ * chore(nix): add `hyperfine` package ([`0488457`](https://github.com/tulpje/tulpje/commit/048845787d9be2d830fd41197127ca775fec20ce))
+ * feat(tools/release-tulpje): add more colored output ([`b3bb48e`](https://github.com/tulpje/tulpje/commit/b3bb48e809581a4a78949a23ddffd748819b2b46))
+ * refactor(tools/release-tulpje): split log formatter into separate module ([`b4d072b`](https://github.com/tulpje/tulpje/commit/b4d072bd6712d91ebcf596288c2ed62d9ea66554))
+ * refactor(tools/release-tulpje): turn `release.py` into a proper python package ([`b3625fb`](https://github.com/tulpje/tulpje/commit/b3625fb8e6de115d05186b5eb11bad67afbf186f))
+ * fix(build): add glob support to workspace member resolution in `release.py` ([`e42d72c`](https://github.com/tulpje/tulpje/commit/e42d72ca1cadc0af71518147033bdad013b4777f))
+ * feat(build): add `--skip-slow` to `release.py` to speed up dry runs ([`cd472ec`](https://github.com/tulpje/tulpje/commit/cd472ec7df5f781c91917960f6c80061fdf9bf39))
+ * chore(ci): disable dependabot version updates, only use it for security ([`6680102`](https://github.com/tulpje/tulpje/commit/66801022fbf5c18e86517b22f8fc218b6312b266))
+ * chore: set `publish` in each crate's `Cargo.toml` ([`e6748e7`](https://github.com/tulpje/tulpje/commit/e6748e79d1c5e354cf4315d7cdf8361962718a84))
+ * chore: use the Color deref impl ([`85639d1`](https://github.com/tulpje/tulpje/commit/85639d1b6c2f0f36a259c95a2d0e3169d66288fc))
+ * fix(handler): don't use references to Color, it's `Copy` now ([`130265b`](https://github.com/tulpje/tulpje/commit/130265b6be4a47f88759e1d362dbb2aa01f3643a))
+ * feat(framework): add `Deref` impl for `Color ([`f021b26`](https://github.com/tulpje/tulpje/commit/f021b26c37a31d06a51870da812a308984aeda89))
+ * fix(framework): derive `Copy` and `Clone` for `Color ([`17d2796`](https://github.com/tulpje/tulpje/commit/17d2796a505ec4e68fe01b89062f5493a34a209a))
+ * refactor: move `Color` struct and role colors into `tulpje-framework` ([`474807a`](https://github.com/tulpje/tulpje/commit/474807a168a3cdd502127d3da2ea0f87f48c81fd))
+ * fix(framework): don't bubble up command error if it's already handled in the command handler ([`4a200b7`](https://github.com/tulpje/tulpje/commit/4a200b7acdde1be47fa2c45ee633f7986ca7b93c))
+ * chore(docs): point to new user guide ([`2b8d9eb`](https://github.com/tulpje/tulpje/commit/2b8d9ebbad0e6a17476de9af44cf4ddd40c230d1))
+</details>
+
 ## [0.21.5] - 2026-03-26
 
 ### Commit Details

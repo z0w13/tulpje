@@ -1,6 +1,6 @@
 [package]
 name = "tulpje-cache"
-version = "0.5.0"
+version = "0.5.1-rc.1"
 description = "A redis cache for twilight"
 publish = true
 # tulpje-cache is heavily based on twilight-cache-inmemory

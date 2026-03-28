@@ -13,9 +13,9 @@ chrono = { workspace = true }
 num-format = "0.4.4"
 redis = { workspace = true }
 tracing = { workspace = true }
-tulpje-common = { version = "0.21.5", path = "../tulpje-common" }
-tulpje-framework = { version = "0.16.0", path = "../tulpje-framework" }
-tulpje-lib = { version = "0.21.5", path = "../tulpje-lib" }
+tulpje-common = { version = "0.22.0-rc.1", path = "../tulpje-common" }
+tulpje-framework = { version = "0.16.1-rc.1", path = "../tulpje-framework" }
+tulpje-lib = { version = "0.22.0-rc.1", path = "../tulpje-lib" }
 twilight-model = { workspace = true }
 twilight-util = { workspace = true, features = ["builder"] }
 
