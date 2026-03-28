@@ -3,6 +3,9 @@ members = ["crates/*"]
 
 resolver = "3"
 
+[profile.dev]
+debug = "line-tables-only"
+
 [workspace.package]
 version = "0.21.5"
 description = "Multi-purpose discord bot & framework"
