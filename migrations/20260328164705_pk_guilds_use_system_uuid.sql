@@ -1,3 +1,6 @@
+-- begin the transaction
+BEGIN TRANSACTION;
+
 -- add the column
 ALTER TABLE pk_guilds ADD COLUMN system_uuid UUID;
 
@@ -27,3 +30,6 @@ ON DELETE CASCADE;
 
 -- drop old column
 ALTER TABLE pk_guilds DROP COLUMN system_id;
+
+-- commit the changes
+COMMIT TRANSACTION;
