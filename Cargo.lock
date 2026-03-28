@@ -3181,6 +3181,7 @@ dependencies = [
  "tulpje-common",
  "twilight-gateway",
  "twilight-model",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3217,6 +3218,7 @@ dependencies = [
  "twilight-model",
  "twilight-util",
  "uuid",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -3260,6 +3262,7 @@ name = "tulpje-utils"
 version = "0.21.5"
 dependencies = [
  "reqwest 0.13.1",
+ "workspace-hack",
 ]
 
 [[package]]
@@ -4038,6 +4041,64 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3268f3d866458b787f390cf61f4bbb563b922d091359f9608842999eaee3943c"
 dependencies = [
  "bitflags",
+]
+
+[[package]]
+name = "workspace-hack"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bitflags",
+ "byteorder",
+ "chrono",
+ "crossbeam-utils",
+ "crypto-common",
+ "deranged",
+ "digest",
+ "either",
+ "fastrand",
+ "form_urlencoded",
+ "futures-channel",
+ "futures-core",
+ "futures-io",
+ "futures-sink",
+ "futures-util",
+ "getrandom 0.3.1",
+ "hashbrown 0.15.2",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "ipnet",
+ "log",
+ "memchr",
+ "nom",
+ "percent-encoding",
+ "regex",
+ "regex-automata",
+ "regex-syntax",
+ "reqwest 0.13.1",
+ "rustls",
+ "rustls-webpki",
+ "serde",
+ "serde_core",
+ "serde_json",
+ "sha2",
+ "smallvec",
+ "sqlx-core",
+ "sqlx-postgres",
+ "syn",
+ "thiserror 2.0.8",
+ "time",
+ "tokio",
+ "tokio-rustls",
+ "tokio-util",
+ "tokio-websockets",
+ "tracing",
+ "tracing-core",
+ "twilight-gateway",
+ "twilight-util",
+ "url",
+ "uuid",
 ]
 
 [[package]]
