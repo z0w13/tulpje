@@ -3222,7 +3222,6 @@ dependencies = [
  "pkrs-fork",
  "redis",
  "serde",
- "serde_json",
  "sqlx",
  "tulpje-cache",
  "tulpje-framework",
