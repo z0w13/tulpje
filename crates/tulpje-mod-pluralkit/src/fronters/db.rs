@@ -7,7 +7,7 @@ use twilight_model::id::{
 };
 
 use tulpje_framework::Error;
-use tulpje_lib::db::DbId;
+use tulpje_lib::db_id::DbId;
 use uuid::Uuid;
 
 use crate::db::ModPkSystem;

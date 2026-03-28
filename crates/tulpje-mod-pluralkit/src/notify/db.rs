@@ -5,7 +5,7 @@ use twilight_model::id::{
 };
 use uuid::Uuid;
 
-use tulpje_lib::db::DbId;
+use tulpje_lib::db_id::DbId;
 
 pub(crate) async fn save_notify_channel(
     db: &sqlx::PgPool,

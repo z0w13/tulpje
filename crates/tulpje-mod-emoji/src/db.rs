@@ -7,7 +7,7 @@ use twilight_model::id::{
 };
 
 use super::shared::StatsSort;
-use tulpje_lib::db::DbId;
+use tulpje_lib::db_id::DbId;
 
 #[derive(Debug)]
 // TODO: tests to confirm this still matches the database structure
