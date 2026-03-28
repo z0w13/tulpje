@@ -12,7 +12,7 @@ pub async fn guild_create(ctx: EventContext) -> Result<(), Error> {
 
     let guild_id = guild_create.id();
 
-    db::touch_guild(&ctx.services.db, guild_id).await?;
+    tulpje_lib::db::touch_guild(&ctx.services.db, guild_id).await?;
     register_commands(&ctx, guild_id).await?;
 
     Ok(())
