@@ -376,7 +376,7 @@ class ReleaseInfo:
     @property
     def prefix(self) -> str:
         if self.single_crate:
-            return f"{self.crates[0].path}-"
+            return f"{self.crates[0].name.removeprefix('tulpje-')}-"
         else:
             return ""
 
