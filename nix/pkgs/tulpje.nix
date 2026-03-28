@@ -21,9 +21,6 @@ let
 
     pname = name;
     strictDeps = true;
-
-    # to build a pecific create
-    cargoExtraArgs = "-p ${name}";
   };
   cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 in
@@ -31,6 +28,9 @@ craneLib.buildPackage (
   commonArgs
   // {
     inherit cargoArtifacts;
+
+    # to build a pecific create
+    cargoExtraArgs = "-p ${name}";
 
     env = {
       TULPJE_VERSION_EXTRA = inputs.self.shortRev or inputs.self.dirtyShortRev or "";
