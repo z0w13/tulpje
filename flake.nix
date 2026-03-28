@@ -71,6 +71,7 @@
               skopeo
               toolchain
               cargo-edit
+              cargo-hakari
               cargo-machete
               cargo-outdated
               cargo-semver-checks

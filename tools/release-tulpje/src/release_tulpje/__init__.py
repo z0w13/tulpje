@@ -166,7 +166,9 @@ class CrateInfo(NamedTuple):
         )
         parsed_manifest = json.loads(manifest_json)
         workspace_dependencies = {
-            d["name"] for d in parsed_manifest["dependencies"] if "path" in d
+            d["name"]
+            for d in parsed_manifest["dependencies"]
+            if "path" in d and d["name"] != "workspace-hack"
         }
 
         lock_file = find_file_upwards(path, "Cargo.lock")
@@ -855,7 +857,8 @@ def main(args: argparse.Namespace) -> int:
         print(" [!] combining --skip-slow with --execute is disallowed")
         return 1
 
-    crates = gather_crates()
+    # exclude the workspace hack from processing
+    crates = [c for c in gather_crates() if c.name != "workspace-hack"]
     independent_crates = [crate for crate in crates if crate.independent]
     grouped_crates = [crate for crate in crates if not crate.independent]
 

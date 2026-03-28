@@ -29,3 +29,4 @@ metrics-exporter-prometheus = { workspace = true }
 figment = { version = "0.10.19", features = ["env"] }
 figment_file_provider_adapter = "0.1.1"
 tokio-util = { workspace = true, features = ["rt"] }
+workspace-hack = { version = "0.1", path = "../workspace-hack" }
