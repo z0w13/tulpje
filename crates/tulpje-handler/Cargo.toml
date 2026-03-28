@@ -12,15 +12,15 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-tulpje-common = { version = "0.22.0-rc.1", path = "../tulpje-common" }
-tulpje-lib = { version = "0.22.0-rc.1", path = "../tulpje-lib" }
-tulpje-framework = { version = "0.16.1-rc.1", path = "../tulpje-framework" }
-tulpje-cache = { version = "0.5.1-rc.1", path = "../tulpje-cache" }
-tulpje-mod-core = { version = "0.22.0-rc.1", path = "../tulpje-mod-core" }
-tulpje-mod-emoji = { version = "0.22.0-rc.1", path = "../tulpje-mod-emoji" }
-tulpje-mod-pluralkit = { version = "0.22.0-rc.1", path = "../tulpje-mod-pluralkit" }
-tulpje-mod-stats = { version = "0.22.0-rc.1", path = "../tulpje-mod-stats" }
-reconnecting-amqp = { version = "0.2.2-rc.1", path = "../reconnecting-amqp" }
+tulpje-common = { version = "0.22.0", path = "../tulpje-common" }
+tulpje-lib = { version = "0.22.0", path = "../tulpje-lib" }
+tulpje-framework = { version = "0.16.1", path = "../tulpje-framework" }
+tulpje-cache = { version = "0.5.1", path = "../tulpje-cache" }
+tulpje-mod-core = { version = "0.22.0", path = "../tulpje-mod-core" }
+tulpje-mod-emoji = { version = "0.22.0", path = "../tulpje-mod-emoji" }
+tulpje-mod-pluralkit = { version = "0.22.0", path = "../tulpje-mod-pluralkit" }
+tulpje-mod-stats = { version = "0.22.0", path = "../tulpje-mod-stats" }
+reconnecting-amqp = { version = "0.2.2", path = "../reconnecting-amqp" }
 rustls = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "signal"] }
