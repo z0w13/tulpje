@@ -17,11 +17,11 @@ use tulpje_framework::{
 use tulpje_lib::context::Services;
 
 mod commands;
-pub(crate) mod db;
+mod db;
 mod event_handlers;
 mod tasks;
 
-pub(crate) fn build(registry: &Registry<Services>) -> Module<Services> {
+pub fn build(registry: &Registry<Services>) -> Module<Services> {
     let guild_module_choices: Vec<(String, String)> = registry
         .guild_module_names()
         .into_iter()

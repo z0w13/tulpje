@@ -3,7 +3,7 @@ use tulpje_lib::context::EventContext;
 use twilight_gateway::Event;
 use twilight_model::id::{Id, marker::GuildMarker};
 
-use crate::modules::core::db;
+use crate::db;
 
 pub async fn guild_create(ctx: EventContext) -> Result<(), Error> {
     let Event::GuildCreate(guild_create) = &ctx.event else {

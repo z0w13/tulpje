@@ -3187,7 +3187,6 @@ dependencies = [
 name = "tulpje-handler"
 version = "0.21.5"
 dependencies = [
- "chrono",
  "figment",
  "figment_file_provider_adapter",
  "metrics",
@@ -3205,13 +3204,12 @@ dependencies = [
  "tulpje-common",
  "tulpje-framework",
  "tulpje-lib",
+ "tulpje-mod-core",
  "tulpje-mod-emoji",
  "tulpje-mod-pluralkit",
  "tulpje-mod-stats",
  "twilight-gateway",
  "twilight-http",
- "twilight-model",
- "twilight-util",
  "workspace-hack",
 ]
 
@@ -3225,6 +3223,21 @@ dependencies = [
  "sqlx",
  "tulpje-cache",
  "tulpje-framework",
+ "twilight-http",
+ "twilight-model",
+ "twilight-util",
+]
+
+[[package]]
+name = "tulpje-mod-core"
+version = "0.21.5"
+dependencies = [
+ "chrono",
+ "sqlx",
+ "tracing",
+ "tulpje-framework",
+ "tulpje-lib",
+ "twilight-gateway",
  "twilight-http",
  "twilight-model",
  "twilight-util",

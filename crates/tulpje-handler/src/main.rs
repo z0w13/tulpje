@@ -1,6 +1,5 @@
 mod config;
 mod metrics;
-mod modules;
 
 use std::{sync::Arc, time::Duration};
 
@@ -132,7 +131,7 @@ async fn main() {
 
     // core should always be registered last because it needs the data from
     // previous modules to set up
-    registry.register(modules::core::build(&registry));
+    registry.register(tulpje_mod_core::build(&registry));
 
     // only run scheduled tasks on the "primary" handler
     if config.handler_id != 0 {
