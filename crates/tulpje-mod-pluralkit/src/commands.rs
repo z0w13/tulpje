@@ -45,7 +45,7 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
     };
 
     db::update_system(&ctx.services.db, &system).await?;
-    db::save_guild_settings(&ctx.services.db, guild.id, user_id, &system.id).await?;
+    db::save_guild_settings(&ctx.services.db, guild.id, user_id, system.uuid).await?;
 
     // Inform user of success
     responses::success(

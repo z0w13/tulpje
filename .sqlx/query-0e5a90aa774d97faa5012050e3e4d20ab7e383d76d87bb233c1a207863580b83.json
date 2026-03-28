@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT guild_id, user_id, system_id FROM pk_guilds WHERE system_id = $1",
+  "query": "SELECT guild_id, user_id, system_uuid FROM pk_guilds WHERE system_uuid = $1",
   "describe": {
     "columns": [
       {
@@ -15,13 +15,13 @@
       },
       {
         "ordinal": 2,
-        "name": "system_id",
-        "type_info": "Varchar"
+        "name": "system_uuid",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "Text"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -30,5 +30,5 @@
       false
     ]
   },
-  "hash": "897a798cfcf1dcb68ad9deab2c8bf2b97035bfe24c1a0fa74de444bc663e5281"
+  "hash": "0e5a90aa774d97faa5012050e3e4d20ab7e383d76d87bb233c1a207863580b83"
 }

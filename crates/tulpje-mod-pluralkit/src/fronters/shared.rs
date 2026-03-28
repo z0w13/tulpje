@@ -142,7 +142,7 @@ pub(super) async fn update_fronter_channels(
     let desired_fronters = if let Some(members) = members {
         members.iter().map(get_member_name).collect()
     } else {
-        get_desired_fronters(pk, &PkId(gs.system_id.clone())).await?
+        get_desired_fronters(pk, &PkId(gs.system_uuid.to_string())).await?
     };
 
     let current_fronters: HashSet<String> = fronter_channels

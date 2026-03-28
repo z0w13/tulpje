@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE\n            FROM\n                pk_systems\n            WHERE\n                NOT EXISTS (\n                    SELECT 1 FROM pk_guilds WHERE pk_guilds.system_uuid = pk_systems.uuid\n                )\n            AND\n                NOT EXISTS (\n                    SELECT 1 FROM pk_notify_systems WHERE pk_notify_systems.system_uuid = pk_systems.uuid\n                )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "012786811fb7d7d20daa56b6ba98bdcdbc410dd1a4ae49f434574335b857c8cc"
+}

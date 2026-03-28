@@ -75,9 +75,9 @@ pub(crate) async fn get_tracked_system_count(db: &sqlx::PgPool) -> Result<usize,
                     pk_notify_systems
             )
         OR
-            id IN (
+            uuid IN (
                 SELECT
-                    system_id
+                    system_uuid
                 FROM
                     pk_guilds
                 INNER JOIN
@@ -215,9 +215,9 @@ pub(crate) async fn get_systems_to_update(db: &sqlx::PgPool) -> Result<Vec<ModPk
                             pk_notify_systems
                     )
                 OR
-                    id IN (
+                    uuid IN (
                         SELECT
-                            system_id
+                            system_uuid
                         FROM
                             pk_guilds
                         INNER JOIN

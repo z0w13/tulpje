@@ -28,7 +28,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     };
 
-    let system_ref = SystemRef::Id(guild_settings.system_id);
+    let system_ref = SystemRef::Uuid(guild_settings.system_uuid);
     let system = get_system(&ctx.services.db, &system_ref).await?;
     let display_name = system.map_or_else(|| system_ref.to_string(), |s| s.name.unwrap_or(s.id));
 

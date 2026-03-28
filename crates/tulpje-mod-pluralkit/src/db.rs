@@ -15,19 +15,19 @@ use tulpje_lib::db::DbId;
 pub(crate) struct ModPkGuildRow {
     pub(crate) guild_id: DbId<GuildMarker>,
     pub(crate) user_id: DbId<UserMarker>,
-    pub(crate) system_id: String,
+    pub(crate) system_uuid: Uuid,
 }
 pub(crate) async fn save_guild_settings(
     db: &sqlx::PgPool,
     guild_id: Id<GuildMarker>,
     user_id: Id<UserMarker>,
-    system_id: &String,
+    system_uuid: Uuid,
 ) -> Result<(), Error> {
     sqlx::query!(
-        "INSERT INTO pk_guilds (guild_id, user_id, system_id) VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO UPDATE SET system_id = $3",
+        "INSERT INTO pk_guilds (guild_id, user_id, system_uuid) VALUES ($1, $2, $3) ON CONFLICT (guild_id) DO UPDATE SET system_uuid = $3",
         i64::from(DbId(guild_id)),
         i64::from(DbId(user_id)),
-        system_id,
+        system_uuid,
     )
     .execute(db)
     .await?;
@@ -37,12 +37,12 @@ pub(crate) async fn save_guild_settings(
 
 pub(crate) async fn get_guild_settings_for_system(
     db: &sqlx::PgPool,
-    system_id: &str,
+    system_uuid: Uuid,
 ) -> Result<Option<ModPkGuildRow>, Error> {
     Ok(sqlx::query_as!(
         ModPkGuildRow,
-        "SELECT guild_id, user_id, system_id FROM pk_guilds WHERE system_id = $1",
-        system_id
+        "SELECT guild_id, user_id, system_uuid FROM pk_guilds WHERE system_uuid = $1",
+        system_uuid
     )
     .fetch_optional(db)
     .await?)
@@ -54,7 +54,7 @@ pub(crate) async fn get_guild_settings_for_id(
 ) -> Result<Option<ModPkGuildRow>, Error> {
     Ok(sqlx::query_as!(
         ModPkGuildRow,
-        "SELECT guild_id, user_id, system_id FROM pk_guilds WHERE guild_id = $1",
+        "SELECT guild_id, user_id, system_uuid FROM pk_guilds WHERE guild_id = $1",
         i64::from(DbId(guild_id))
     )
     .fetch_optional(db)
@@ -65,7 +65,7 @@ pub(crate) async fn get_guild_settings_for_id(
 pub(crate) async fn get_guild_settings(db: &sqlx::PgPool) -> Result<Vec<ModPkGuildRow>, Error> {
     Ok(sqlx::query_as!(
         ModPkGuildRow,
-        "SELECT guild_id, user_id, system_id FROM pk_guilds",
+        "SELECT guild_id, user_id, system_uuid FROM pk_guilds",
     )
     .fetch_all(db)
     .await?)
@@ -172,7 +172,7 @@ pub(crate) async fn cleanup_systems(db: &sqlx::PgPool) -> Result<u64, Error> {
                 pk_systems
             WHERE
                 NOT EXISTS (
-                    SELECT 1 FROM pk_guilds WHERE pk_guilds.system_id = pk_systems.id
+                    SELECT 1 FROM pk_guilds WHERE pk_guilds.system_uuid = pk_systems.uuid
                 )
             AND
                 NOT EXISTS (

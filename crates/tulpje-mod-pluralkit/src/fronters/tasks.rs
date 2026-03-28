@@ -119,7 +119,7 @@ async fn update_fronter_category(
     system: &ModPkSystem,
     switch: &Switch,
 ) -> Result<(), Error> {
-    let Some(guild_settings) = pk_db::get_guild_settings_for_system(db, &system.id).await? else {
+    let Some(guild_settings) = pk_db::get_guild_settings_for_system(db, system.uuid).await? else {
         tracing::debug!(
             method = "update_fronter_category",
             "no guild with system {}, skipping",

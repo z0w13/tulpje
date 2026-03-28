@@ -101,7 +101,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
         .await?;
         return Ok(());
     };
-    let system_ref = SystemRef::Id(gs.system_id);
+    let system_ref = SystemRef::Uuid(gs.system_uuid);
     let token = ctx.get_arg_string_optional("token")?;
 
     // fetch members from PluralKit
