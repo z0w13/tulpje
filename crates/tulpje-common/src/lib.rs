@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use twilight_model::id::{Id, marker::ApplicationMarker};
 
 use tulpje_framework::Metadata;
 
@@ -47,10 +46,6 @@ pub fn format_significant_duration(total_secs: u64) -> String {
     }
 }
 
-pub fn is_pk_proxy(application_id: &Option<Id<ApplicationMarker>>) -> bool {
-    application_id.is_some_and(|id| id.get() == 466378653216014359) // PluralKit Application ID
-}
-
 #[macro_export]
 macro_rules! version {
     () => {
@@ -70,15 +65,5 @@ mod tests {
         assert_eq!(format_significant_duration(5 * 3_600 + 5 * 60 + 5), "5h 5m");
         assert_eq!(format_significant_duration(20 * 60 + 1), "20m 1s");
         assert_eq!(format_significant_duration(0), "0s");
-    }
-
-    #[test]
-    fn is_pk_proxy_test() {
-        assert!(is_pk_proxy(&Some(Id::<ApplicationMarker>::new(
-            466378653216014359
-        ))));
-
-        assert!(!is_pk_proxy(&Some(Id::<ApplicationMarker>::new(1))));
-        assert!(!is_pk_proxy(&None));
     }
 }

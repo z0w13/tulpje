@@ -3139,7 +3139,6 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tulpje-framework",
- "twilight-model",
 ]
 
 [[package]]

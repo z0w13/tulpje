@@ -10,10 +10,8 @@ use twilight_model::{
     id::{Id, marker::EmojiMarker},
 };
 
-use tulpje_lib::context::EventContext;
-
-use tulpje_common::is_pk_proxy;
 use tulpje_framework::Error;
+use tulpje_lib::{context::EventContext, util::is_pk_proxy};
 
 use super::{
     db::{self, delete_emojis_not_in_list_for_guild},

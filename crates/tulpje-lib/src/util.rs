@@ -10,7 +10,7 @@ use twilight_model::{
     guild::{Permissions, Role},
     id::{
         Id,
-        marker::{ChannelMarker, GuildMarker, RoleMarker, UserMarker},
+        marker::{ApplicationMarker, ChannelMarker, GuildMarker, RoleMarker, UserMarker},
     },
 };
 use twilight_util::{
@@ -225,4 +225,23 @@ pub fn parse_channel_ref(channel_ref: &str) -> Option<Id<ChannelMarker>> {
         .trim_end_matches(">")
         .parse()
         .ok()
+}
+
+pub fn is_pk_proxy(application_id: &Option<Id<ApplicationMarker>>) -> bool {
+    application_id.is_some_and(|id| id.get() == 466378653216014359) // PluralKit Application ID
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_pk_proxy_test() {
+        assert!(is_pk_proxy(&Some(Id::<ApplicationMarker>::new(
+            466378653216014359
+        ))));
+
+        assert!(!is_pk_proxy(&Some(Id::<ApplicationMarker>::new(1))));
+        assert!(!is_pk_proxy(&None));
+    }
 }
