@@ -14,7 +14,7 @@ run-local +command:
   contrib/run-local.sh {{ command }}
 
 sqlx-migrate: database-up
-  contrib/run-local.sh sqlx migrate run --source crates/tulpje-handler/migrations
+  contrib/run-local.sh sqlx migrate run --source migrations
 
 sqlx-prepare: database-up
   contrib/run-local.sh cargo sqlx prepare --workspace

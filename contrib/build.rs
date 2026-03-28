@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // sqlx migrations in tulpje-handler
     if env::var("CARGO_PKG_NAME").is_ok_and(|name| name == "tulpje-handler") {
-        println!("cargo::rerun-if-changed=migrations");
+        println!("cargo::rerun-if-changed=../../migrations");
     }
 
     if PathBuf::from("../../.git").is_dir() {

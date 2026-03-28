@@ -116,7 +116,7 @@ async fn main() {
     amqp.wait_start().await.expect("couldn't connect to amqp");
 
     tracing::info!("running migrations...");
-    sqlx::migrate!("./migrations")
+    sqlx::migrate!("../../migrations")
         .run(&db)
         .await
         .expect("error running migrations");
