@@ -126,8 +126,8 @@ async fn main() {
     tracing::info!("registering handlers");
     let mut registry = Registry::<context::Services>::new();
 
-    registry.register(modules::emoji::build());
     registry.register(modules::stats::build());
+    registry.register(tulpje_mod_emoji::build());
     registry.register(tulpje_mod_pluralkit::build());
 
     // core should always be registered last because it needs the data from

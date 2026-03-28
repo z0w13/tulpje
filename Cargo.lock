@@ -3188,19 +3188,15 @@ dependencies = [
 name = "tulpje-handler"
 version = "0.21.5"
 dependencies = [
- "base64",
  "chrono",
  "figment",
  "figment_file_provider_adapter",
- "futures-util",
  "metrics",
  "metrics-exporter-prometheus",
  "num-format",
  "pkrs-fork",
  "reconnecting-amqp",
  "redis",
- "regex",
- "reqwest 0.13.1",
  "rustls",
  "serde",
  "serde_json",
@@ -3211,6 +3207,7 @@ dependencies = [
  "tulpje-common",
  "tulpje-framework",
  "tulpje-lib",
+ "tulpje-mod-emoji",
  "tulpje-mod-pluralkit",
  "twilight-gateway",
  "twilight-http",
@@ -3230,6 +3227,27 @@ dependencies = [
  "sqlx",
  "tulpje-cache",
  "tulpje-framework",
+ "twilight-http",
+ "twilight-model",
+ "twilight-util",
+]
+
+[[package]]
+name = "tulpje-mod-emoji"
+version = "0.21.5"
+dependencies = [
+ "base64",
+ "chrono",
+ "futures-util",
+ "regex",
+ "reqwest 0.13.1",
+ "sqlx",
+ "tracing",
+ "tulpje-cache",
+ "tulpje-common",
+ "tulpje-framework",
+ "tulpje-lib",
+ "twilight-gateway",
  "twilight-http",
  "twilight-model",
  "twilight-util",

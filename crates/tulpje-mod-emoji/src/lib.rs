@@ -1,8 +1,8 @@
-pub mod clone;
-pub mod commands;
-pub mod db;
-pub mod event_handlers;
-pub mod shared;
+mod clone;
+mod commands;
+mod db;
+mod event_handlers;
+mod shared;
 
 use twilight_gateway::EventType;
 use twilight_model::{
@@ -18,7 +18,7 @@ use tulpje_framework::{
 
 use tulpje_lib::context::Services;
 
-pub(crate) fn build() -> Module<Services> {
+pub fn build() -> Module<Services> {
     ModuleBuilder::<Services>::new("emoji")
         // commands
         .command(

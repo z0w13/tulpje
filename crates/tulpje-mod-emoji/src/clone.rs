@@ -7,8 +7,8 @@ use tulpje_lib::context::CommandContext;
 use twilight_model::id::Id;
 use twilight_model::id::marker::{EmojiMarker, GuildMarker};
 
-use crate::modules::emoji::db::Emoji;
-use crate::modules::emoji::shared::parse_emojis_from_string;
+use crate::db::Emoji;
+use crate::shared::parse_emojis_from_string;
 
 // requires CREATE_GUILD_EXPRESSIONS permission
 pub(crate) async fn command(ctx: CommandContext) -> Result<(), Error> {
