@@ -67,6 +67,7 @@
 
               jq
               cachix
+              hyperfine
               skopeo
               toolchain
               cargo-edit
