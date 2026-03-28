@@ -3243,7 +3243,6 @@ dependencies = [
  "sqlx",
  "tracing",
  "tulpje-cache",
- "tulpje-common",
  "tulpje-framework",
  "tulpje-lib",
  "twilight-gateway",

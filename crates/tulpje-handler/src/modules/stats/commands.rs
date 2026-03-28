@@ -13,7 +13,7 @@ use twilight_util::builder::{
 };
 
 use super::redis;
-use tulpje_lib::context::CommandContext;
+use tulpje_lib::{context::CommandContext, util::format_significant_duration};
 
 async fn minimal_stats_response(ctx: CommandContext, api_latency: i64) -> Result<(), Error> {
     if let Err(err) = ctx
@@ -124,7 +124,7 @@ pub async fn stats(ctx: CommandContext) -> Result<(), Error> {
                 "Shard Uptime",
                 format!(
                     "{} ({} disconnections)",
-                    tulpje_common::format_significant_duration(
+                    format_significant_duration(
                         chrono::DateTime::from_timestamp(
                             current_shard_state.last_connection.try_into()?,
                             0
@@ -199,7 +199,7 @@ pub async fn shards(ctx: CommandContext) -> Result<(), Error> {
                         format!(
                             "Latency: {} ms / Uptime: {} / Servers: {} / Disconnects: {}",
                             shard.latency.to_formatted_string(&Locale::en),
-                            tulpje_common::format_significant_duration(
+                            format_significant_duration(
                                 chrono::DateTime::from_timestamp(
                                     shard.last_connection.try_into()?,
                                     0
@@ -262,7 +262,7 @@ pub async fn processes(ctx: CommandContext) -> Result<(), Error> {
                         "CPU: {:.2}% / Mem: {:.2}MiB / Uptime: {} / Version: {}",
                         process.cpu_usage,
                         process.memory_usage as f64 / 1024. / 1024.,
-                        tulpje_common::format_significant_duration(
+                        format_significant_duration(
                             chrono::DateTime::from_timestamp(process.last_started.try_into()?, 0)
                                 .ok_or("couldn't create timestamp")?
                                 .signed_duration_since(Utc::now())
