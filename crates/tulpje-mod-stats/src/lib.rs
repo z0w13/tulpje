@@ -9,7 +9,7 @@ use tulpje_lib::context::Services;
 mod commands;
 mod redis;
 
-pub(crate) fn build() -> Module<Services> {
+pub fn build() -> Module<Services> {
     ModuleBuilder::<Services>::new("stats")
         .command(
             CommandBuilder::new("stats", "Bot stats", CommandType::ChatInput)

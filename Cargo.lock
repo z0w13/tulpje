@@ -3192,7 +3192,6 @@ dependencies = [
  "figment_file_provider_adapter",
  "metrics",
  "metrics-exporter-prometheus",
- "num-format",
  "pkrs-fork",
  "reconnecting-amqp",
  "redis",
@@ -3208,6 +3207,7 @@ dependencies = [
  "tulpje-lib",
  "tulpje-mod-emoji",
  "tulpje-mod-pluralkit",
+ "tulpje-mod-stats",
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
@@ -3268,6 +3268,21 @@ dependencies = [
  "twilight-model",
  "twilight-util",
  "uuid",
+]
+
+[[package]]
+name = "tulpje-mod-stats"
+version = "0.21.5"
+dependencies = [
+ "chrono",
+ "num-format",
+ "redis",
+ "tracing",
+ "tulpje-common",
+ "tulpje-framework",
+ "tulpje-lib",
+ "twilight-model",
+ "twilight-util",
 ]
 
 [[package]]
