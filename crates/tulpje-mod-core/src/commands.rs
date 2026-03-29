@@ -14,6 +14,7 @@ pub(crate) async fn enable(ctx: CommandContext) -> Result<(), Error> {
         return Ok(());
     }
 
+    tulpje_lib::db::touch_guild(&ctx.services.db, guild.id).await?;
     db::enable_module(&ctx.services.db, guild.id, &module).await?;
     set_guild_commands_for_guild(
         &db::guild_modules(&ctx.services.db, guild.id).await?,

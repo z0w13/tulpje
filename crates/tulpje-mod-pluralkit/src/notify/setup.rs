@@ -67,6 +67,7 @@ pub(crate) async fn handle(ctx: CommandContext) -> Result<(), Error> {
             .await?
     };
 
+    tulpje_lib::db::touch_guild(&ctx.services.db, guild.id).await?;
     db::save_notify_channel(&ctx.services.db, guild.id, channel.id).await?;
     responses::success(
         &ctx,

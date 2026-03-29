@@ -44,6 +44,7 @@ pub async fn setup_pk(ctx: CommandContext) -> Result<(), Error> {
         Err(err) => return Err(err.into()),
     };
 
+    tulpje_lib::db::touch_guild(&ctx.services.db, guild.id).await?;
     db::update_system(&ctx.services.db, &system).await?;
     db::save_guild_settings(&ctx.services.db, guild.id, user_id, system.uuid).await?;
 
